@@ -61,13 +61,14 @@ impl CjkRules {
         if !has_marker {
             return s.to_string();
         }
-        let mut t = cjk_numerals(s);
+        // "10번길" is a road ("road 10, lane"), not house number 10
+        let mut t = cjk_numerals(s).replace("번길", "\u{E000}");
         for (re, rep) in &self.rules {
             if re.is_match(&t) {
                 t = re.replace_all(&t, *rep).into_owned();
             }
         }
-        t
+        t.replace('\u{E000}', "번길")
     }
 }
 
