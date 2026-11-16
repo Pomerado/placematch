@@ -1,0 +1,67 @@
+# Endonym and exonym spellings of major cities, first entry canonical (general geographic knowledge)
+munich|münchen|muenchen
+cologne|köln|koeln
+vienna|wien
+rome|roma
+florence|firenze
+turin|torino
+milan|milano
+naples|napoli
+venice|venezia
+genoa|genova
+padua|padova
+lisbon|lisboa
+oporto|porto
+prague|praha
+warsaw|warszawa
+krakow|kraków|cracow
+wroclaw|wrocław|breslau
+gdansk|gdańsk|danzig
+brussels|bruxelles|brussel
+antwerp|antwerpen|anvers
+ghent|gent|gand
+liege|liège|luik
+bruges|brugge
+the hague|den haag|s-gravenhage|'s-gravenhage
+geneva|genève|genf|ginevra
+zurich|zürich|zuerich
+lucerne|luzern
+basel|bâle|basle
+bern|berne
+nuremberg|nürnberg|nuernberg
+hanover|hannover
+brunswick|braunschweig
+copenhagen|københavn|kobenhavn
+gothenburg|göteborg|goteborg
+athens|athína|athina|athenes
+thessaloniki|thessalonike|salonica
+moscow|moskva|moskau
+saint petersburg|sankt-peterburg|st petersburg|st. petersburg|sankt peterburg
+nizhny novgorod|nizhnii novgorod|nizhniy novgorod
+kyiv|kiev|kiyiv
+lviv|lvov|lwow
+odesa|odessa
+kharkiv|kharkov
+dnipro|dnepr|dnipropetrovsk
+zaporizhzhia|zaporizhia|zaporozhye
+seville|sevilla
+saragossa|zaragoza
+corunna|a coruña|la coruña
+mexico city|ciudad de méxico|cdmx|méxico df
+bengaluru|bangalore
+mumbai|bombay
+kolkata|calcutta
+chennai|madras
+beijing|peking
+guangzhou|canton
+ho chi minh city|ho chi minh|saigon|hồ chí minh|thành phố hồ chí minh
+hanoi|hà nội|ha noi
+istanbul|i̇stanbul
+cairo|al qahirah|al-qahira
+riyadh|ar riyad|ar-riyad
+mecca|makkah|makkah al mukarramah
+medina|al madinah|madinah
+jerusalem|yerushalayim
+bucharest|bucurești|bucuresti
+belgrade|beograd
+gqeberha|port elizabeth

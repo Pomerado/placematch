@@ -1,0 +1,10 @@
+[package]
+name = "placematch-bench"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+publish = false
+
+[dependencies]
+placematch = { path = "../placematch" }
+serde_json = "1"

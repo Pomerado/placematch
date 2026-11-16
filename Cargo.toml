@@ -1,0 +1,14 @@
+[workspace]
+resolver = "2"
+members = ["crates/placematch", "crates/placematch-bench", "crates/placematch-wasm"]
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[profile.wasm]
+inherits = "release"
+opt-level = "s"
+strip = true

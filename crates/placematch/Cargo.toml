@@ -1,0 +1,23 @@
+[package]
+name = "placematch"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Decide whether an address someone wrote is the same place as one a website lists, in any script"
+repository = "https://github.com/Pomerado/placematch"
+readme = "../../README.md"
+build = "build.rs"
+
+[dependencies]
+unicode-normalization = { version = "0.1", default-features = false }
+any_ascii = "0.3"
+regex-lite = "0.1"
+
+[build-dependencies]
+serde_json = "1"
+unicode-normalization = { version = "0.1", default-features = false }
+any_ascii = "0.3"
+regex-lite = "0.1"
+
+[dev-dependencies]
+serde_json = "1"

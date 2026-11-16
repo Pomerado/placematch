@@ -1,0 +1,57 @@
+# placematch supplements to libpostal dictionaries: lang<TAB>class<TAB>synonyms (first canonical)
+el	unit_types_numbered	διαμέρισμα|διαμ|diam|diamerisma
+ar	unit_types_numbered	شقة|shqh|shq|shqa|shaqqa|flat|apt
+he	unit_types_numbered	דירה|dyrh|dira|dirah
+hi	unit_types_numbered	फ्लैट|phlaitt|phlait|flat
+th	unit_types_numbered	ห้อง|hxng|hong|h̄̂xng
+vi	unit_types_numbered	phòng|phong
+tr	unit_types_numbered	daire|d
+pl	unit_types_numbered	mieszkanie|m
+sv	unit_types_numbered	lägenhet|lgh
+nb	unit_types_numbered	leilighet|leil
+da	unit_types_numbered	lejlighed|lejl
+fi	unit_types_numbered	asunto|as
+cs	unit_types_numbered	byt
+de	unit_types_numbered	wohnung|whg
+it	unit_types_numbered	interno|int|scala
+nl	unit_types_numbered	bus
+es	level_types_numbered	piso|pº|p
+es	unit_types_numbered	puerta|pta
+pt	unit_types_numbered	apartamento|apto|ap
+ru	unit_types_numbered	квартира|кв|kvartira|kv
+uk	unit_types_numbered	квартира|кв|kvartira|kv
+ru	house_numbers	дом|д|dom|d
+uk	house_numbers	будинок|буд|budynok|bud
+ja	unit_types_numbered	号室|室
+ko	unit_types_numbered	호|ho
+zh	unit_types_numbered	室|shi
+en	house_numbers	house number|h no|hno|house no|h #|plot no|door no
+hi	house_numbers	मकान नंबर|मकान नं|मकान संख्या|makan nan|makan nam|makaan nan|makan nambar
+ru	street_types	бульвар|б-р|бул|бульв|bulvar|b-r
+ru	street_types	проспект|пр-т|пр-кт|просп|prospekt|pr-t
+uk	street_types	бульвар|б-р|бул|бульв|bulvar|bulvar
+uk	street_types	проспект|пр-т|просп|prospekt
+uk	street_types	площа|пл|ploshcha|pl
+uk	street_types	провулок|пров|provulok
+uk	street_types	вулиця|вул|vulytsia|vulytsya|vul
+ru	post_office	абонентский ящик|а/я|аб ящик|abonentskiy yashchik
+uk	post_office	абонентська скринька|а/с|abonentska skrynka
+it	street_types	piazza|p.zza|p.za|pza|p zza|p za
+it	street_types	corso|c.so|c so
+it	street_types	viale|v.le|v le
+it	street_types	largo|l.go|l go
+it	street_types	vicolo|vic|v.lo
+es	street_types	paseo|p.º|pº|p.o|pso
+es	street_types	plaza|pza|pl
+pt	street_types	praça|pç|pc|pca
+fr	street_types	boulevard|boul|bd|bld
+tr	street_types	bulvarı|bulvari|bulv|blv
+tr	street_types	caddesi|cad|cd
+tr	street_types	sokak|sk|sok
+en	post_office	po box|pob|p o box|post office box|box
+nl	post_office	postbus|pb
+de	post_office	postfach|pf
+fr	post_office	boîte postale|bp|b p
+es	post_office	apartado de correos|apartado|apdo|ap correos
+it	post_office	casella postale|cp|c p
+pt	post_office	caixa postal|cx postal|cp
