@@ -887,7 +887,7 @@ impl Matcher {
 
     /// How a row's first part relates to the caller's place name: 2 the same name, 1 a variant
     /// (the caller's words in order with words added before or between them: "The Example Park",
-    /// "Jacob K. Javits Convention Center" for "Javits Center"), 0 another place (another name, or
+    /// "Jane Q. Example Convention Center" for "Example Center"), 0 another place (another name, or
     /// the name followed by more words: "Example Park Ferry Terminal").
     fn name_relation(&self, name: &[(String, Vec<u32>)], row: &[(String, Vec<u32>)]) -> u8 {
         let eq = |a: &(String, Vec<u32>), b: &(String, Vec<u32>)| a.0 == b.0 || intersects(&a.1, &b.1);
