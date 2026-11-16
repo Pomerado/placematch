@@ -1,8 +1,8 @@
 // Node entry: loads the WebAssembly module shipped beside this file. No network access.
 import { readFile } from "node:fs/promises";
-import { load } from "./placematch.mjs";
+import { load, LIMITS } from "./placematch.mjs";
 
-export { load };
+export { load, LIMITS };
 
 /** Load PlaceMatch from the package's own placematch.wasm. Load once and reuse the result. */
 export async function open() {

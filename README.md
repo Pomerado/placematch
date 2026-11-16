@@ -43,21 +43,32 @@ assert_eq!(e.notes, vec!["unit_not_listed"]); // type the unit into the site's o
 - `same`: for a match, every row that is the caller's place, in the site's order, so a picker can
   take the site's own first among them; for `ambiguous`, the rows to choose between.
 - `rows`: each row's verdict and reasons (`house_number`, `postcode`, `place_name`, `area`,
-  `control` and so on).
+  `control`, `house_number_range` and so on), and, for each row of the place, its notes, so a
+  picker that takes the site's own first row of the place still learns that row leaves out the
+  caller's unit.
 - `reasons`, for `ambiguous`: `several_places` (two places fit), `place_name_variant` (a row holds
   the caller's place name with other words, so it may be the place), and, when no row is the place,
   the near rows: `unit_not_given` (a unit the caller did not give), `postcode_differs` (the caller's
   number, street and town under another postcode), `number_not_listed` (the caller's street with no
   house number) and `number_range` (a house-number range holding the caller's number, with no
   postcode on both sides to confirm it).
-- `notes`, for a match: `unit_not_listed` when the row leaves out the unit the caller gave.
+- `notes`, for a match: `unit_not_listed` when the row at `index` leaves out the unit the caller
+  gave (each row's own notes are in `rows`).
 - `cross_script`: the match was read across scripts ("Ulitsa Primer" for "Улица Пример").
 - `prefer_on_read`: see below.
 
-`pick` gives the same answer, except that it says `none` where only near rows other than
-`unit_not_given` were found: it answers whether a row is the place; `pick_explained` also says what
-a picker should ask about. A listing's house-number range ("10-14 Example St") holding the caller's
-number on the caller's street is the caller's building when both give the same postcode.
+`pick` and `compare` keep their answers: they answer whether a row is the place. `pick_explained`
+also says what a picker should ask about, so it asks where `pick` says `none` because only near
+rows were found, and it alone reads house-number ranges.
+
+A listing's hyphenated house number ("10-14 Example St") is read as a range of one building only
+where it means one: the caller's country must be given and be the US, the UK, Ireland, Germany or
+France; both sides in Latin script; not Hawaii (ZIPs 967xx and 968xx, zone-and-house numbers) or
+Queens-style numbering (ZIPs 110xx to 116xx, block-and-lot numbers); ascending, at most 8 wide, and
+with the caller's number on the range's side of the street (both ends and the number all even or all
+odd). Then it is the caller's building when both sides give the same postcode, and `number_range`
+asks when they don't both give one. Anywhere else the pair is an ordinary house number, so
+"3-10 Example St" (unit 3 at number 10 in Australia) is never "5 Example St".
 
 ## What counts as the same place
 
@@ -103,15 +114,18 @@ name decides:
   street follows the name, when its town, region and postcode fit the caller's;
 - a row that holds the caller's words in order with others added before or between them ("The
   Example Park", or a venue under its full name) is `ambiguous`: it may be the place;
-- a row that starts with the name and goes on ("Example Park Ferry Terminal") is another place;
+- a row that starts with the name and goes on ("Example Park Ferry Terminal"), with or without a
+  leading article, or that adds a place-type word ("The Example Park Hotel", "Example Park
+  Station") is another place;
 - a row that shows the caller's whole text after words of its own ("See more results for ...") is
   a site control, not a place.
 
 When a row has exactly the caller's name and another holds the name in a longer form (a pin dropped
 under the name next to the venue under its official name), the answer is `ambiguous`. A row may say
 that the site shows it with a category of its own (`Row { text, categorized: true }`, a venue type
-such as "Convention center"). When exactly one of those rows is categorized, `prefer_on_read` names
-it: a picker reading the site may take it, and a write still asks.
+such as "Convention center"). When exactly one of those rows is categorized, and the rows name one
+town (the caller's, when the caller gave an area), `prefer_on_read` names it: a picker reading the
+site may take it, and a write still asks.
 
 A picker around PlaceMatch decides what to do with `none` and `ambiguous` (ask in a write, refuse or
 read on in a read). `Matcher::is_control`, `Matcher::in_area` and `Matcher::same_but_postcode`
@@ -167,14 +181,16 @@ import { open } from "@pomerado/placematch";
 
 const m = await open();
 const e = m.pickExplained("example center", [
-  "Example Center, Othertown, NY, USA",
+  "Example Center, Exampleton, NY, USA",
   { text: "Jane Q. Example Convention Center, 429 Sample Ave, Exampleton, NY 10001, USA", categorized: true },
 ], { country: "US" });
 // e.outcome === "ambiguous", e.reasons == ["place_name_variant"], e.prefer_on_read === 1
 ```
 
-`pickExplained` returns the fields above in snake case (`prefer_on_read`, `cross_script`); `pick`
-and `compare` are there too. `@pomerado/placematch/loader` exports `load(bytes)` for other
+`pickExplained` returns the fields above in snake case (`prefer_on_read`, `cross_script`); `options`
+may be left out or `null`. `pick` and `compare` are there too. Every call takes a query and rows of
+at most 512 characters each (JavaScript string length) and at most 100 rows (`LIMITS`); longer input
+throws a `RangeError` and is never cut, because matching time grows quickly with text length. `@pomerado/placematch/loader` exports `load(bytes)` for other
 runtimes, and `@pomerado/placematch/placematch.wasm` is the module. `js/placematch.d.ts` has the
 types.
 

@@ -61,28 +61,69 @@ fn a_listing_of_the_street_without_the_callers_number_asks() {
     assert_eq!(explain(&m, "10 Example Square, Springfield", &["Springfield, IL"]).outcome, Outcome::None);
 }
 
+fn explain_in(m: &Matcher, country: Option<&str>, query: &str, rows: &[&str]) -> Explained {
+    let rows: Vec<Row> = rows.iter().map(|&t| Row::from(t)).collect();
+    m.pick_explained(query, &rows, &PickOptions { country })
+}
+
 #[test]
 fn a_house_number_range_holding_the_number_matches_under_the_same_postcode() {
     let m = Matcher::new();
     let q = "12 Example St, Springfield, IL 62701";
     let e = explain(&m, q, &["10-14 Example St, Springfield, IL 62701"]);
     assert_eq!((e.outcome, e.index), (Outcome::Match, Some(0)));
-    assert_eq!(m.pick(q, &["10-14 Example St, Springfield, IL 62701"], Some("US")), Pick::Match(0));
-    assert_eq!(explain(&m, q, &["10–14 Example Street, Springfield, IL 62701"]).outcome, Outcome::Match);
+    assert!(e.rows[0].reasons.contains(&"house_number_range"));
     // another postcode asks, as for a single number
     assert_eq!(explain(&m, q, &["10-14 Example St, Springfield, IL 62702"]).reasons, vec!["postcode_differs"]);
-    // no postcode on either side to confirm the range: ask
+    // no postcode on both sides to confirm the range: ask
     let e = explain(&m, "12 Example St, Springfield", &["10-14 Example St, Springfield"]);
     assert_eq!((e.outcome, e.same.clone(), e.reasons.clone()), (Outcome::Ambiguous, vec![0], vec!["number_range"]));
-    let e = explain(&m, q, &["10-14 Example St, Springfield"]);
-    assert_eq!(e.reasons, vec!["number_range"]);
-    // a range that does not hold it, the other side of the street, or another street
-    assert_eq!(explain(&m, q, &["16-20 Example St, Springfield, IL 62701"]).outcome, Outcome::None);
-    assert_eq!(explain(&m, "11 Example St, Springfield, IL 62701", &["10-14 Example St, Springfield, IL 62701"]).outcome, Outcome::None);
-    assert_eq!(explain(&m, q, &["10-14 Sample St, Springfield, IL 62701"]).outcome, Outcome::None);
+    assert_eq!(explain(&m, q, &["10-14 Example St, Springfield"]).reasons, vec!["number_range"]);
     // a range listing and the number itself are one place; the number's own row is taken
     let e = explain(&m, q, &["10-14 Example St, Springfield, IL 62701", "12 Example St, Springfield, IL 62701"]);
     assert_eq!((e.outcome, e.index, e.same.clone()), (Outcome::Match, Some(1), vec![0, 1]));
+}
+
+/// A hyphenated pair is read as a range only where it means one, so a range never makes another
+/// building the caller's: outside that, the pair is an ordinary house number.
+#[test]
+fn a_hyphenated_number_is_a_range_only_where_it_means_one() {
+    let m = Matcher::new();
+    let none = |country: Option<&str>, q: &str, row: &str| {
+        let e = explain_in(&m, country, q, &[row]);
+        assert_eq!((e.outcome, e.index), (Outcome::None, None), "{:?} {} / {}", country, q, row);
+    };
+    // Australia and New Zealand write a unit and its number "3-10" (unit 3 at number 10)
+    none(Some("AU"), "5 Example St, Exampleton NSW 2000", "3-10 Example St, Exampleton NSW 2000");
+    none(Some("AU"), "6 Example St, Exampleton NSW 2000", "4-8 Example St, Exampleton NSW 2000");
+    none(Some("NZ"), "6 Example Road, Exampleton 1010", "4-8 Example Road, Exampleton 1010");
+    // Hawaii writes a zone and a house number ("91-1234"); Queens a block and a lot ("12-34")
+    none(Some("US"), "500 Example St, Kapolei, HI 96707", "498-502 Example St, Kapolei, HI 96707");
+    none(Some("US"), "500 Example St, Kapolei, HI 96707", "91-1234 Example St, Kapolei, HI 96707");
+    none(Some("US"), "20 Example St, Queens, NY 11105", "18-22 Example St, Queens, NY 11105");
+    none(Some("US"), "20 Example St, Queens, NY 11105", "12-34 Example St, Queens, NY 11105");
+    // no country to say what the hyphen means
+    none(None, "12 Example St, Springfield, IL 62701", "10-14 Example St, Springfield, IL 62701");
+    none(None, "5 Asahimachi, Kurume", "3-10 Asahimachi, Kurume");
+    // both sides of the street, too wide to be one building, not holding it, another street
+    none(Some("US"), "12 Example St, Springfield, IL 62701", "10-15 Example St, Springfield, IL 62701");
+    none(Some("US"), "11 Example St, Springfield, IL 62701", "10-14 Example St, Springfield, IL 62701");
+    none(Some("US"), "150 Example St, Springfield, IL 62701", "100-198 Example St, Springfield, IL 62701");
+    none(Some("US"), "20 Example St, Springfield, IL 62701", "10-30 Example St, Springfield, IL 62701");
+    none(Some("US"), "12 Example St, Springfield, IL 62701", "16-20 Example St, Springfield, IL 62701");
+    none(Some("US"), "12 Example St, Springfield, IL 62701", "10-14 Sample St, Springfield, IL 62701");
+    // and none of these is even asked about as a range
+    let e = explain_in(&m, Some("AU"), "5 Example St, Exampleton", &["3-10 Example St, Exampleton"]);
+    assert_eq!(e.outcome, Outcome::None);
+}
+
+/// `pick` and `compare` keep their answers: they never read a range.
+#[test]
+fn pick_and_compare_never_read_a_range() {
+    let m = Matcher::new();
+    let (q, row) = ("12 Example St, Springfield, IL 62701", "10-14 Example St, Springfield, IL 62701");
+    assert_eq!(m.pick(q, &[row], Some("US")), Pick::None);
+    assert_eq!(m.compare(q, row, Some("US")), (Verdict::Different, vec!["house_number"]));
 }
 
 #[test]
@@ -105,7 +146,8 @@ fn a_pick_read_across_scripts_says_so() {
     assert_eq!((e.outcome, e.cross_script), (Outcome::Match, true));
 }
 
-const PIN: &str = "Example Center, Othertown, NY, USA";
+const PIN: &str = "Example Center, Exampleton, NY, USA";
+const PIN_ELSEWHERE: &str = "Example Center, Othertown, NY, USA";
 const VENUE: &str = "Jane Q. Example Convention Center, 429 Sample Ave, Exampleton, NY 10001, USA";
 
 #[test]
@@ -118,14 +160,41 @@ fn a_same_name_pin_beside_a_categorized_venue_asks_and_a_read_may_take_the_venue
     // the categorized one is preferred whichever it is
     let e = m.pick_explained("example center", &[Row { text: PIN, categorized: true }, Row::from(VENUE)], &o);
     assert_eq!(e.prefer_on_read, Some(0));
+    // in the caller's area, when the caller gave one
+    let e = m.pick_explained("example center, exampleton, ny", &[Row::from(PIN), Row { text: VENUE, categorized: true }], &o);
+    assert_eq!((e.outcome, e.prefer_on_read), (Outcome::Ambiguous, Some(1)));
     // both or neither categorized: nothing to prefer
     for (a, b) in [(false, false), (true, true)] {
         let e = m.pick_explained("example center", &[Row { text: PIN, categorized: a }, Row { text: VENUE, categorized: b }], &o);
         assert_eq!((e.outcome, e.prefer_on_read), (Outcome::Ambiguous, None));
     }
+    // two towns, or a row with no town of its own: the rows may be two places, so nothing to prefer
+    let e = m.pick_explained("example center", &[Row::from(PIN_ELSEWHERE), Row { text: VENUE, categorized: true }], &o);
+    assert_eq!((e.outcome, e.prefer_on_read), (Outcome::Ambiguous, None));
+    let e = m.pick_explained("example center, exampleton, ny", &[Row::from("Example Center, NY, USA"), Row { text: VENUE, categorized: true }], &o);
+    assert_eq!((e.outcome, e.prefer_on_read), (Outcome::Ambiguous, None));
     // a category never turns a match into anything else
     let e = m.pick_explained("Example Park, Exampleton, CA", &[Row::from("Example Park, Exampleton, CA"), Row { text: "Example Park Ferry Terminal, Exampleton, CA", categorized: true }], &o);
     assert_eq!((e.outcome, e.index, e.prefer_on_read), (Outcome::Match, Some(0), None));
+}
+
+/// A longer name that adds a place-type word is another place, with or without a leading article.
+#[test]
+fn a_longer_name_adding_a_place_type_is_another_place() {
+    let m = Matcher::new();
+    let o = PickOptions { country: Some("US") };
+    let hotel = Row { text: "The Example Park Hotel, 5 Sample Rd, Springfield, IL", categorized: true };
+    let e = m.pick_explained("example park, springfield, il", &[Row::from("Example Park, Springfield, IL"), hotel], &o);
+    assert_eq!((e.outcome, e.index, e.prefer_on_read), (Outcome::Match, Some(0), None));
+    assert_eq!(e.rows[1].reasons, vec!["place_name"]);
+    let hotel = Row { text: "The Example Park Hotel, 5 Sample Rd, Shelbyville, IL", categorized: true };
+    let e = m.pick_explained("example park", &[Row::from("Example Park, Springfield, IL"), hotel], &o);
+    assert_eq!((e.outcome, e.index, e.prefer_on_read), (Outcome::Match, Some(0), None));
+    for row in ["The Example Park Station, Springfield, IL", "Example Park North Mall, Springfield, IL", "The Example Park Gardens, Springfield, IL"] {
+        assert_eq!(explain(&m, "example park, springfield, il", &[row]).outcome, Outcome::None, "{}", row);
+    }
+    // an article alone, or words that are not a place type, may still be the place
+    assert_eq!(explain(&m, "example park, springfield, il", &["The Example Park, Springfield, IL"]).outcome, Outcome::Ambiguous);
 }
 
 #[test]
@@ -138,6 +207,16 @@ fn named_rows_say_why_they_are_not_the_place() {
     assert_eq!(why, vec![(Verdict::Same, vec![]), (Verdict::Different, vec!["place_name"]), (Verdict::Different, vec!["area"]), (Verdict::Different, vec!["control"])]);
 }
 
+/// A picker that takes the site's first row of the place still learns the unit is not listed there.
+#[test]
+fn each_row_of_the_place_carries_its_own_notes() {
+    let m = Matcher::new();
+    let e = explain(&m, "10 Example St, Apt 4, Springfield, IL", &["10 Example St, Springfield, IL", "10 Example St, Apt 4, Springfield, IL"]);
+    assert_eq!((e.outcome, e.index, e.same.clone(), e.notes.clone()), (Outcome::Match, Some(1), vec![0, 1], vec![]));
+    assert_eq!(e.rows[0].notes, vec!["unit_not_listed"]);
+    assert!(e.rows[1].notes.is_empty());
+}
+
 #[test]
 fn the_json_form_carries_every_field() {
     let m = Matcher::new();
@@ -148,16 +227,18 @@ fn the_json_form_carries_every_field() {
         serde_json::json!({
             "outcome": "match", "index": 0, "same": [0], "reasons": [], "notes": ["unit_not_listed"],
             "cross_script": false, "prefer_on_read": null,
-            "rows": [{"verdict": "same", "reasons": ["unit_not_listed"]}, {"verdict": "different", "reasons": ["house_number"]}]
+            "rows": [{"verdict": "same", "reasons": [], "notes": ["unit_not_listed"]}, {"verdict": "different", "reasons": ["house_number"], "notes": []}]
         })
     );
 }
 
-/// `pick` answers as before: the same row, or `none` where only near rows (another postcode, no
-/// house number, an unconfirmed range) were found.
+/// `pick` answers as `pick_explained` does wherever it should: the same row on a match, the same
+/// rows on an ambiguous answer, and `none` (or the rows with an added unit) where `pick_explained`
+/// asks only about near rows. Ranges are read by `pick_explained` alone.
 #[test]
 fn pick_agrees_with_pick_explained() {
     let m = Matcher::new();
+    let near = ["unit_not_given", "postcode_differs", "number_not_listed", "number_range"];
     for text in [include_str!("../../../tests/cases.jsonl"), include_str!("../../../tests/place-names.jsonl")] {
         for line in text.lines().filter(|l| !l.trim().is_empty()) {
             let c: serde_json::Value = serde_json::from_str(line).unwrap();
@@ -166,15 +247,21 @@ fn pick_agrees_with_pick_explained() {
             let cands: Vec<&str> = c["candidates"].as_array().unwrap().iter().map(|x| x.as_str().unwrap()).collect();
             let rows: Vec<Row> = cands.iter().map(|&t| Row::from(t)).collect();
             let e = m.pick_explained(q, &rows, &PickOptions { country: cc });
-            let near_only = e.reasons.iter().all(|r| matches!(*r, "postcode_differs" | "number_not_listed" | "number_range"));
+            if e.rows.iter().any(|r| r.reasons.iter().any(|x| matches!(*x, "house_number_range" | "number_range"))) {
+                continue;
+            }
             let want = match e.outcome {
                 Outcome::Match => Pick::Match(e.index.unwrap()),
                 Outcome::None => Pick::None,
-                Outcome::Ambiguous if near_only => Pick::None,
-                Outcome::Ambiguous => match m.pick(q, &cands, cc) {
-                    Pick::Ambiguous(_) => continue,
-                    other => panic!("{}: pick {:?}, explained ambiguous", c["id"], other),
-                },
+                Outcome::Ambiguous if e.reasons.iter().all(|r| near.contains(r)) => {
+                    let units: Vec<usize> = e.same.iter().copied().filter(|&i| e.rows[i].reasons.contains(&"unit_not_given")).collect();
+                    if units.is_empty() {
+                        Pick::None
+                    } else {
+                        Pick::Ambiguous(units)
+                    }
+                }
+                Outcome::Ambiguous => Pick::Ambiguous(e.same.clone()),
             };
             assert_eq!(m.pick(q, &cands, cc), want, "{}", c["id"]);
         }

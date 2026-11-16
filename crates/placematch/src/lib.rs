@@ -89,7 +89,7 @@ pub enum Outcome {
 ///   give (`unit_not_given`), show another postcode at the caller's number, street and town
 ///   (`postcode_differs`), list the caller's street without a house number (`number_not_listed`), or
 ///   give a house-number range holding the caller's number with no postcode on both sides to confirm
-///   it (`number_range`).
+///   it (`number_range`; ranges are read only where `RANGE_COUNTRIES` allows).
 pub const AMBIGUITY_REASONS: &[&str] = &["several_places", "place_name_variant", "unit_not_given", "postcode_differs", "number_not_listed", "number_range"];
 
 /// Notes beside a `match`: `unit_not_listed` when the row leaves out a unit the caller gave (a
@@ -97,11 +97,15 @@ pub const AMBIGUITY_REASONS: &[&str] = &["several_places", "place_name_variant",
 pub const MATCH_NOTES: &[&str] = &["unit_not_listed"];
 
 /// One row's verdict against the caller's text, with its reasons ("house_number", "postcode",
-/// "place_name", "area", "control", "unit_not_listed", "cross_script" and so on).
+/// "place_name", "area", "control", "house_number_range", "cross_script", or a near row's ambiguity
+/// reason) and, for each row of the caller's place, its notes from `MATCH_NOTES`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RowReport {
     pub verdict: Verdict,
     pub reasons: Vec<&'static str>,
+    /// `unit_not_listed` when this row leaves out a unit the caller gave, so a picker taking any
+    /// row of the place knows whether to type the unit.
+    pub notes: Vec<&'static str>,
 }
 
 /// `Matcher::pick_explained`'s answer.
@@ -115,13 +119,15 @@ pub struct Explained {
     pub same: Vec<usize>,
     /// `ambiguous`: why, from `AMBIGUITY_REASONS`.
     pub reasons: Vec<&'static str>,
-    /// `match`: notes from `MATCH_NOTES`.
+    /// `match`: notes from `MATCH_NOTES` for the row at `index`; each row of `same` has its own in
+    /// `rows[i].notes`.
     pub notes: Vec<&'static str>,
     /// `match`: the row was read across scripts ("Ulitsa Primer" for "Улица Пример", "Asahicho" for
     /// "旭町").
     pub cross_script: bool,
     /// `ambiguous` between a same-name row and a row with the name in a longer form: the one row of
-    /// them the site categorized, when exactly one is. A read may take it; a write still asks.
+    /// them the site categorized, when exactly one is and the rows name one town (the caller's, when
+    /// the caller gave an area). A read may take it; a write still asks.
     pub prefer_on_read: Option<usize>,
     /// Each row's verdict and reasons, by row index.
     pub rows: Vec<RowReport>,
@@ -162,7 +168,7 @@ impl Explained {
                     Verdict::Different => "different",
                     Verdict::Unknown => "unknown",
                 };
-                format!("{{\"verdict\":\"{}\",\"reasons\":{}}}", v, words(&r.reasons))
+                format!("{{\"verdict\":\"{}\",\"reasons\":{},\"notes\":{}}}", v, words(&r.reasons), words(&r.notes))
             })
             .collect();
         format!(
@@ -189,8 +195,18 @@ fn script_group(s: Option<Script>) -> u8 {
     }
 }
 
-/// A listing's house-number range ("10-14") holds the caller's number: within it and, when both
-/// ends are on one side of the street (both even or both odd), on that side.
+/// Countries where a listing's hyphenated pair of house numbers ("10-14 Example St") is a range of
+/// one building's numbers. Elsewhere it may be a unit and its number (Australia, New Zealand,
+/// Canada), a block and lot, or a number and its addition, so it is never read as a range.
+const RANGE_COUNTRIES: &[&str] = &["US", "GB", "IE", "DE", "FR"];
+
+/// The widest range read as one building. A building's numbers on one side of a street span a few
+/// consecutive same-side numbers ("10-14", "2-8"); 8 allows five of them. Street-segment ranges a
+/// geocoder lists ("100-198") and zone or block forms ("91-1234") are far wider.
+const RANGE_WIDTH: u32 = 8;
+
+/// A listing's house-number range ("10-14") holds the caller's number: ascending, at most
+/// `RANGE_WIDTH` wide, both ends and the number on one side of the street (all even or all odd).
 fn range_holds(range: &str, number: &str) -> bool {
     let digits = |s: &str| !s.is_empty() && s.len() <= 6 && s.bytes().all(|b| b.is_ascii_digit());
     let Some((lo, hi)) = range.split_once('-') else {
@@ -200,8 +216,21 @@ fn range_holds(range: &str, number: &str) -> bool {
         return false;
     }
     let (lo, hi, n): (u32, u32, u32) = (lo.parse().unwrap(), hi.parse().unwrap(), number.parse().unwrap());
-    lo < hi && lo <= n && n <= hi && (lo % 2 != hi % 2 || n % 2 == lo % 2)
+    lo < hi && hi - lo <= RANGE_WIDTH && lo % 2 == hi % 2 && n % 2 == lo % 2 && lo <= n && n <= hi
 }
+
+/// Words that make a longer name another place: a place of its own type at or near the named one
+/// ("Example Park Hotel", "The Example Park Station").
+const PLACE_TYPES: &[&str] = &[
+    "hotel", "motel", "inn", "hostel", "resort", "lodge", "station", "stn", "terminal", "ferry", "pier", "port", "harbor", "harbour", "airport",
+    "garden", "gardens", "mall", "market", "plaza", "garage", "parking", "carpark", "hospital", "clinic", "school", "college", "university",
+    "library", "museum", "stadium", "arena", "church", "cemetery", "store", "shop", "restaurant", "cafe", "bar", "tower", "apartments",
+    "condominiums", "condos", "office", "offices", "entrance", "gate", "annex", "annexe", "lot",
+];
+
+/// Leading articles a place name may be written with or without.
+const ARTICLES: &[&str] = &["the", "la", "le", "les", "el", "los", "las", "il", "lo", "der", "die", "das", "het"];
+
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum Tri {
@@ -607,8 +636,6 @@ impl Matcher {
         let peer = matches!(mode, Mode::Peer);
         let mut reasons = Vec::new();
         let mut unknown = false;
-        // the caller's number lies in the listing's house-number range; the postcode must confirm it
-        let mut ranged = false;
         // PO box
         match (&q.po_box, &c.po_box) {
             (Some(a), Some(b)) if a != b => return (Verdict::Different, vec!["po_box"]),
@@ -624,13 +651,7 @@ impl Matcher {
                         let (qq, cc2) = if q.house.as_ref().map_or(0, |h| h.len()) > c.house.as_ref().map_or(0, |h| h.len()) { (&x2, c) } else { (q, &x2) };
                         return self.compare_parsed(qq, cc2, mode);
                     }
-                    // a listing's range holding the caller's number ("10-14" for 12); two listings, one
-                    // a range and one a number in it, may be one building
-                    let holds = Self::ranges_apply(q, c) && (range_holds(b, a) || (peer && range_holds(a, b)));
-                    if !holds {
-                        return (Verdict::Different, vec!["house_number"]);
-                    }
-                    ranged = !peer;
+                    return (Verdict::Different, vec!["house_number"]);
                 }
             }
             (Some(_), None) => {
@@ -734,9 +755,6 @@ impl Matcher {
             if a != b {
                 return (Verdict::Different, vec!["postcode"]);
             }
-        } else if ranged {
-            unknown = true;
-            reasons.push("number_range");
         }
         // two listings that place themselves by different means (one by town, one by postcode only)
         // cannot be shown to be one place
@@ -901,6 +919,16 @@ impl Matcher {
         if row.len() <= name.len() {
             return 0;
         }
+        // a place-type word the caller did not write makes another place ("The Example Park Hotel")
+        if row.iter().any(|w| PLACE_TYPES.contains(&w.0.as_str()) && !name.iter().any(|n| eq(n, w))) {
+            return 0;
+        }
+        // the name followed by more words is another place, with or without a leading article
+        let bare = |v: &'_ [(String, Vec<u32>)]| -> usize { usize::from(v.len() > 1 && ARTICLES.contains(&v[0].0.as_str())) };
+        let (n2, r2) = (&name[bare(name)..], &row[bare(row)..]);
+        if r2.len() > n2.len() && n2.iter().zip(r2).all(|(a, b)| eq(a, b)) {
+            return 0;
+        }
         if name.iter().zip(row).all(|(a, b)| eq(a, b)) {
             return 0;
         }
@@ -946,20 +974,18 @@ impl Matcher {
     /// accept it; a write asks.
     pub fn same_but_postcode(&self, query: &str, row: &str, country: Option<&str>) -> bool {
         let ctx = self.ctx(country);
-        self.postcode_only_differs(&parse::parse(&ctx, query), &parse::parse(&ctx, row), false)
+        self.postcode_only_differs(&parse::parse(&ctx, query), &parse::parse(&ctx, row))
     }
 
-    /// `same_but_postcode` on parsed text; with `range`, a range holding the caller's number counts
-    /// as the caller's number.
-    fn postcode_only_differs(&self, q: &Components, c: &Components, range: bool) -> bool {
+    /// `same_but_postcode` on parsed text.
+    fn postcode_only_differs(&self, q: &Components, c: &Components) -> bool {
         if q.house.is_none() || q.postcode.is_none() || c.postcode.is_none() || q.postcode == c.postcode || (q.city.is_none() && q.regions.is_empty()) {
             return false;
         }
         let (mut q, mut c) = (q.clone(), c.clone());
         q.postcode = None;
         c.postcode = None;
-        let (v, r) = self.compare_parsed(&q, &c, Mode::Query);
-        v == Verdict::Same || (range && v == Verdict::Unknown && r == ["number_range"])
+        self.compare_parsed(&q, &c, Mode::Query).0 == Verdict::Same
     }
 
     /// Does the row's area fit the caller's? Returns (fits, holds every area part the caller gave).
@@ -1002,10 +1028,11 @@ impl Matcher {
     fn named_decide(&self, ctx: &Ctx, query: &str, name: &[(String, Vec<u32>)], rows: &[Row]) -> (Pick, Explained) {
         let rest = |s: &str| -> String { s.splitn(2, ',').nth(1).unwrap_or("").to_string() };
         let qa = parse::parse(ctx, &rest(query));
-        let report = |verdict: Verdict, reasons: Vec<&'static str>| RowReport { verdict, reasons };
+        let report = |verdict: Verdict, reasons: Vec<&'static str>| RowReport { verdict, reasons, notes: vec![] };
         let mut reports: Vec<RowReport> = Vec::with_capacity(rows.len());
         let mut exact: Vec<(usize, bool, Components)> = Vec::new();
         let mut variant: Vec<usize> = Vec::new();
+        let mut variant_area: Vec<(bool, Components)> = Vec::new();
         for (i, row) in rows.iter().enumerate() {
             let c = row.text;
             if self.is_control(query, c) {
@@ -1030,6 +1057,7 @@ impl Matcher {
             } else {
                 reports.push(report(Verdict::Unknown, vec!["place_name_variant"]));
                 variant.push(i);
+                variant_area.push((full, ca));
             }
         }
         if exact.is_empty() {
@@ -1048,8 +1076,13 @@ impl Matcher {
                 reasons.push("place_name_variant");
             }
             let mut e = Explained::ambiguous(ids.clone(), reasons, reports);
-            // the venue the site categorized, beside a same-name row it did not (or the reverse)
-            if !towns_apart {
+            // the venue the site categorized, beside a same-name row it did not (or the reverse), when
+            // the rows name one town, and the caller's area in full when the caller gave one
+            let areas: Vec<(bool, &Components)> = exact.iter().map(|x| (x.1, &x.2)).chain(variant_area.iter().map(|x| (x.0, &x.1))).collect();
+            let has_town = |x: &Components| x.localities.iter().any(|t| !x.regions.contains(&t.key) && !self.data.is_country_name(&t.key));
+            let caller_area = qa.postcode.is_some() || !qa.localities.is_empty() || !qa.regions.is_empty();
+            let one_town = areas.iter().all(|(full, a)| has_town(a) && (*full || !caller_area) && areas.iter().all(|(_, b)| self.area_fits(a, b).0 && self.area_fits(b, a).0));
+            if !towns_apart && one_town {
                 let categorized: Vec<usize> = ids.iter().copied().filter(|&i| rows[i].categorized).collect();
                 if categorized.len() == 1 {
                     e.prefer_on_read = Some(categorized[0]);
@@ -1139,12 +1172,29 @@ impl Matcher {
         (q.street_type_compound || c.street_type_compound) && same_type && typo_in_long_word(&[full(q).as_str()], &full(c))
     }
 
-    /// House-number ranges are read only where "10-14" is not another kind of number: not in block
-    /// addresses (Japan, Korea, China, Taiwan), not where it is a house and its flat (Russia, Ukraine,
-    /// Belarus, Kazakhstan), not in Colombian street-and-distance numbers, and only in Latin script.
-    fn ranges_apply(q: &Components, c: &Components) -> bool {
-        let cc = q.cc.as_deref().or(c.cc.as_deref());
-        !matches!(cc, Some("JP" | "KR" | "CN" | "TW" | "RU" | "UA" | "BY" | "KZ" | "CO")) && script_group(q.script) == 0 && script_group(c.script) == 0
+    /// A hyphenated house number on the listing may be read as a range: the caller's country is
+    /// given and on `RANGE_COUNTRIES`, both sides are in Latin script, and, in the US, neither side is
+    /// in Hawaii (ZIPs 967xx and 968xx, zone-and-house numbers) or Queens-style numbering (ZIPs 110xx
+    /// to 116xx, block-and-lot numbers).
+    fn range_reading(q: &Components, c: &Components) -> bool {
+        let Some(cc) = q.cc.as_deref() else {
+            return false;
+        };
+        if !RANGE_COUNTRIES.contains(&cc) || script_group(q.script) != 0 || script_group(c.script) != 0 {
+            return false;
+        }
+        if cc == "US" {
+            for x in [q, c] {
+                let zip3: String = x.postcode.as_deref().unwrap_or("").chars().take(3).collect();
+                if matches!(zip3.as_str(), "967" | "968" | "110" | "111" | "112" | "113" | "114" | "115" | "116") {
+                    return false;
+                }
+                if x.regions.iter().any(|r| r == "hi" || r == "hawaii") || x.localities.iter().any(|l| l.key == "queens") {
+                    return false;
+                }
+            }
+        }
+        true
     }
 
     /// `x` with house "73k" when `y` has house "73" and a street starting with the word "k":
@@ -1424,30 +1474,60 @@ impl Matcher {
     /// (so a picker may choose by the site's own order among rows of one place), each row's verdict
     /// and reasons, the reasons an `ambiguous` answer asks, notes beside a `match`, and the row a read
     /// may take when a write asks. Unlike `pick`, it also asks where the only rows near the caller's
-    /// place show another postcode, leave out the house number, or give an unconfirmed range.
+    /// place show another postcode or leave out the house number, and it reads a listing's
+    /// house-number range where one is meant (see `RANGE_COUNTRIES`).
     pub fn pick_explained(&self, query: &str, rows: &[Row], options: &PickOptions) -> Explained {
-        self.decide(query, rows, options.country).1
+        self.decide(query, rows, options.country, true).1
     }
 
     /// Choose the candidate that is the same place as the query.
     pub fn pick<S: AsRef<str>>(&self, query: &str, candidates: &[S], country: Option<&str>) -> Pick {
         let rows: Vec<Row> = candidates.iter().map(|c| Row::from(c.as_ref())).collect();
-        self.decide(query, &rows, country).0
+        self.decide(query, &rows, country, false).0
     }
 
-    /// `pick`'s answer and `pick_explained`'s.
-    fn decide(&self, query: &str, rows: &[Row], country: Option<&str>) -> (Pick, Explained) {
+    /// `pick`'s answer and `pick_explained`'s; `ranges`: read listings' house-number ranges.
+    fn decide(&self, query: &str, rows: &[Row], country: Option<&str>, ranges: bool) -> (Pick, Explained) {
         let ctx = self.ctx(country);
         let q = parse::parse(&ctx, query);
         if let Some(name) = self.place_name(query, &q) {
             return self.named_decide(&ctx, query, &name, rows);
         }
         let candidates: Vec<&str> = rows.iter().map(|r| r.text).collect();
-        let cs: Vec<Components> = candidates.iter().map(|c| parse::parse(&ctx, c)).collect();
+        let mut cs: Vec<Components> = candidates.iter().map(|c| parse::parse(&ctx, c)).collect();
         let alts: Vec<Components> = Self::comma_free_readings(query).iter().map(|a| parse::parse(&ctx, a)).collect();
         let calts: Vec<Option<Components>> = candidates.iter().map(|c| Self::without_leading_name(c).map(|t| parse::parse(&ctx, &t))).collect();
-        let verdicts: Vec<(Verdict, Vec<&'static str>)> = cs.iter().zip(&calts).map(|(c, ca)| self.compare_any(&q, &alts, c, ca.as_ref())).collect();
-        let mut reports: Vec<RowReport> = verdicts.iter().map(|(v, r)| RowReport { verdict: *v, reasons: r.clone() }).collect();
+        let mut verdicts: Vec<(Verdict, Vec<&'static str>)> = cs.iter().zip(&calts).map(|(c, ca)| self.compare_any(&q, &alts, c, ca.as_ref())).collect();
+        let mut reports: Vec<RowReport> = verdicts.iter().map(|(v, r)| RowReport { verdict: *v, reasons: r.clone(), notes: vec![] }).collect();
+        // a listing's range holding the caller's number ("10-14" for 12) is read as that number: the
+        // caller's building when both sides give the same postcode, asked about otherwise
+        let mut ranged = vec![false; cs.len()];
+        if let (true, Some(qh)) = (ranges, &q.house) {
+            for i in 0..cs.len() {
+                let holds = verdicts[i].1 == ["house_number"] && cs[i].house.as_deref().map_or(false, |h| range_holds(h, qh)) && Self::range_reading(&q, &cs[i]);
+                if !holds {
+                    continue;
+                }
+                let mut c2 = cs[i].clone();
+                c2.house = Some(qh.clone());
+                let (v, r) = self.compare_parsed(&q, &c2, Mode::Query);
+                let confirmed = q.postcode.is_some() && q.postcode == c2.postcode;
+                let read: (Verdict, Vec<&'static str>) = match v {
+                    Verdict::Same if confirmed => (Verdict::Same, vec!["house_number_range"]),
+                    Verdict::Same => (Verdict::Unknown, vec!["number_range"]),
+                    Verdict::Different if r == ["postcode"] => (Verdict::Different, vec!["postcode"]),
+                    _ => continue,
+                };
+                let mut shown = read.1.clone();
+                if !shown.contains(&"house_number_range") && !shown.contains(&"number_range") {
+                    shown.push("house_number_range");
+                }
+                reports[i] = RowReport { verdict: read.0, reasons: shown, notes: vec![] };
+                verdicts[i] = read;
+                cs[i] = c2;
+                ranged[i] = true;
+            }
+        }
         let same: Vec<usize> = (0..cs.len()).filter(|&i| verdicts[i].0 == Verdict::Same).collect();
         if same.is_empty() {
             // the caller gave no unit and the site lists the place only with units: ask which one
@@ -1461,7 +1541,7 @@ impl Matcher {
                     (_, ["candidate_adds_unit"]) => "unit_not_given",
                     (Verdict::Unknown, ["candidate_has_no_house_number"]) => "number_not_listed",
                     (Verdict::Unknown, ["number_range"]) => "number_range",
-                    (Verdict::Different, ["postcode"]) if self.postcode_only_differs(&q, &cs[i], true) => "postcode_differs",
+                    (Verdict::Different, ["postcode"]) if self.postcode_only_differs(&q, &cs[i]) => "postcode_differs",
                     _ => continue,
                 };
                 near.push(i);
@@ -1522,8 +1602,7 @@ impl Matcher {
         }
         // prefer the listing with the caller's own number over a range holding it, the listing
         // without a business name, then the most complete one
-        let ranged = |i: usize| cs[i].house != q.house && cs[i].house.as_deref().map_or(false, |h| h.contains('-'));
-        let best = clusters[0].iter().copied().min_by_key(|&i| (cs[i].units != q.units, ranged(i), cs[i].business.len(), usize::MAX - cs[i].localities.len())).unwrap();
+        let best = clusters[0].iter().copied().min_by_key(|&i| (cs[i].units != q.units, ranged[i], cs[i].business.len(), usize::MAX - cs[i].localities.len())).unwrap();
         // a row read across scripts: its street or town is written in another script than the caller's
         let across = |i: usize| {
             let (c, qq) = (&cs[i], &q);
@@ -1534,7 +1613,7 @@ impl Matcher {
         let unit_left_out = |i: usize| q.units.iter().any(|u| !cs[i].units.iter().any(|v| v[1..] == u[1..]));
         for &i in &place {
             if unit_left_out(i) {
-                reports[i].reasons.push("unit_not_listed");
+                reports[i].notes.push("unit_not_listed");
             }
             if across(i) {
                 reports[i].reasons.push("cross_script");

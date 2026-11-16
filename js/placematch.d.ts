@@ -14,11 +14,17 @@ export type AmbiguityReason =
 /** Said beside a match: the row leaves out a unit the caller gave. */
 export type MatchNote = "unit_not_listed";
 
+/** The longest query or row text (JavaScript string length) and the most rows a call takes; longer
+ * input throws a RangeError and is never cut. */
+export const LIMITS: { readonly textLength: 512; readonly rows: 100 };
+
 export interface RowReport {
   verdict: "same" | "different" | "unknown";
   /** Such as "house_number", "postcode", "place_name", "area", "control", "unit_not_listed",
    * "cross_script", or an ambiguity reason for a near row. */
   reasons: string[];
+  /** For each row of the caller's place: "unit_not_listed" when it leaves out the caller's unit. */
+  notes: MatchNote[];
 }
 
 export interface Explained {
@@ -30,7 +36,7 @@ export interface Explained {
   same: number[];
   /** ambiguous: why. */
   reasons: AmbiguityReason[];
-  /** match: notes. */
+  /** match: notes for the row at `index`; each row has its own in `rows[i].notes`. */
   notes: MatchNote[];
   /** match: the row was read across scripts. */
   cross_script: boolean;
@@ -45,7 +51,7 @@ export interface PlaceMatch {
   memoryBytes(): number;
   pick(query: string, candidates: string[], country?: string): { outcome: "match"; index: number } | { outcome: "none" | "ambiguous"; index: null };
   compare(query: string, candidate: string, country?: string): "same" | "different" | "unknown";
-  pickExplained(query: string, rows: Row[], options?: { country?: string }): Explained;
+  pickExplained(query: string, rows: Row[], options?: { country?: string } | null): Explained;
 }
 
 /** Load PlaceMatch from WebAssembly bytes. */

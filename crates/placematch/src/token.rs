@@ -141,7 +141,7 @@ fn tokenize_raw(folded: &str, jp: bool) -> Vec<Tok> {
             toks.push(Tok { s: "#".into(), seg, script: Script::Other, num: false, abbr: false });
             continue;
         }
-        if (c == '-' || c == '/' || c == '‐' || c == '−' || c == '–') && !cur.is_empty() {
+        if (c == '-' || c == '/' || c == '‐' || c == '−') && !cur.is_empty() {
             let prev_digit = cur.chars().last().map_or(false, |p| p.is_ascii_digit());
             let next_digit = chars.get(i + 1).map_or(false, |p| p.is_ascii_digit());
             if (prev_digit || c == '/') && next_digit && cur.chars().next().map_or(false, |p| p.is_ascii_digit()) {
