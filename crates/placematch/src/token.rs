@@ -23,6 +23,7 @@ impl CjkRules {
         let r = |p: &str| Regex::new(p).unwrap();
         CjkRules {
             rules: vec![
+                (r(r"(\d+(?:-\d+)+)\s*(?:番地|番|号|號)"), " $1 "),
                 (r(r"(\d+)\s*丁目\s*(\d+)\s*番地?\s*の?\s*(\d+)\s*号?"), " $1-$2-$3 "),
                 (r(r"(\d+)\s*丁目\s*(\d+)\s*[-‐−の]\s*(\d+)\s*号?"), " $1-$2-$3 "),
                 (r(r"(\d+)\s*丁目\s*(\d+)\s*番地?"), " $1-$2 "),
@@ -36,6 +37,8 @@ impl CjkRules {
                 (r(r"(\d+)\s*(?:階|楼|層|层|층)"), " floor $1 "),
                 (r(r"(\d+)\s*(?:号|號|번지|번)"), " no $1 "),
                 (r(r"(\d+)\s*-?\s*chome\s*,?\s*(\d+)\s*-?\s*ban(?:chi)?\s*,?\s*(\d+)\s*-?\s*go\b"), " $1-$2-$3 "),
+                // "3 Shonai-cho 6-chome": the lot number written before the town and its chome
+                (r(r"\b(\d+)\s+([a-z][a-z\- ]*?)\s+(\d+)\s*-?\s*chome\b"), " $2 $3-$1 "),
                 (r(r"(\d+)\s*-?\s*chome\s*,?\s*(\d+)\s*-?\s*ban(?:chi)?\b"), " $1-$2 "),
                 (r(r"\bchome\s*(\d+)\b"), " $1 "),
                 (r(r"(\d+)\s*-?\s*chome\b"), " $1 "),

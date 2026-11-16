@@ -11,6 +11,7 @@
 pub mod data;
 pub mod fold;
 pub mod parse;
+pub mod reading;
 pub mod token;
 
 use fold::Script;
@@ -95,11 +96,11 @@ fn dl_le1_raw(a: &str, b: &str) -> bool {
 /// Street type words that translate one another across scripts, as OpenStreetMap's English names
 /// and local signs write them ("Zamkova Street" / "Замкова вулиця", "Al Zaghl Street" / "شارع الزغل").
 const TYPE_GROUPS: &[&[&str]] = &[
-    &["street", "st", "str", "شارع", "ش", "רחוב", "רח", "улица", "ул", "вулиця", "вул", "οδός", "οδ", "ถนน", "ถ", "улица", "ulitsa", "vulytsia", "odos", "shari", "thanon"],
-    &["road", "rd", "طريق", "דרך", "шоссе", "шосе", "ถนน", "tariq", "derekh", "thanon"],
-    &["avenue", "ave", "av", "проспект", "просп", "пр", "λεωφόρος", "λεωφ", "שדרות", "שד", "prospekt", "prospekt", "leoforos", "sderot"],
+    &["street", "st", "str", "شارع", "ش", "רחוב", "רח", "улица", "ул", "вулиця", "вул", "οδός", "οδ", "ถนน", "ถ", "улица", "ulitsa", "vulytsia", "odos", "shari", "thanon", "街", "jie", "gai"],
+    &["road", "rd", "طريق", "דרך", "шоссе", "шосе", "ถนน", "tariq", "derekh", "thanon", "路", "lu", "通", "tori", "dori", "로", "ro", "lo"],
+    &["avenue", "ave", "av", "проспект", "просп", "пр", "λεωφόρος", "λεωφ", "שדרות", "שד", "prospekt", "prospekt", "leoforos", "sderot", "大道", "dadao", "대로", "daero", "daelo"],
     &["boulevard", "blvd", "бульвар", "бул", "бульв", "bulvar", "bulevard"],
-    &["lane", "ln", "alley", "soi", "ซอย", "переулок", "пер", "провулок", "пров", "סמטה", "زقاق", "pereulok", "provulok"],
+    &["lane", "ln", "alley", "soi", "ซอย", "переулок", "пер", "провулок", "пров", "סמטה", "زقاق", "pereulok", "provulok", "巷", "xiang", "hang", "弄", "nong", "long", "길", "gil"],
     &["square", "sq", "plaza", "площадь", "пл", "площа", "כיכר", "ميدان", "πλατεία", "ploshchad", "ploshcha", "kikar", "midan", "plateia"],
 ];
 
@@ -221,13 +222,59 @@ fn text_eq(m: &Matcher, q: &Text, c: &Text, typo: bool) -> Tri {
                 return Tri::Yes;
             }
         }
-        // Han/Kana readings cannot be recovered from a romanization
+        // Han and Kana names read with their per-character readings ("台中市" / "Taichung")
+        if reading_eq(q, c) {
+            return Tri::Yes;
+        }
+        // other Han/Kana readings cannot be recovered from a romanization
         let hard = |s: Option<Script>| matches!(s, Some(Script::Han) | Some(Script::Kana) | Some(Script::Thai) | Some(Script::Arabic) | Some(Script::Hebrew) | Some(Script::Devanagari));
         if hard(qs) || hard(cs) {
             return Tri::Unknown;
         }
     }
     Tri::No
+}
+
+/// Han administrative suffixes a romanization may translate or leave out ("台中市" / "Taichung").
+const HAN_ADMIN: &[char] = &['市', '区', '區', '県', '縣', '县', '府', '都', '省', '郡', '鎮', '镇', '鄉', '乡', '村', '町', '道'];
+/// Their romanized and English forms.
+const LATIN_ADMIN: &[&str] = &["shi", "ku", "ken", "fu", "to", "do", "gun", "son", "mura", "machi", "cho", "city", "district", "ward", "county", "prefecture", "province", "qu", "xian", "sheng", "zhen", "xiang", "town", "township", "village", "hsien", "hsiang", "chen", "shih", "chu", "cun"];
+
+/// One side is Han or Kana and the other a romanization that reads as it.
+fn reading_eq(q: &Text, c: &Text) -> bool {
+    let (nat, lat) = if reading::readable(&q.native) && is_latinish(c.script) {
+        (q, c)
+    } else if reading::readable(&c.native) && is_latinish(q.script) {
+        (c, q)
+    } else {
+        return false;
+    };
+    // the romanization as written: the ASCII key folds "ae" as an umlaut ("Kitaen" is not "Kitan")
+    let letters = |t: &Text| -> String { if t.native.is_empty() { t.key.clone() } else { t.native.chars().filter(|ch| ch.is_ascii_alphabetic()).collect() } };
+    let full = letters(lat);
+    if full.is_empty() || !full.bytes().all(|b| b.is_ascii_lowercase()) {
+        return false;
+    }
+    let mut natives = vec![nat.native.clone()];
+    if nat.native.chars().count() >= 2 && nat.native.ends_with(HAN_ADMIN) {
+        let mut s = nat.native.clone();
+        s.pop();
+        natives.push(s);
+    }
+    let mut lats = vec![full.clone()];
+    if let Some(last) = lat.toks.last() {
+        if lat.toks.len() >= 2 && LATIN_ADMIN.contains(&last.0.as_str()) && full.ends_with(last.0.as_str()) {
+            lats.push(full[..full.len() - last.0.len()].to_string());
+        }
+    }
+    for n in &natives {
+        for l in &lats {
+            if l.len() >= 2 && [reading::Lang::Chinese, reading::Lang::Japanese].iter().any(|&lang| reading::reads_as(n, l, lang)) {
+                return true;
+            }
+        }
+    }
+    false
 }
 
 #[derive(Clone, Copy)]
@@ -477,7 +524,7 @@ impl Matcher {
                         }
                         let toks = qc.toks[keep.clone()].to_vec();
                         let key: String = toks.iter().map(|t| t.0.as_str()).collect();
-                        let t = Text { skel: fold::skeleton(&key), key, script: qc.script, abbr: qc.abbr.get(keep.clone()).map_or(vec![false; toks.len()], |a| a.to_vec()), toks };
+                        let t = Text { skel: fold::skeleton(&key), key, script: qc.script, abbr: qc.abbr.get(keep.clone()).map_or(vec![false; toks.len()], |a| a.to_vec()), toks, native: String::new() };
                         if c.localities.iter().any(|l| text_eq(self, &t, l, false) == Tri::Yes) {
                             any_yes = true;
                         }
@@ -613,7 +660,7 @@ impl Matcher {
         }
         let mk = |toks: &[(String, Vec<u32>)], abbr: &[bool], sc: Option<Script>| -> Text {
             let key: String = toks.iter().map(|t| t.0.as_str()).collect();
-            Text { skel: fold::skeleton(&key), key, script: sc, toks: toks.to_vec(), abbr: abbr.to_vec() }
+            Text { skel: fold::skeleton(&key), key, script: sc, toks: toks.to_vec(), abbr: abbr.to_vec(), native: String::new() }
         };
         let head = mk(&x.street.toks[..k], &x.street.abbr[..k.min(x.street.abbr.len())], x.street.script);
         // the other side may carry its type inside the name ("reunalan" + "tie")

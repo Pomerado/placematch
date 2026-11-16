@@ -13,6 +13,8 @@ pub struct Text {
     pub toks: Vec<(String, Vec<u32>)>,
     /// per-token: written as an abbreviation
     pub abbr: Vec<bool>,
+    /// the folded native-script text of the name, for reading comparisons ("台中")
+    pub native: String,
 }
 
 impl Text {
@@ -37,6 +39,8 @@ pub struct Components {
     pub street_type_guess: bool,
     /// the type is written before the name ("Rue X", "ул. X")
     pub street_type_first: bool,
+    /// characters of a compound type split off the name's last word
+    pub street_type_word_chars: usize,
     pub units: Vec<String>,
     pub po_box: Option<String>,
     pub postcode: Option<String>,
@@ -941,6 +945,7 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
                     *a = false;
                 }
                 c.street_type_word = ascii_key(&suf);
+                c.street_type_word_chars = sl;
                 c.street_type_compound = true;
                 c.street_type = vec![e.canon];
                 c.street_type_script = Some(toks[lastk].script);
@@ -949,7 +954,17 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
         }
         let key: String = toks_out.iter().map(|t| t.0.as_str()).collect();
         let sc = name_idx.first().map(|&k| toks[k].script);
-        c.street = Text { skel: skeleton(&key), key, script: sc, toks: toks_out, abbr: abbr_out };
+        let mut native: String = name_idx.iter().map(|&k| toks[k].s.as_str()).collect();
+        if c.street_type_compound {
+            let lastk = *name_idx.last().unwrap();
+            let surf = &toks[lastk].s;
+            let keep = surf.chars().count().saturating_sub(c.street_type_word_chars);
+            let cut: String = surf.chars().skip(keep).collect();
+            if native.ends_with(cut.as_str()) {
+                native.truncate(native.len() - cut.len());
+            }
+        }
+        c.street = Text { skel: skeleton(&key), key, script: sc, toks: toks_out, abbr: abbr_out, native };
         for &k in &idx {
             used[k] = true;
         }
@@ -1063,7 +1078,8 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
             }
             let sc = text_words.first().map(|&k| toks[k].script);
             let ab: Vec<bool> = text_words.iter().map(|&k| toks[k].abbr).collect();
-            let t = Text { skel: skeleton(&key), key, script: sc, toks: tk, abbr: ab };
+            let native: String = text_words.iter().map(|&k| toks[k].s.as_str()).collect();
+            let t = Text { skel: skeleton(&key), key, script: sc, toks: tk, abbr: ab, native };
             seg_texts.push((g[0], t, is_region, is_country));
         }
     }

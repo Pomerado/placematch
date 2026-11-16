@@ -65,3 +65,6 @@ jerusalem|yerushalayim
 bucharest|bucurești|bucuresti
 belgrade|beograd
 gqeberha|port elizabeth
+keelung|jilong|jilongshi|基隆|基隆市
+new taipei|xinbei|xinbeishi|new taipei city|新北|新北市
+kinmen|jinmen|jinmenxian|kinmen county|金門|金門縣
