@@ -41,9 +41,31 @@ Hard components. A contradiction on any of them means a different place:
 - PO box number.
 
 Soft components may be missing on either side: postcode, region, country, district, business or
-building name.
+building name. A row must still confirm where the caller's place is:
 
-A different compass word is a different street (`1 N Main St` and `1 S Main St`), never a typo.
+- a row that names no town where the caller gave one (`12 Example St, USA`, `Exampleton Mall, 1
+  Example St` for `..., Exampleton, IL`) is not the caller's place unless the postcodes agree;
+- where towns share names across states (the US, Canada, Australia), a row with neither a state
+  nor a postcode does not confirm the caller's state or postcode (`1 Example St, Exampleton` for
+  `..., Exampleton, IL 60000`); a US ZIP code confirms a state in its zone (the ZIP's first digit)
+  and contradicts one outside it (`... 60000` is not in Pennsylvania);
+- with no country given or shown by the texts, a row that leaves out a place the caller named
+  does not confirm it;
+- a state comes only from the state part or code, never from a town named like a state
+  (`Washington, PA` is not `Washington, DC`; `Nevada, MO` is not `Nevada, IA`);
+- a two-letter code after the town is the state, never the town (`Exampleton, NE`);
+- a country the caller gives is never crossed: a row naming another country, or a state code of
+  another country that writes one after the town (`Paris, TX` for France), is another place.
+
+A different compass word is a different street (`1 N Main St` and `1 S Main St`), never a typo, and
+so is a compass word on one side only of the same street words (`1 Example St NE` and `1 Example
+St`), even where the word is also a state code (`NE`). A letter the other side spells out is no
+compass word (`Av S. Ejemplo` and `Avenida San Ejemplo`).
+
+Two cities whose names share a reading in another script (`福州` and `抚州`, both `Fuzhou`) are
+not told apart by the reading: a row in Latin script for a Han city whose reading several cities
+share is `ambiguous` unless a province or region confirms it, and two Han names compare by their
+characters.
 
 A caller who names a place and gives no house number (`Example Park, Exampleton, CA`) is matched
 by the name: a row whose first part is the same name word for word is the place, whatever street
@@ -66,7 +88,13 @@ Business listings count: `Cafe Luna, 10 Main St, Springfield` is the same place 
 Equivalent spellings: abbreviations, diacritics and their folds, case, punctuation, component
 order, native digits, Japanese `1丁目2番3号` and `1-2-3`, joined or split compound street names,
 transliteration between a native script and Latin, and a one-letter typo in a caller's street or
-town name of six or more letters (never a changed digit).
+town name of six or more letters (never a changed digit, and never in a town typed alone:
+`Homburg` is not `Hamburg`).
+
+With no country given, PlaceMatch reads the texts by the one country they show (see
+`Matcher::infer_country`): a country's name, a state or province with its postcode, or a postcode
+only one country writes. When they show none, or two, the texts are read with no country, which
+asks more often.
 
 ## Outcomes for `pick`
 

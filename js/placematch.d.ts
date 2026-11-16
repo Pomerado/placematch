@@ -45,6 +45,14 @@ export interface Explained {
    * categorized, which a read may take. A write still asks. */
   prefer_on_read: number | null;
   rows: RowReport[];
+  /** The caller's unit as the caller wrote it ("Apt 3", "#4B"; several joined with ", "), whatever
+   * the outcome, to type into the site's own unit field; null when the caller gave none or there
+   * are no rows. */
+  unit: string | null;
+  /** With no country given: the country PlaceMatch read the texts by, when they show one (a
+   * country's name, a state with its ZIP code, a postcode only one country writes); null when a
+   * country was given, the texts show none or two, or there are no rows. */
+  inferred_country: string | null;
 }
 
 export interface PlaceMatch {

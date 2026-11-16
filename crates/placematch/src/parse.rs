@@ -42,6 +42,9 @@ pub struct Components {
     /// characters of a compound type split off the name's last word
     pub street_type_word_chars: usize,
     pub units: Vec<String>,
+    /// the folded words of each unit with its keyword, as the text gives them ("apt 3", "# 4b"), so
+    /// the unit can be found as written
+    pub unit_words: Vec<String>,
     pub po_box: Option<String>,
     pub postcode: Option<String>,
     pub city: Option<Text>,
@@ -448,6 +451,14 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
         let short_unit_kw = kw_len <= 1 && !toks[k + sp.len - 1].abbr;
         let value_is_zip = (region_kw || kw_len <= 2)
             && value_after(k, &used).map_or(false, |v| ctx.cc.and_then(|cc| ctx.data.countries.get(cc)).and_then(|co| co.zip()).map_or(false, |re| re.is_match(&toks[v].s)));
+        // with no country: a state or province code of a country that writes one before its
+        // postcode, before a postcode of that country's form ("FL 32500"), is no unit
+        let value_is_zip = value_is_zip
+            || (ctx.cc.is_none()
+                && value_after(k, &used).map_or(false, |v| {
+                    let kw: String = toks[k..k + sp.len].iter().map(|t| t.s.as_str()).collect();
+                    ["US", "CA", "AU"].iter().filter_map(|cc| ctx.data.countries.get(*cc)).any(|co| co.regions.contains_key(&crate::fold::ascii_key(&kw)) && co.zip().map_or(false, |re| re.is_match(&toks[v].s)))
+                }));
         if unit && !sp.has(Class::StreetType) && (!region_kw || pure_unit) && !value_is_zip && unit_ctx && !zip_here && !short_unit_kw {
             if let Some(v) = value_after(k, &used).filter(|&v| toks[v].s.chars().any(|ch| ch.is_ascii_digit()) || kw_len >= 3 || toks[k + sp.len - 1].abbr) {
                 let kind = if sp.has(Class::LevelNum) { "l" } else { "u" };
@@ -459,6 +470,7 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
                     end = v + 1;
                 }
                 c.units.push(format!("{}{}", kind, val));
+                c.unit_words.push(toks[k..=end].iter().map(|t| t.s.as_str()).collect::<Vec<_>>().join(" "));
                 for x in k..=end {
                     used[x] = true;
                 }
@@ -479,6 +491,7 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
                         end = v + 1;
                     }
                     c.units.push(format!("{}{}", kind, val));
+                    c.unit_words.push(toks[k..=end].iter().map(|t| t.s.as_str()).collect::<Vec<_>>().join(" "));
                     for x in k..=end {
                         used[x] = true;
                     }
@@ -508,6 +521,7 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
             let prior_num = (0..k).any(|q| toks[q].num && !used[q] && toks[q].seg <= toks[k].seg);
             if prior_num {
                 c.units.push(format!("u{}", norm_number(&toks[nxt].s)));
+                c.unit_words.push(format!("{} {}", toks[k].s, toks[nxt].s));
                 used[k] = true;
                 used[nxt] = true;
             } else if toks[nxt].num {
@@ -528,6 +542,7 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
             let typed = (0..n).any(|q| toks[q].seg == segk && spans[q].as_ref().map_or(false, |s| s.has(Class::StreetType)));
             if (sp.has(Class::LevelNum) || sp.has(Class::LevelAlone)) && !sp.has(Class::StreetType) && (wl >= 2 || toks[k + 1].abbr) && (free <= sp.len + 1 || typed) {
                 c.units.push(format!("l{}", norm_number(&toks[k].s)));
+                c.unit_words.push(toks[k..k + 1 + sp.len].iter().map(|t| t.s.as_str()).collect::<Vec<_>>().join(" "));
                 for x in k..k + 1 + sp.len {
                     used[x] = true;
                 }
@@ -545,6 +560,7 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
                 if !others {
                     let ck = &ctx.data.canon_keys[sp.entries[0].canon as usize];
                     c.units.push(format!("s{}", ck));
+                    c.unit_words.push(toks[sp.start..sp.start + sp.len].iter().map(|t| t.s.as_str()).collect::<Vec<_>>().join(" "));
                     for x in sp.start..sp.start + sp.len {
                         used[x] = true;
                     }
@@ -640,7 +656,10 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
         if k > 0 && toks[k - 1].seg == toks[k].seg && !used[k - 1] {
             let p = toks[k - 1].s.as_str();
             let own = ctx.cc.map_or(false, |cc| cc.eq_ignore_ascii_case(p));
-            if own || matches!(p, "d" | "f" | "a" | "ch" | "l" | "b" | "i" | "nl" | "lt" | "lv" | "ee" | "fi" | "s" | "dk" | "n" | "pl" | "cz" | "sk" | "e" | "p" | "fl") {
+            // a country prefix ("D-10115", "FL-9490"), unless it is a region of the hinted country
+            // ("FL 33100" in the US)
+            let region = ctx.cc.and_then(|cc| ctx.data.countries.get(cc)).map_or(false, |co| co.regions.contains_key(p));
+            if own || (!region && matches!(p, "d" | "f" | "a" | "ch" | "l" | "b" | "i" | "nl" | "lt" | "lv" | "ee" | "fi" | "s" | "dk" | "n" | "pl" | "cz" | "sk" | "e" | "p" | "fl")) {
                 used[k - 1] = true;
             }
         }
@@ -978,7 +997,8 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
             name_idx.retain(|&q| q < sp.start || q >= sp.start + sp.len);
         }
         // drop stopwords (unless that empties the name) and house-number keywords
-        let content: Vec<usize> = name_idx.iter().copied().filter(|&q| !span_at(q).map_or(false, |s| s.has(Class::Stop) && !s.has(Class::StreetType))).collect();
+        // a compass word that is a stop word in another language is kept ("N" read with no country)
+        let content: Vec<usize> = name_idx.iter().copied().filter(|&q| !span_at(q).map_or(false, |s| s.has(Class::Stop) && !s.has(Class::StreetType) && !s.has(Class::Directional))).collect();
         let name_idx = if content.is_empty() { name_idx } else { content };
         let mut toks_out: Vec<(String, Vec<u32>)> = Vec::new();
         let mut abbr_out: Vec<bool> = Vec::new();
@@ -1054,6 +1074,7 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
         let long_num = nums.first().map_or(false, |&q| toks[q].s.chars().filter(|ch| ch.is_ascii_digit()).count() >= 4);
         if nums.len() == 1 && words.len() == 1 && letters <= 6 && words[0] < nums[0] && more_after && !long_num {
             c.units.push(format!("u{}", norm_number(&toks[nums[0]].s)));
+            c.unit_words.push(ks.iter().map(|&q| toks[q].s.as_str()).collect::<Vec<_>>().join(" "));
             for q in ks {
                 used[q] = true;
             }
@@ -1117,7 +1138,7 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
             let words = if content.is_empty() { words } else { content };
             let key: String = words.iter().map(|&k| ascii_key(&toks[k].s)).collect();
             let full_key: String = g.iter().map(|&k| ascii_key(&toks[k].s)).collect();
-            let is_country = data.all_country_names.contains_key(&key) || country.map_or(false, |c| c.names.contains(&key));
+            let mut is_country = data.all_country_names.contains_key(&key) || country.map_or(false, |c| c.names.contains(&key));
             let mut is_region = country.map_or(false, |c| c.regions.contains_key(&key) || c.regions.contains_key(&full_key));
             // CJK admin suffixes: prefecture/province level are regions
             if words.len() == 1 && toks[words[0]].script.is_cjk() {
@@ -1125,6 +1146,11 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
                 if matches!(last, '都' | '道' | '府' | '県' | '省') && toks[words[0]].s.chars().count() >= 2 {
                     is_region = true;
                 }
+            }
+            // a region of the hinted country is that region, not a country of the same name ("Georgia"
+            // with a US hint)
+            if is_country && is_region && country.map_or(false, |c| !c.names.contains(&key)) {
+                is_country = false;
             }
             // strip region tokens at the end of a locality ("Springfield IL")
             let mut text_words = words.clone();
@@ -1144,7 +1170,6 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
                     if data.all_country_names.contains_key(&tail) || country.map_or(false, |c| c.names.contains(&tail)) {
                         text_words.truncate(text_words.len() - l);
                         c.country = true;
-                        c.countries.push(tail);
                         break;
                     }
                 }
@@ -1160,6 +1185,15 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
             let native: String = text_words.iter().map(|&k| toks[k].s.as_str()).collect();
             let t = Text { skel: skeleton(&key), key, script: sc, toks: tk, abbr: ab, native };
             seg_texts.push((g[0], t, is_region, is_country));
+        }
+    }
+    // a country's name followed by another place is a town named after it ("Lebanon, PA", "Mexico,
+    // MO"); CJK addresses write the country first
+    for i in 0..seg_texts.len() {
+        let latin = seg_texts[i].1.script.map_or(true, |s| !s.is_cjk() && s != Script::Hangul);
+        let at = seg_texts[i].0;
+        if seg_texts[i].3 && latin && seg_texts.iter().any(|x| x.0 > at && !x.3) {
+            seg_texts[i].3 = false;
         }
     }
     let ss = street_seg.unwrap_or(usize::MAX);

@@ -39,8 +39,9 @@ fn run_cases(text: &str) {
         } else {
             match m.pick(q, &cands, cc) {
                 Pick::Match(i) => expected == "match" && accept.contains(&i),
-                Pick::None => expected == "none",
-                Pick::Ambiguous(_) => expected == "ambiguous",
+                // "not_match": the case asks or says none, never a place
+                Pick::None => expected == "none" || expected == "not_match",
+                Pick::Ambiguous(_) => expected == "ambiguous" || expected == "not_match",
             }
         };
         // a case may also name the notes its answer carries ("unit_not_listed") and the row a read

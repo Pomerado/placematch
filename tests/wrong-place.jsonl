@@ -38,3 +38,59 @@
 {"id": "w60", "country": "DE", "task": "pick", "query": "Munich", "candidates": ["München, Deutschland"], "expected": "match", "accept": [0]}
 {"id": "w61", "country": "IT", "task": "pick", "query": "Rome", "candidates": ["Roma, Italia"], "expected": "match", "accept": [0]}
 {"id": "w62", "country": "TH", "task": "pick", "query": "Nonthaburi", "candidates": ["นนทบุรี"], "expected": "match", "accept": [0]}
+{"id": "w70", "country": "US", "task": "pick", "query": "Example Park, Washington, PA", "candidates": ["Example Park, Washington, NC"], "expected": "none", "accept": []}
+{"id": "w71", "country": "US", "task": "pick", "query": "Example Park, Washington, PA", "candidates": ["Example Park, Washington, DC"], "expected": "none", "accept": []}
+{"id": "w72", "country": "US", "task": "pick", "query": "Example Park, Washington, Pennsylvania", "candidates": ["Example Park, Washington, DC"], "expected": "none", "accept": []}
+{"id": "w73", "country": "US", "task": "pick", "query": "Example Park, Nevada, MO", "candidates": ["Example Park, Nevada, IA"], "expected": "none", "accept": []}
+{"id": "w74", "country": "US", "task": "pick", "query": "Example Park, Delaware, OH", "candidates": ["Example Park, Delaware, NJ"], "expected": "none", "accept": []}
+{"id": "w75", "country": "US", "task": "pick", "query": "10 Main St, Washington, PA", "candidates": ["10 Main St, Washington, NC"], "expected": "none", "accept": []}
+{"id": "w76", "country": "US", "task": "pick", "query": "10 Main St, Washington, PA", "candidates": ["10 Main St, Washington, DC"], "expected": "none", "accept": []}
+{"id": "w77", "country": "US", "task": "pick", "query": "10 Main St, Nevada, MO", "candidates": ["10 Main St, Nevada, IA"], "expected": "none", "accept": []}
+{"id": "w78", "country": "US", "task": "pick", "query": "10 Main St, Delaware, OH", "candidates": ["10 Main St, Delaware, NJ"], "expected": "none", "accept": []}
+{"id": "w79", "country": "US", "task": "pick", "query": "Example Park, Washington, PA", "candidates": ["Example Park, Washington, DC", "Example Park, Washington, PA"], "expected": "match", "accept": [1]}
+{"id": "w80", "country": "US", "task": "pick", "query": "10 Main St, Washington, PA", "candidates": ["10 Main St, Washington, PA 15301"], "expected": "match", "accept": [0]}
+{"id": "w81", "country": "DE", "task": "pick", "query": "Hamburg", "candidates": ["Homburg, Deutschland"], "expected": "none", "accept": []}
+{"id": "w82", "country": "DE", "task": "pick", "query": "Homburg", "candidates": ["Hamburg, Deutschland"], "expected": "none", "accept": []}
+{"id": "w83", "country": null, "task": "pick", "query": "Hamburg", "candidates": ["Homburg"], "expected": "none", "accept": []}
+{"id": "w84", "country": "AT", "task": "pick", "query": "Salzburg", "candidates": ["Sulzburg, Deutschland"], "expected": "none", "accept": []}
+{"id": "w85", "country": null, "task": "pick", "query": "Salzburg", "candidates": ["Sulzburg, Deutschland"], "expected": "none", "accept": []}
+{"id": "w86", "country": "DE", "task": "pick", "query": "Hamburg", "candidates": ["Homburg, Deutschland", "Hamburg, Deutschland"], "expected": "match", "accept": [1]}
+{"id": "w87", "country": "CN", "task": "pick", "query": "Fuzhou", "candidates": ["福州市", "抚州市"], "expected": "ambiguous", "accept": []}
+{"id": "w88", "country": "CN", "task": "pick", "query": "Fuzhou", "candidates": ["抚州市", "福州市"], "expected": "ambiguous", "accept": []}
+{"id": "w89", "country": null, "task": "pick", "query": "Fuzhou", "candidates": ["福州市", "抚州市"], "expected": "ambiguous", "accept": []}
+{"id": "w90", "country": "CN", "task": "pick", "query": "Taizhou", "candidates": ["台州市", "泰州市"], "expected": "ambiguous", "accept": []}
+{"id": "w91", "country": "CN", "task": "pick", "query": "Suzhou", "candidates": ["苏州市", "宿州市"], "expected": "ambiguous", "accept": []}
+{"id": "w92", "country": "CN", "task": "pick", "query": "Shanxi", "candidates": ["陕西省", "山西省"], "expected": "ambiguous", "accept": []}
+{"id": "w93", "country": "CN", "task": "pick", "query": "Shanxi", "candidates": ["山西省"], "expected": "ambiguous", "accept": []}
+{"id": "w94", "country": "CN", "task": "pick", "query": "Fuzhou", "candidates": ["抚州市"], "expected": "ambiguous", "accept": []}
+{"id": "w95", "country": "CN", "task": "pick", "query": "Changchou", "candidates": ["漳州市"], "expected": "ambiguous", "accept": []}
+{"id": "w96", "country": "TW", "task": "pick", "query": "Taichung", "candidates": ["台中市"], "expected": "match", "accept": [0]}
+{"id": "w97", "country": "US", "task": "pick", "query": "100 Example St, Atlanta, Georgia", "candidates": ["100 Example St, Atlanta, GA, United States"], "expected": "match", "accept": [0]}
+{"id": "w98", "country": "US", "task": "pick", "query": "Example Park, Atlanta, Georgia", "candidates": ["Example Park, Atlanta, GA, USA"], "expected": "match", "accept": [0]}
+{"id": "w99", "country": "US", "task": "pick", "query": "100 Example St, Atlanta, GA", "candidates": ["100 Example St, Atlanta, Georgia, United States"], "expected": "match", "accept": [0]}
+{"id": "w100", "country": "FR", "task": "pick", "query": "Paris", "candidates": ["Paris, TX"], "expected": "none", "accept": []}
+{"id": "w101", "country": "PT", "task": "pick", "query": "Lisbon", "candidates": ["Lisbon, ME"], "expected": "none", "accept": []}
+{"id": "w102", "country": "PT", "task": "pick", "query": "Lisbon", "candidates": ["Lisboa, Portugal"], "expected": "match", "accept": [0]}
+{"id": "w103", "country": "US", "task": "pick", "query": "Example Park", "candidates": ["Example Park View"], "expected": "none", "accept": []}
+{"id": "w110", "country": "US", "task": "pick", "query": "1 Example St, Washington, IL", "candidates": ["1 Example St, Washington, WA"], "expected": "none", "accept": []}
+{"id": "w111", "country": "US", "task": "pick", "query": "12 Example St, Washington, Pennsylvania", "candidates": ["12 Example St, Washington, Washington"], "expected": "none", "accept": []}
+{"id": "w112", "country": "US", "task": "pick", "query": "1 Example St, Port Exampleton, PA", "candidates": ["1 Example St, Port, Exampleton 60000"], "expected": "none", "accept": []}
+{"id": "w113", "country": "US", "task": "pick", "query": "1 Example St, Exampleton, MT", "candidates": ["1 Example St St Exampleton"], "expected": "none", "accept": []}
+{"id": "w114", "country": "US", "task": "pick", "query": "1 Example St, Exampleton, IL", "candidates": ["Exampleton Mall, 1 Example St"], "expected": "not_match", "accept": []}
+{"id": "w115", "country": "US", "task": "pick", "query": "12 Exampleton Ave, Exampleton, IL", "candidates": ["12 Exampleton Ave"], "expected": "not_match", "accept": []}
+{"id": "w116", "country": "US", "task": "pick", "query": "1 Example St, Exampleton New York", "candidates": ["1 Example St"], "expected": "not_match", "accept": []}
+{"id": "w117", "country": "US", "task": "pick", "query": "1 Example St NW, Washington DC", "candidates": ["1 Example St NW"], "expected": "not_match", "accept": []}
+{"id": "w118", "country": "US", "task": "pick", "query": "12 Example St, Exampleton Illinois, USA", "candidates": ["12 Example St, USA"], "expected": "not_match", "accept": []}
+{"id": "w119", "country": "US", "task": "pick", "query": "1 Example St, Exampleton, IL 60000", "candidates": ["1 Example St, Exampleton"], "expected": "not_match", "accept": []}
+{"id": "w120", "country": "US", "task": "pick", "query": "1 Example St, Exampleton, NE", "candidates": ["1 Example St NE, Exampleton, NE 68000, USA"], "expected": "not_match", "accept": []}
+{"id": "w121", "country": "US", "task": "pick", "query": "1 Example St NE, Exampleton, NE", "candidates": ["1 Example St, Exampleton, NE 68000, USA"], "expected": "not_match", "accept": []}
+{"id": "w122", "country": "US", "task": "pick", "query": "1 Example St, Exampleton, NE", "candidates": ["1 Example St NE, Exampleton, Nebraska 68000, USA"], "expected": "not_match", "accept": []}
+{"id": "w123", "country": "US", "task": "pick", "query": "1 Example St NE, Exampleton, Nebraska", "candidates": ["1 Example St, Exampleton, NE 68000, USA"], "expected": "not_match", "accept": []}
+{"id": "w124", "country": "US", "task": "pick", "query": "1 Example St, Exampleton, IL", "candidates": ["1 Example St, Exampleton, WI", "1 Example St, Exampleton"], "expected": "not_match", "accept": []}
+{"id": "w125", "country": "US", "task": "pick", "query": "1 NE Example St, Exampleton, NE", "candidates": ["1 NE Example St Exampleton, NE, USA"], "expected": "match", "accept": [0]}
+{"id": "w126", "country": "US", "task": "pick", "query": "1 Example St Exampleton NE 68000", "candidates": ["1 Example St, Exampleton, NE 68000, USA"], "expected": "match", "accept": [0]}
+{"id": "w127", "country": "US", "task": "pick", "query": "1 Example St, Washington, PA", "candidates": ["1 Example St, Washington, PA 15301"], "expected": "match", "accept": [0]}
+{"id": "w128", "country": "US", "task": "pick", "query": "1 Example St, Exampleton, IL", "candidates": ["1 Example St, Exampleton, IL 60000, USA"], "expected": "match", "accept": [0]}
+{"id": "w129", "country": null, "task": "pick", "query": "Paris", "candidates": ["Paris, TX"], "expected": "not_match", "accept": [], "note": "With no country, a town typed alone is not confirmed by a row adding a state the caller did not name."}
+{"id": "w130", "country": null, "task": "pick", "query": "Lisbon", "candidates": ["Lisbon, ME"], "expected": "not_match", "accept": [], "note": "With no country, a town typed alone is not confirmed by a row adding a state the caller did not name."}
+{"id": "w131", "country": "AR", "task": "pick", "query": "512 Avenida San Ejemplo", "candidates": ["Av S. Ejemplo 512, 6000 Exampleton", "Avenida San Ejemplo 512, Otherton, Argentina"], "expected": "ambiguous", "accept": [], "note": "\"S.\" here is San, not South: both rows are the caller's street, in two towns, so the answer asks."}

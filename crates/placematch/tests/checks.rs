@@ -27,6 +27,8 @@ fn only_clear_ui_controls_are_controls() {
         ("Example Center, Springfield, IL", "Jane Q. Example Center, Springfield, IL"),
         ("Example Park", "Example Park, Springfield, IL"),
         ("Example Center, Springfield", "Use my current location"),
+        ("Example Park", "Example Park View"),
+        ("Example Park", "Example Park Explore"),
     ] {
         assert!(!m.is_control(q, row), "{} / {}", q, row);
     }
@@ -46,6 +48,8 @@ fn another_postcode_is_the_same_building_only_in_the_same_town_state_and_postal_
     assert!(!m.same_but_postcode("Example Str. 5, 10115 Berlin", "Example Str. 5, 10117 Berlin", Some("DE")));
     assert!(m.same_but_postcode("Example Str. 5, 10115 Berlin, Mitte", "Example Str. 5, 10117 Berlin, Mitte", Some("DE")));
     assert!(!m.same_but_postcode("Example Str. 5, 10115 Berlin, Mitte", "Example Str. 5, 10117 Berlin, Pankow", Some("DE")));
+    assert!(!m.same_but_postcode("Rue Exemple 5, 1000 Bruxelles", "Rue Exemple 5, 1020 Bruxelles", Some("BE")));
+    assert!(!m.same_but_postcode("Örnek Sokak 5, 34000 İstanbul", "Örnek Sokak 5, 34010 İstanbul", Some("TR")));
 }
 
 /// Inputs that once crashed: a Han name followed by a lone long-vowel or small-tsu mark.

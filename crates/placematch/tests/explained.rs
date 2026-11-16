@@ -114,8 +114,8 @@ fn a_hyphenated_number_is_a_range_only_where_it_means_one() {
     none(Some("US"), "500 Example St, Kapolei, HI 96707", "91-1234 Example St, Kapolei, HI 96707");
     none(Some("US"), "20 Example St, Queens, NY 11105", "18-22 Example St, Queens, NY 11105");
     none(Some("US"), "20 Example St, Queens, NY 11105", "12-34 Example St, Queens, NY 11105");
-    // no country to say what the hyphen means
-    none(None, "12 Example St, Springfield, IL 62701", "10-14 Example St, Springfield, IL 62701");
+    // no country to say what the hyphen means, given or shown by the texts
+    none(None, "12 Example St, Springfield", "10-14 Example St, Springfield");
     none(None, "5 Asahimachi, Kurume", "3-10 Asahimachi, Kurume");
     // both sides of the street, too wide to be one building, not holding it, another street
     none(Some("US"), "12 Example St, Springfield, IL 62701", "10-15 Example St, Springfield, IL 62701");
@@ -222,7 +222,7 @@ fn a_read_prefers_a_longer_name_only_when_it_ends_with_the_callers_name() {
         let e = m.pick_explained("example park, springfield, il", &[Row::from("Example Park, Springfield, IL"), Row { text: &venue, categorized: true }], &o);
         assert_eq!((e.outcome, e.prefer_on_read), (Outcome::Ambiguous, None), "{}", name);
     }
-    let e = m.pick_explained("parc exemple, exempleville", &[Row::from("Parc Exemple, Exempleville, QC"), Row { text: "Vieux Parc Exemple, 5 Rue Modèle, Exempleville, QC", categorized: true }], &PickOptions { country: Some("FR") });
+    let e = m.pick_explained("parc exemple, exempleville", &[Row::from("Parc Exemple, Exempleville, QC"), Row { text: "Vieux Parc Exemple, 5 Rue Modèle, Exempleville, QC", categorized: true }], &PickOptions { country: Some("CA") });
     assert_eq!((e.outcome, e.prefer_on_read), (Outcome::Ambiguous, None));
     // given names and initials before the name are fine, and so is a type word the caller typed
     let e = m.pick_explained("example park, springfield, il", &[Row::from("Example Park, Springfield, IL"), Row { text: "Jane Q. Example Park, 5 Sample Rd, Springfield, IL 62701", categorized: true }], &o);
@@ -298,7 +298,8 @@ fn the_json_form_carries_every_field() {
         serde_json::json!({
             "outcome": "match", "index": 0, "same": [0], "reasons": [], "notes": ["unit_not_listed"],
             "cross_script": false, "prefer_on_read": null,
-            "rows": [{"verdict": "same", "reasons": [], "notes": ["unit_not_listed"]}, {"verdict": "different", "reasons": ["house_number"], "notes": []}]
+            "rows": [{"verdict": "same", "reasons": [], "notes": ["unit_not_listed"]}, {"verdict": "different", "reasons": ["house_number"], "notes": []}],
+            "unit": "Apt 4", "inferred_country": null
         })
     );
 }
@@ -348,4 +349,60 @@ fn readme_explained_example() {
     assert_eq!(e.index, Some(1));
     assert_eq!(e.same, vec![0, 1]);
     assert_eq!(e.notes, vec!["unit_not_listed"]);
+}
+
+/// The caller's unit comes back as the caller wrote it, whatever the outcome, so a picker can type
+/// it into the site's own unit field.
+#[test]
+fn the_callers_unit_comes_back_as_written() {
+    let m = Matcher::new();
+    let unit = |q: &str| explain(&m, q, &["1 Example St, Exampleton, IL 60000"]).unit;
+    assert_eq!(unit("350 Example Ave Apt 3, Exampleton, IL 60000").as_deref(), Some("Apt 3"));
+    assert_eq!(unit("1 Example St #4B, Exampleton, IL").as_deref(), Some("#4B"));
+    assert_eq!(unit("Suite 200, 1 Example St, Exampleton, IL").as_deref(), Some("Suite 200"));
+    assert_eq!(unit("1 Example St, Fl 2, Exampleton, IL").as_deref(), Some("Fl 2"));
+    assert_eq!(unit("1 Example St, Exampleton, IL 60000"), None);
+    // a state code before a ZIP code is no unit
+    assert_eq!(unit("1 Example St, Exampleton, FL 32500"), None);
+}
+
+/// With no country given, the texts are read by the one country they show, and never against a
+/// country the caller gave.
+#[test]
+fn a_country_the_texts_show_is_read_when_none_is_given() {
+    let m = Matcher::new();
+    let inferred = |q: &str, rows: &[&str]| explain_in(&m, None, q, rows).inferred_country;
+    // a state with its ZIP code, a province with its postcode, a country's name
+    assert_eq!(inferred("1 Example St, Exampleton, IL 60000", &["1 Example St, Exampleton, IL 60000"]).as_deref(), Some("US"));
+    assert_eq!(inferred("1 Example St, Exampleton, ON K1A 0B1", &["1 Example St, Exampleton, ON K1A 0B1"]).as_deref(), Some("CA"));
+    assert_eq!(inferred("Rue Exemple 5, 1000 Bruxelles, Belgium", &["Rue Exemple 5, 1000 Bruxelles"]).as_deref(), Some("BE"));
+    // the rows show it and the caller's state or ZIP code fits it, or the caller gives no place
+    assert_eq!(inferred("Example Park, Exampleton, CA", &["Example Park, Exampleton, CA, USA"]).as_deref(), Some("US"));
+    assert_eq!(inferred("1 Example St, Exampleton, FL", &["1 Example St, Exampleton 32500"]).as_deref(), Some("US"));
+    assert_eq!(inferred("12 Example St", &["12 Example St, Exampleton, IL 60000"]).as_deref(), Some("US"));
+    // two countries, or too little to tell: none, and the texts are read with no country
+    assert_eq!(inferred("1 Example St, Exampleton, IL 60000", &["1 Example St, Exampleton, ON, Canada"]), None);
+    assert_eq!(inferred("Example Park, London, United Kingdom", &["Example Park, London, Ontario"]), None);
+    assert_eq!(inferred("12 Example St, Springfield", &["12 Example St, Springfield"]), None);
+    assert_eq!(inferred("Example Park, Exampleton, CA", &["Example Park, Exampleton, CA"]), None);
+    // a country the caller gives is never replaced
+    let e = explain_in(&m, Some("CA"), "1 Example St, Exampleton, IL 60000", &["1 Example St, Exampleton, IL 60000"]);
+    assert_eq!(e.inferred_country, None);
+    // read as the United States, the hyphenated listing is a range holding the caller's number
+    let e = explain_in(&m, None, "12 Example St, Springfield, IL 62701", &["10-14 Example St, Springfield, IL 62701"]);
+    assert_eq!((e.outcome, e.index), (Outcome::Match, Some(0)));
+}
+
+/// A ZIP code tells the zone of states it is in: one outside the caller's state is another place,
+/// one inside it confirms the state a row leaves out.
+#[test]
+fn a_zip_code_outside_the_callers_state_is_another_place() {
+    let m = Matcher::new();
+    let e = explain(&m, "1 Example St, Exampleton, PA", &["1 Example St, Exampleton 60000"]);
+    assert_eq!(e.outcome, Outcome::None);
+    let e = explain(&m, "1 Example St, Exampleton, CA", &["1 Example St, Exampleton 93600"]);
+    assert_eq!((e.outcome, e.index), (Outcome::Match, Some(0)));
+    // a row with neither a state nor a ZIP code cannot confirm the caller's state
+    let e = explain(&m, "1 Example St, Exampleton, IL 60000", &["1 Example St, Exampleton"]);
+    assert_ne!(e.outcome, Outcome::Match);
 }

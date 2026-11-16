@@ -36,14 +36,25 @@ test("near rows ask with their reason", () => {
   assert.equal(m.pickExplained(q, ["10-14 Example St, Springfield, IL 62701"], { country: "US" }).outcome, "match");
   assert.deepEqual(m.pickExplained(q, ["12 Example St, Springfield, IL 62702"], { country: "US" }).reasons, ["postcode_differs"]);
   assert.deepEqual(m.pickExplained("12 Example St, Springfield", ["10-14 Example St, Springfield"], { country: "US" }).reasons, ["number_range"]);
-  // no country, or one where a hyphen joins a unit and its number: never a range
-  assert.equal(m.pickExplained(q, ["10-14 Example St, Springfield, IL 62701"]).outcome, "none");
+  // no country given or shown by the texts, or one where a hyphen joins a unit and its number:
+  // never a range
+  assert.equal(m.pickExplained("12 Example St, Springfield", ["10-14 Example St, Springfield"]).outcome, "none");
   assert.equal(m.pickExplained("5 Example St, Exampleton NSW 2000", ["3-10 Example St, Exampleton NSW 2000"], { country: "AU" }).outcome, "none");
   assert.deepEqual(m.pickExplained("12 Example Square, Springfield", ["Example Square, Springfield"]).reasons, ["number_not_listed"]);
 });
 
+test("the caller's unit comes back as written, and a country the texts show is read", () => {
+  const e = m.pickExplained("350 Example Ave Apt 3, Exampleton, IL 60000", ["350 Example Ave, Exampleton, IL 60000, USA"]);
+  assert.equal(e.outcome, "match");
+  assert.equal(e.unit, "Apt 3");
+  assert.equal(e.inferred_country, "US");
+  const given = m.pickExplained("1 Example St #4B, Exampleton, IL", ["1 Example St, Exampleton, IL"], { country: "US" });
+  assert.equal(given.unit, "#4B");
+  assert.equal(given.inferred_country, null);
+});
+
 test("no rows is none, and a row holding the separator is refused", () => {
-  assert.deepEqual(m.pickExplained("10 Example St", []), { outcome: "none", index: null, same: [], reasons: [], notes: [], cross_script: false, prefer_on_read: null, rows: [] });
+  assert.deepEqual(m.pickExplained("10 Example St", []), { outcome: "none", index: null, same: [], reasons: [], notes: [], cross_script: false, prefer_on_read: null, rows: [], unit: null, inferred_country: null });
   assert.throws(() => m.pickExplained("10 Example St", ["a\u0001b"]), TypeError);
 });
 
@@ -96,4 +107,26 @@ test("an input that once trapped answers, and memory stays flat", () => {
   }
   assert.equal(m.memoryBytes(), before);
   assert.deepEqual(m.pick("10 Main St, Springfield", ["10 Main St, Springfield, IL"], "US"), { outcome: "match", index: 0 });
+});
+
+test("a call that traps replaces the module instance", async () => {
+  const { load } = await import("./placematch.mjs");
+  // a stand-in module whose am_pick counts its calls in a global and traps on the second
+  const name = (s) => [s.length, ...Buffer.from(s)];
+  const section = (id, body) => [id, body.length, ...body];
+  const pickBody = [0x00, 0x23, 0x00, 0x41, 0x01, 0x6a, 0x24, 0x00, 0x23, 0x00, 0x41, 0x02, 0x46, 0x04, 0x40, 0x00, 0x0b, 0x23, 0x00, 0x0b];
+  const bytes = new Uint8Array([
+    0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00,
+    ...section(1, [0x04, 0x60, 0x00, 0x00, 0x60, 0x01, 0x7f, 0x01, 0x7f, 0x60, 0x02, 0x7f, 0x7f, 0x00, 0x60, 0x06, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x01, 0x7f]),
+    ...section(3, [0x04, 0x00, 0x01, 0x02, 0x03]),
+    ...section(5, [0x01, 0x00, 0x01]),
+    ...section(6, [0x01, 0x7f, 0x01, 0x41, 0x00, 0x0b]),
+    ...section(7, [0x05, ...name("memory"), 0x02, 0x00, ...name("am_init"), 0x00, 0x00, ...name("am_alloc"), 0x00, 0x01, ...name("am_free"), 0x00, 0x02, ...name("am_pick"), 0x00, 0x03]),
+    ...section(10, [0x04, 0x02, 0x00, 0x0b, 0x04, 0x00, 0x41, 0x10, 0x0b, 0x02, 0x00, 0x0b, pickBody.length, ...pickBody]),
+  ]);
+  const f = await load(bytes);
+  assert.deepEqual(f.pick("10 Example St", ["10 Example St"]), { outcome: "match", index: 1 });
+  assert.throws(() => f.pick("10 Example St", ["10 Example St"]), WebAssembly.RuntimeError);
+  // the same instance would answer 3; a fresh one starts its count again
+  assert.deepEqual(f.pick("10 Example St", ["10 Example St"]), { outcome: "match", index: 1 });
 });

@@ -1,6 +1,6 @@
 //! Embedded dictionaries (libpostal) and country data (libaddressinput, OpenCage), parsed once
 //! into immutable lookup tables owned by a `Matcher`.
-use crate::fold::{ascii_key, fold};
+use crate::fold::{all_han, ascii_key, fold, han_canon};
 use crate::token::tokenize_plain;
 use regex_lite::Regex;
 use std::collections::HashMap;
@@ -111,8 +111,21 @@ pub struct Country {
     /// short names of regions, without a kind word ("taichung" for "Taichung City", "jiangsu" for
     /// "Jiangsu Sheng"), used only to compare a place name with a region, never in parsing
     pub region_short: HashMap<String, u16>,
+    /// keys that name more than one region (two provinces with one toneless reading, "shanxi" for
+    /// 山西省 and 陕西省): every region they may name
+    pub region_shared: HashMap<String, Vec<u16>>,
     pub region_info: Vec<RegionInfo>,
     pub names: Vec<String>,
+}
+
+impl Country {
+    /// The regions a key may name: one, several when the key is shared, or none.
+    pub fn region_ids(&self, key: &str) -> Vec<u16> {
+        if let Some(ids) = self.region_shared.get(key) {
+            return ids.clone();
+        }
+        self.regions.get(key).or_else(|| self.region_short.get(key)).map_or(Vec::new(), |&id| vec![id])
+    }
 }
 
 /// One region of a country.
@@ -139,7 +152,7 @@ const ADMIN_SUFFIXES: &[char] = &['省', '市', '縣', '县', '府', '都', '道
 /// Regions from groups of names ("a:" libaddressinput, "y:" OpenCage), joined where they share a
 /// name or code, each with its short names (without a kind word: "Taichung" for "Taichung City",
 /// "江苏" for "江苏省") and whether it is a city.
-fn build_regions(field: &str) -> (HashMap<String, u16>, HashMap<String, u16>, Vec<RegionInfo>) {
+fn build_regions(field: &str) -> (HashMap<String, u16>, HashMap<String, u16>, HashMap<String, Vec<u16>>, Vec<RegionInfo>) {
     let groups: Vec<(u8, Vec<String>)> = field
         .split('~')
         .filter_map(|g| g.split_once(':'))
@@ -153,22 +166,29 @@ fn build_regions(field: &str) -> (HashMap<String, u16>, HashMap<String, u16>, Ve
         }
         i
     }
-    let mut first: HashMap<String, usize> = HashMap::new();
+    // two groups of one list are two regions, even when their names read alike (山西省 and 陕西省
+    // are both "shanxisheng"); groups of the two lists are joined on a name or code that names one
+    // group in each list
+    let mut by_key: HashMap<String, Vec<usize>> = HashMap::new();
     for (i, (_, names)) in groups.iter().enumerate() {
         for n in names {
             let k = concat_key(n);
-            if k.is_empty() {
-                continue;
-            }
-            match first.get(&k) {
-                Some(&j) => {
-                    let (a, b) = (root(&mut parent, i), root(&mut parent, j));
-                    parent[a] = b;
-                }
-                None => {
-                    first.insert(k, i);
+            if !k.is_empty() {
+                let v = by_key.entry(k).or_default();
+                if !v.contains(&i) {
+                    v.push(i);
                 }
             }
+        }
+    }
+    let mut keys: Vec<&String> = by_key.keys().collect();
+    keys.sort();
+    for k in keys {
+        let gs = &by_key[k];
+        let (a, y): (Vec<usize>, Vec<usize>) = gs.iter().partition(|&&g| groups[g].0 == 1);
+        if a.len() == 1 && y.len() == 1 {
+            let (ra, ry) = (root(&mut parent, a[0]), root(&mut parent, y[0]));
+            parent[ra] = ry;
         }
     }
     let words = |n: &str| -> Vec<String> { tokenize_plain(&fold(n)).iter().map(|t| ascii_key(t)).filter(|t| !t.is_empty()).collect() };
@@ -189,19 +209,30 @@ fn build_regions(field: &str) -> (HashMap<String, u16>, HashMap<String, u16>, Ve
     let has_kind = |names: &[String]| names.iter().any(|n| n.ends_with(ADMIN_SUFFIXES) || words(n).last().map_or(false, |w| ADMIN_WORDS.contains(&w.as_str())));
     let with_kind = members.iter().filter(|m| has_kind(m)).count();
     let mostly = !members.is_empty() && with_kind * 5 >= members.len() * 4;
-    let mut regions: HashMap<String, u16> = HashMap::new();
+    let mut named: HashMap<String, Vec<u16>> = HashMap::new();
     for (id, names) in members.iter().enumerate() {
         let city = names.iter().any(|n| n.ends_with('市') || n.ends_with("광역시") || n.ends_with("특별시") || words(n).last().map_or(false, |w| CITY_WORDS.contains(&w.as_str())));
         info[id].city = city || (mostly && !has_kind(names));
         for n in names {
             let k = concat_key(n);
             if !k.is_empty() {
-                regions.insert(k, id as u16);
+                let v = named.entry(k).or_default();
+                if !v.contains(&(id as u16)) {
+                    v.push(id as u16);
+                }
             }
         }
     }
+    let mut regions: HashMap<String, u16> = HashMap::new();
+    let mut shared: HashMap<String, Vec<u16>> = HashMap::new();
+    for (k, ids) in named {
+        regions.insert(k.clone(), ids[0]);
+        if ids.len() > 1 {
+            shared.insert(k, ids);
+        }
+    }
     // short names, where no region already has them as a name
-    let mut short_names: HashMap<String, u16> = HashMap::new();
+    let mut short_all: HashMap<String, Vec<u16>> = HashMap::new();
     for (id, names) in members.iter().enumerate() {
         for n in names {
             let w = words(n);
@@ -213,14 +244,33 @@ fn build_regions(field: &str) -> (HashMap<String, u16>, HashMap<String, u16>, Ve
             if chars.len() >= 3 && n.ends_with(ADMIN_SUFFIXES) {
                 short.push(concat_key(&chars[..chars.len() - 1].iter().collect::<String>()));
             }
+            // a Han name also by its characters, which tell apart regions that read alike
+            // ("山西省" and "陕西省"), with and without its kind suffix
+            if all_han(n) {
+                let h: Vec<char> = han_canon(n).chars().collect();
+                short.push(h.iter().collect());
+                if h.len() >= 2 && n.ends_with(ADMIN_SUFFIXES) {
+                    short.push(h[..h.len() - 1].iter().collect());
+                }
+            }
             for k in short {
                 if k.len() >= 2 && !regions.contains_key(&k) {
-                    short_names.entry(k).or_insert(id as u16);
+                    let v = short_all.entry(k).or_default();
+                    if !v.contains(&(id as u16)) {
+                        v.push(id as u16);
+                    }
                 }
             }
         }
     }
-    (regions, short_names, info)
+    let mut short_names: HashMap<String, u16> = HashMap::new();
+    for (k, ids) in short_all {
+        short_names.insert(k.clone(), ids[0]);
+        if ids.len() > 1 {
+            shared.insert(k, ids);
+        }
+    }
+    (regions, short_names, shared, info)
 }
 
 pub struct Data {
@@ -426,11 +476,11 @@ impl Data {
                 }
             }
             let zip_src = f[3].to_string();
-            let (regions, mut region_short, region_info) = build_regions(f.get(4).unwrap_or(&""));
+            let (regions, mut region_short, region_shared, region_info) = build_regions(f.get(4).unwrap_or(&""));
             // a region that is a city is also compared under the city's other names ("moskva" is
             // also "moscow")
             for (k, &id) in &regions {
-                if let Some(canon) = exonyms.get(k).filter(|c| !regions.contains_key(*c)) {
+                if let Some(canon) = exonyms.get(k).filter(|c| !regions.contains_key(*c) && !region_shared.contains_key(*c)) {
                     region_short.entry(canon.clone()).or_insert(id);
                 }
             }
@@ -449,7 +499,7 @@ impl Data {
                 }
             }
             names.push(cc.to_ascii_lowercase());
-            countries.insert(cc, Country { langs: lv, zip_src, zip_re: OnceLock::new(), regions, region_short, region_info, names });
+            countries.insert(cc, Country { langs: lv, zip_src, zip_re: OnceLock::new(), regions, region_short, region_shared, region_info, names });
         }
         suffixes.sort_by(|a, b| b.0.chars().count().cmp(&a.0.chars().count()));
         let mut suffix_map: HashMap<String, Vec<Entry>> = HashMap::new();
@@ -530,7 +580,10 @@ impl Data {
             let mut short: Vec<(&String, &u16)> = c.region_short.iter().collect();
             short.sort();
             let short: Vec<String> = short.iter().map(|(k, id)| format!("{}={}", k, id)).collect();
-            writeln!(o, "C\t{}\t{}\t{}\t{}\t{}\t{}\t{}", cc, langs.join(","), c.zip_src, regions.join("~"), c.names.join("~"), info.join("~"), short.join("~")).unwrap();
+            let mut shared: Vec<(&String, &Vec<u16>)> = c.region_shared.iter().collect();
+            shared.sort();
+            let shared: Vec<String> = shared.iter().map(|(k, ids)| format!("{}={}", k, ids.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(","))).collect();
+            writeln!(o, "C\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}", cc, langs.join(","), c.zip_src, regions.join("~"), c.names.join("~"), info.join("~"), short.join("~"), shared.join("~")).unwrap();
         }
         o
     }
@@ -602,7 +655,8 @@ impl Data {
                     let names = f[5].split('~').filter(|x| !x.is_empty()).map(|x| x.to_string()).collect();
                     let region_info = f.get(6).unwrap_or(&"").split('~').filter_map(|x| x.split_once('.')).map(|(s, c)| RegionInfo { sources: s.parse().unwrap(), city: c == "1" }).collect();
                     let region_short = f.get(7).unwrap_or(&"").split('~').filter_map(|x| x.rsplit_once('=')).map(|(k, id)| (k.to_string(), id.parse().unwrap())).collect();
-                    d.countries.insert(f[1].to_string(), Country { langs, zip_src: f[3].to_string(), zip_re: OnceLock::new(), regions, region_short, region_info, names });
+                    let region_shared = f.get(8).unwrap_or(&"").split('~').filter_map(|x| x.rsplit_once('=')).map(|(k, ids)| (k.to_string(), ids.split(',').filter_map(|i| i.parse().ok()).collect())).collect();
+                    d.countries.insert(f[1].to_string(), Country { langs, zip_src: f[3].to_string(), zip_re: OnceLock::new(), regions, region_short, region_shared, region_info, names });
                 }
                 _ => {}
             }
