@@ -136,11 +136,36 @@ fn is_latinish(s: Option<Script>) -> bool {
     matches!(s, None | Some(Script::Latin) | Some(Script::Digit) | Some(Script::Other))
 }
 
+/// Compass words of a name, as one sorted list of canonical keys ("N", "North", "Nord" alike).
+fn directions(t: &Text) -> Vec<&'static str> {
+    let mut v: Vec<&'static str> = t
+        .toks
+        .iter()
+        .filter_map(|(k, _)| {
+            Some(match k.as_str() {
+                "n" | "north" | "nord" | "norte" | "noord" => "n",
+                "s" | "south" | "sud" | "sur" | "zuid" | "sued" => "s",
+                "e" | "east" | "est" | "este" | "oost" | "ost" => "e",
+                "w" | "west" | "ouest" | "oeste" => "w",
+                "ne" | "northeast" => "ne",
+                "nw" | "northwest" => "nw",
+                "se" | "southeast" => "se",
+                "sw" | "southwest" => "sw",
+                _ => return None,
+            })
+        })
+        .collect();
+    v.sort();
+    v
+}
+
 /// Compare two names (street or locality). `typo`: allow one edit for names of 6+ letters.
 fn text_eq(m: &Matcher, q: &Text, c: &Text, typo: bool) -> Tri {
     if q.key == c.key {
         return Tri::Yes;
     }
+    // a different compass word is a different street, never a typo ("S Example" / "N Example")
+    let typo = typo && directions(q) == directions(c);
     // a numbered district of the same town ("Paris" vs "Paris 20e Arrondissement")
     for (a, b) in [(&q.key, &c.key), (&c.key, &q.key)] {
         if a.len() >= 3 && b.len() > a.len() && b.starts_with(a.as_str()) && b[a.len()..].starts_with(|ch: char| ch.is_ascii_digit()) {

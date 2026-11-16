@@ -80,7 +80,7 @@ impl Span {
     }
 }
 
-const NAME_CLASSES: &[Class] = &[Class::Synonym, Class::Directional, Class::Title, Class::StreetType, Class::Qualifier];
+const NAME_CLASSES: &[Class] = &[Class::Synonym, Class::Directional, Class::Title, Class::StreetType, Class::Qualifier, Class::Building];
 
 fn lookup(ctx: &Ctx, key: &str) -> Vec<Entry> {
     let es = ctx.data.lookup(key);
@@ -1077,7 +1077,11 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
                     ks.insert(0, k0 - 1);
                 }
             }
-            let pc: String = ks.iter().map(|&k| toks[k].s.as_str()).collect::<String>().chars().filter(|ch| ch.is_ascii_alphanumeric()).collect::<String>().to_ascii_uppercase();
+            let mut pc: String = ks.iter().map(|&k| toks[k].s.as_str()).collect::<String>().chars().filter(|ch| ch.is_ascii_alphanumeric()).collect::<String>().to_ascii_uppercase();
+            // a ZIP+4 is its ZIP ("90000-1234")
+            if ctx.cc == Some("US") && pc.len() == 9 && pc.chars().all(|ch| ch.is_ascii_digit()) {
+                pc.truncate(5);
+            }
             c.postcode = Some(pc);
             for k in ks {
                 used[k] = true;
