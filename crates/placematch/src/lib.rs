@@ -346,7 +346,48 @@ impl Matcher {
         let ctx = self.ctx(country);
         let q = parse::parse(&ctx, query);
         let c = parse::parse(&ctx, candidate);
-        self.compare_parsed(&q, &c, Mode::Query)
+        let alts: Vec<Components> = Self::comma_free_readings(query).iter().map(|a| parse::parse(&ctx, a)).collect();
+        self.compare_any(&q, &alts, &c)
+    }
+
+    /// The query as read, or as one of its comma-free readings if that reading is the candidate's
+    /// place.
+    fn compare_any(&self, q: &Components, alts: &[Components], c: &Components) -> (Verdict, Vec<&'static str>) {
+        let first = self.compare_parsed(q, c, Mode::Query);
+        if first.0 == Verdict::Same {
+            return first;
+        }
+        for a in alts {
+            // a reading counts only when it takes another number as the house number, keeps a
+            // street and loses no postcode
+            if a.house == q.house || a.street.is_empty() || a.postcode != q.postcode {
+                continue;
+            }
+            let r = self.compare_parsed(a, c, Mode::Query);
+            if r.0 == Verdict::Same {
+                return r;
+            }
+        }
+        first
+    }
+
+    /// An address written without commas may end its street part after any number in it
+    /// ("1244. Sokak 6 Karşıyaka" is street "1244. Sokak", number 6, town "Karşıyaka"): the readings
+    /// with a comma after each number but the last word.
+    fn comma_free_readings(query: &str) -> Vec<String> {
+        if query.contains([',', ';', '\n', '،', '、', '|']) {
+            return Vec::new();
+        }
+        let words: Vec<&str> = query.split_whitespace().collect();
+        let nums: Vec<usize> = (0..words.len()).filter(|&i| words[i].chars().any(|ch| ch.is_numeric())).collect();
+        if nums.len() < 2 {
+            return Vec::new();
+        }
+        nums.iter()
+            .filter(|&&i| i >= 1 && i + 1 < words.len())
+            .take(4)
+            .map(|&i| format!("{}, {}", words[..=i].join(" "), words[i + 1..].join(" ")))
+            .collect()
     }
 
     fn compare_parsed(&self, q: &Components, c: &Components, mode: Mode) -> (Verdict, Vec<&'static str>) {
@@ -919,7 +960,8 @@ impl Matcher {
         let ctx = self.ctx(country);
         let q = parse::parse(&ctx, query);
         let cs: Vec<Components> = candidates.iter().map(|c| parse::parse(&ctx, c.as_ref())).collect();
-        let verdicts: Vec<(Verdict, Vec<&'static str>)> = cs.iter().map(|c| self.compare_parsed(&q, c, Mode::Query)).collect();
+        let alts: Vec<Components> = Self::comma_free_readings(query).iter().map(|a| parse::parse(&ctx, a)).collect();
+        let verdicts: Vec<(Verdict, Vec<&'static str>)> = cs.iter().map(|c| self.compare_any(&q, &alts, c)).collect();
         let same: Vec<usize> = (0..cs.len()).filter(|&i| verdicts[i].0 == Verdict::Same).collect();
         if same.is_empty() {
             // the caller gave no unit and the site lists the place only with units: ask which one
