@@ -71,3 +71,29 @@ test("input over the caps is refused, not cut", () => {
   // at the caps it answers
   assert.equal(m.pickExplained("x".repeat(512), Array(100).fill("y".repeat(512))).outcome, "none");
 });
+
+test("the picker checks answer from JavaScript", () => {
+  assert.equal(m.isControl("Example Park, Springfield", "See more results for Example Park, Springfield"), true);
+  assert.equal(m.isControl("Example Park, Springfield", "Jane Doe Example Park, Springfield"), false);
+  assert.equal(m.showsTypedText("Example Park, Springfield", "The Example Park, Springfield"), true);
+  assert.equal(m.showsTypedText("Example Park, Springfield", "The Example Park, Springfield", 2), false);
+  assert.equal(m.inArea("Example Park, Springfield, IL", "Example Gardens, Springfield, IL", "US"), true);
+  assert.equal(m.inArea("Example Park, Springfield, IL", "Example Gardens, Springfield, MO", "US"), false);
+  assert.equal(m.sameButPostcode("10 Main St, Springfield, IL 62701", "10 Main St, Springfield, IL 62702", "US"), true);
+  assert.equal(m.sameButPostcode("10 Main St, Springfield, IL 62701", "10 Main St, Springfield, MO 65801", "US"), false);
+  assert.throws(() => m.isControl("x".repeat(513), "y"), RangeError);
+});
+
+test("an input that once trapped answers, and memory stays flat", () => {
+  for (const [q, rows, cc] of [["5 Sakura, Exampleshi", ["桜ー 5, 例市"], "JP"], ["1 Example, Higashi", ["1 Example, 東ッ"], "JP"], ["Sakura 5", ["桜ー5"], undefined]]) {
+    m.pick(q, rows, cc);
+    m.pickExplained(q, rows, { country: cc });
+  }
+  const before = m.memoryBytes();
+  for (let i = 0; i < 500; i++) {
+    m.pickExplained("5 Sakura, Exampleshi", ["桜ー 5, 例市"], { country: "JP" });
+    assert.throws(() => m.pick("10 Example St", ["a\u0001b"]), TypeError);
+  }
+  assert.equal(m.memoryBytes(), before);
+  assert.deepEqual(m.pick("10 Main St, Springfield", ["10 Main St, Springfield, IL"], "US"), { outcome: "match", index: 0 });
+});

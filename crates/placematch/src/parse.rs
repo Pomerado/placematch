@@ -48,6 +48,8 @@ pub struct Components {
     pub localities: Vec<Text>,
     pub regions: Vec<String>,
     pub country: bool,
+    /// the country names the text gives ("uk", "canada")
+    pub countries: Vec<String>,
     pub business: Vec<Text>,
     pub script: Option<Script>,
     /// the country hint the text was read with
@@ -232,8 +234,8 @@ fn thai_fold(s: &str) -> String {
     words.join(" ")
 }
 
-/// Korean road names carry their own numbers and type words: "경원대로1418번길", "Gyeongwon-daero
-/// 1418beon-gil", "Namak 2-ro 22beon-gil". Join each into one romanized word, written the same way
+/// Korean road names carry their own numbers and type words: "예제대로1418번길", "Yeje-daero
+/// 1418beon-gil", "Yeje 2-ro 22beon-gil". Join each into one romanized word, written the same way
 /// in both scripts, so the numbers are not read as house numbers and the spelling of the joins
 /// does not matter.
 fn merge_korean_roads(toks: Vec<crate::token::Tok>) -> Vec<crate::token::Tok> {
@@ -1142,6 +1144,7 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
                     if data.all_country_names.contains_key(&tail) || country.map_or(false, |c| c.names.contains(&tail)) {
                         text_words.truncate(text_words.len() - l);
                         c.country = true;
+                        c.countries.push(tail);
                         break;
                     }
                 }
@@ -1183,6 +1186,7 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
     for x in &seg_texts {
         if x.3 {
             c.country = true;
+            c.countries.push(x.1.key.clone());
         } else if x.2 {
             c.regions.push(x.1.key.clone());
             region_texts.push(x.1.clone());

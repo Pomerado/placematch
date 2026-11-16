@@ -105,9 +105,122 @@ pub struct Country {
     pub langs: Vec<u8>,
     pub zip_src: String,
     zip_re: OnceLock<Option<Regex>>,
-    /// folded ASCII keys of region names and codes
-    pub regions: HashMap<String, ()>,
+    /// folded ASCII keys of region names and codes, each to its region (an index in `region_info`):
+    /// a region's names, codes and names in other scripts share one index
+    pub regions: HashMap<String, u16>,
+    /// short names of regions, without a kind word ("taichung" for "Taichung City", "jiangsu" for
+    /// "Jiangsu Sheng"), used only to compare a place name with a region, never in parsing
+    pub region_short: HashMap<String, u16>,
+    pub region_info: Vec<RegionInfo>,
     pub names: Vec<String>,
+}
+
+/// One region of a country.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct RegionInfo {
+    /// The lists that name it: 1 libaddressinput, 2 OpenCage. Two lists may name regions of
+    /// different levels (provinces in one, regions in the other), so only regions named by one list
+    /// are compared with each other.
+    pub sources: u8,
+    /// The region is a city ("台南市", "Taichung City", a federal city).
+    pub city: bool,
+}
+
+/// Words that name a region's kind in its romanized or English name.
+const ADMIN_WORDS: &[&str] = &[
+    "sheng", "shi", "zizhiqu", "xian", "oblast", "kray", "krai", "respublika", "okrug", "avtonomnyy", "avtonomnaya", "county", "province", "prefecture",
+    "region", "state", "district", "city", "do", "si", "gun", "ken", "fu", "to", "teukbyeolsi", "gwangyeoksi", "teukbyeoljachisi", "teukbyeoljachido",
+];
+/// Kind words that make the region a city.
+const CITY_WORDS: &[&str] = &["city", "shi", "si", "teukbyeolsi", "gwangyeoksi", "teukbyeoljachisi"];
+/// Han and Hangul suffixes of a region's kind.
+const ADMIN_SUFFIXES: &[char] = &['省', '市', '縣', '县', '府', '都', '道', '区', '州', '시', '도'];
+
+/// Regions from groups of names ("a:" libaddressinput, "y:" OpenCage), joined where they share a
+/// name or code, each with its short names (without a kind word: "Taichung" for "Taichung City",
+/// "江苏" for "江苏省") and whether it is a city.
+fn build_regions(field: &str) -> (HashMap<String, u16>, HashMap<String, u16>, Vec<RegionInfo>) {
+    let groups: Vec<(u8, Vec<String>)> = field
+        .split('~')
+        .filter_map(|g| g.split_once(':'))
+        .map(|(fam, names)| (if fam == "a" { 1 } else { 2 }, names.split('|').filter(|n| !n.is_empty()).map(|n| n.to_string()).collect()))
+        .collect();
+    let mut parent: Vec<usize> = (0..groups.len()).collect();
+    fn root(p: &mut [usize], mut i: usize) -> usize {
+        while p[i] != i {
+            p[i] = p[p[i]];
+            i = p[i];
+        }
+        i
+    }
+    let mut first: HashMap<String, usize> = HashMap::new();
+    for (i, (_, names)) in groups.iter().enumerate() {
+        for n in names {
+            let k = concat_key(n);
+            if k.is_empty() {
+                continue;
+            }
+            match first.get(&k) {
+                Some(&j) => {
+                    let (a, b) = (root(&mut parent, i), root(&mut parent, j));
+                    parent[a] = b;
+                }
+                None => {
+                    first.insert(k, i);
+                }
+            }
+        }
+    }
+    let words = |n: &str| -> Vec<String> { tokenize_plain(&fold(n)).iter().map(|t| ascii_key(t)).filter(|t| !t.is_empty()).collect() };
+    let mut ids: HashMap<usize, u16> = HashMap::new();
+    let mut info: Vec<RegionInfo> = Vec::new();
+    let mut members: Vec<Vec<String>> = Vec::new();
+    for i in 0..groups.len() {
+        let r = root(&mut parent, i);
+        let id = *ids.entry(r).or_insert_with(|| {
+            info.push(RegionInfo::default());
+            members.push(Vec::new());
+            (info.len() - 1) as u16
+        });
+        info[id as usize].sources |= groups[i].0;
+        members[id as usize].extend(groups[i].1.iter().cloned());
+    }
+    // a region with no kind word, in a country whose regions mostly have one, is a city (a federal city)
+    let has_kind = |names: &[String]| names.iter().any(|n| n.ends_with(ADMIN_SUFFIXES) || words(n).last().map_or(false, |w| ADMIN_WORDS.contains(&w.as_str())));
+    let with_kind = members.iter().filter(|m| has_kind(m)).count();
+    let mostly = !members.is_empty() && with_kind * 5 >= members.len() * 4;
+    let mut regions: HashMap<String, u16> = HashMap::new();
+    for (id, names) in members.iter().enumerate() {
+        let city = names.iter().any(|n| n.ends_with('市') || n.ends_with("광역시") || n.ends_with("특별시") || words(n).last().map_or(false, |w| CITY_WORDS.contains(&w.as_str())));
+        info[id].city = city || (mostly && !has_kind(names));
+        for n in names {
+            let k = concat_key(n);
+            if !k.is_empty() {
+                regions.insert(k, id as u16);
+            }
+        }
+    }
+    // short names, where no region already has them as a name
+    let mut short_names: HashMap<String, u16> = HashMap::new();
+    for (id, names) in members.iter().enumerate() {
+        for n in names {
+            let w = words(n);
+            let mut short: Vec<String> = Vec::new();
+            if w.len() >= 2 && ADMIN_WORDS.contains(&w[w.len() - 1].as_str()) {
+                short.push(w[..w.len() - 1].concat());
+            }
+            let chars: Vec<char> = n.chars().collect();
+            if chars.len() >= 3 && n.ends_with(ADMIN_SUFFIXES) {
+                short.push(concat_key(&chars[..chars.len() - 1].iter().collect::<String>()));
+            }
+            for k in short {
+                if k.len() >= 2 && !regions.contains_key(&k) {
+                    short_names.entry(k).or_insert(id as u16);
+                }
+            }
+        }
+    }
+    (regions, short_names, info)
 }
 
 pub struct Data {
@@ -313,11 +426,12 @@ impl Data {
                 }
             }
             let zip_src = f[3].to_string();
-            let mut regions = HashMap::new();
-            for n in f.get(4).unwrap_or(&"").split('~') {
-                let k = concat_key(n);
-                if !k.is_empty() {
-                    regions.insert(k, ());
+            let (regions, mut region_short, region_info) = build_regions(f.get(4).unwrap_or(&""));
+            // a region that is a city is also compared under the city's other names ("moskva" is
+            // also "moscow")
+            for (k, &id) in &regions {
+                if let Some(canon) = exonyms.get(k).filter(|c| !regions.contains_key(*c)) {
+                    region_short.entry(canon.clone()).or_insert(id);
                 }
             }
             let mut names = Vec::new();
@@ -335,7 +449,7 @@ impl Data {
                 }
             }
             names.push(cc.to_ascii_lowercase());
-            countries.insert(cc, Country { langs: lv, zip_src, zip_re: OnceLock::new(), regions, names });
+            countries.insert(cc, Country { langs: lv, zip_src, zip_re: OnceLock::new(), regions, region_short, region_info, names });
         }
         suffixes.sort_by(|a, b| b.0.chars().count().cmp(&a.0.chars().count()));
         let mut suffix_map: HashMap<String, Vec<Entry>> = HashMap::new();
@@ -408,10 +522,15 @@ impl Data {
         ccs.sort();
         for cc in ccs {
             let c = &self.countries[cc];
-            let mut regions: Vec<&String> = c.regions.keys().collect();
+            let mut regions: Vec<(&String, &u16)> = c.regions.iter().collect();
             regions.sort();
             let langs: Vec<String> = c.langs.iter().map(|l| l.to_string()).collect();
-            writeln!(o, "C\t{}\t{}\t{}\t{}\t{}", cc, langs.join(","), c.zip_src, regions.iter().map(|s| s.as_str()).collect::<Vec<_>>().join("~"), c.names.join("~")).unwrap();
+            let regions: Vec<String> = regions.iter().map(|(k, id)| format!("{}={}", k, id)).collect();
+            let info: Vec<String> = c.region_info.iter().map(|r| format!("{}.{}", r.sources, r.city as u8)).collect();
+            let mut short: Vec<(&String, &u16)> = c.region_short.iter().collect();
+            short.sort();
+            let short: Vec<String> = short.iter().map(|(k, id)| format!("{}={}", k, id)).collect();
+            writeln!(o, "C\t{}\t{}\t{}\t{}\t{}\t{}\t{}", cc, langs.join(","), c.zip_src, regions.join("~"), c.names.join("~"), info.join("~"), short.join("~")).unwrap();
         }
         o
     }
@@ -479,9 +598,11 @@ impl Data {
                 }
                 "C" => {
                     let langs = f[2].split(',').filter(|x| !x.is_empty()).map(|x| x.parse().unwrap()).collect();
-                    let regions = f[4].split('~').filter(|x| !x.is_empty()).map(|x| (x.to_string(), ())).collect();
+                    let regions = f[4].split('~').filter_map(|x| x.rsplit_once('=')).map(|(k, id)| (k.to_string(), id.parse().unwrap())).collect();
                     let names = f[5].split('~').filter(|x| !x.is_empty()).map(|x| x.to_string()).collect();
-                    d.countries.insert(f[1].to_string(), Country { langs, zip_src: f[3].to_string(), zip_re: OnceLock::new(), regions, names });
+                    let region_info = f.get(6).unwrap_or(&"").split('~').filter_map(|x| x.split_once('.')).map(|(s, c)| RegionInfo { sources: s.parse().unwrap(), city: c == "1" }).collect();
+                    let region_short = f.get(7).unwrap_or(&"").split('~').filter_map(|x| x.rsplit_once('=')).map(|(k, id)| (k.to_string(), id.parse().unwrap())).collect();
+                    d.countries.insert(f[1].to_string(), Country { langs, zip_src: f[3].to_string(), zip_re: OnceLock::new(), regions, region_short, region_info, names });
                 }
                 _ => {}
             }

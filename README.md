@@ -100,8 +100,8 @@ Arabic street names, for example). Japanese and Chinese names are read with per-
 readings from the Unicode Han database: a romanization matches when it splits, in order, into one
 reading for each character (Hepburn or Kunrei for Japanese, with long vowels written or not and the
 sound changes of compound names; Hanyu Pinyin, Wade-Giles or Tongyong for Chinese). Thai names
-are compared with their romanizations by consonant sounds. Korean road names ("경원대로1418번길",
-"Gyeongwon-daero 1418beon-gil") are read as one word in both scripts. A Japanese place name whose
+are compared with their romanizations by consonant sounds. Korean road names ("예제대로1418번길",
+"Yeje-daero 1418beon-gil") are read as one word in both scripts. A Japanese place name whose
 reading is not built from its characters' listed readings gets `ambiguous` or `none`, never a
 guess.
 
@@ -111,12 +111,24 @@ When the caller gives a place's name and no house number ("Example Park, Example
 name decides:
 
 - a row whose first part is the same name, word for word (Street for St), is the place, whatever
-  street follows the name, when its town, region and postcode fit the caller's;
+  street follows the name, when its area fits the caller's: the same town, the same state, province
+  or region (a name and its code are one region: "Illinois" and "IL"; a city that is a region of
+  its own, such as "台中市" for "Taichung", counts as both), the same postcode and the same country;
+- a row in another town, region or country, or under another postcode, is another place; so is a
+  row on another street than one the caller typed ("Example Cafe, Oak St, ...");
+- a row that does not state the caller's town or street asks (`place_unconfirmed`), and so does a
+  row that adds a place the caller did not name when no country is given ("Exampleton, CA" may be
+  in California or in Canada);
 - a row that holds the caller's words in order with others added before or between them ("The
   Example Park", or a venue under its full name) is `ambiguous`: it may be the place;
 - a row that starts with the name and goes on ("Example Park Ferry Terminal") is another place;
-- a row that shows the caller's whole text after words of its own ("See more results for ...") is
-  a site control, not a place.
+- a site's control is never a place: a row that holds the caller's whole text and otherwise only
+  control words ("See more results for ...", "Search "..."", "... (see more)"). A row that adds a
+  name to the caller's text ("Old Town Example Park") is a row like any other;
+- same-name rows on two streets or in two towns (two branches of a chain) are two places: the
+  answer asks (`several_places`).
+
+A town typed alone ("Munich") is compared as a town, in its other languages too ("München").
 
 When a row has exactly the caller's name and another holds the name in a longer form (a pin dropped
 under the name next to the venue under its official name), the answer is `ambiguous`. A row may say
@@ -131,8 +143,13 @@ words it adds before it are not compass, age or size words: "Jane Q. Example Con
 with no preference: a write asks and a read takes neither.
 
 A picker around PlaceMatch decides what to do with `none` and `ambiguous` (ask in a write, refuse or
-read on in a read). `Matcher::is_control`, `Matcher::in_area` and `Matcher::same_but_postcode`
-answer the questions such a picker asks; `tests/place-names.jsonl` holds the cases, with the
+read on in a read). `Matcher::is_control`, `Matcher::shows_typed_text`, `Matcher::in_area` and
+`Matcher::same_but_postcode` (in JavaScript `isControl`, `showsTypedText`, `inArea` and
+`sameButPostcode`) answer the questions such a picker asks. `same_but_postcode` accepts another
+postcode only for the caller's house, street and town in the same state, the same districts and
+one postal area (the postcodes differ only in their last two characters); in a city that repeats
+street names across districts (Berlin, Hamburg, London, Vienna, Budapest, Prague) both sides must
+name the same district; `tests/place-names.jsonl` holds the cases, with the
 picker's answer for each mode beside PlaceMatch's own.
 
 ## Accuracy
@@ -146,15 +163,15 @@ Held-out split: 76,722 cases from 62 countries, 11 scripts. Cells are accuracy /
 
 | | PlaceMatch | libpostal baseline | both agree |
 |---|---|---|---|
-| all cases | 92.5% / 0.37% | 75.9% / 1.87% | 74.9% / 0.04% |
-| one candidate (`pair`) | 93.6% / 0.18% | 79.3% / 0.44% | 77.9% / 0.01% |
-| 2 to 8 candidates (`pick`) | 91.0% / 0.63% | 71.3% / 3.81% | 70.9% / 0.08% |
+| all cases | 92.5% / 0.35% | 75.9% / 1.87% | 74.9% / 0.04% |
+| one candidate (`pair`) | 93.6% / 0.17% | 79.3% / 0.44% | 77.9% / 0.01% |
+| 2 to 8 candidates (`pick`) | 91.0% / 0.59% | 71.3% / 3.81% | 70.9% / 0.08% |
 | government and open-data addresses | 96.4% / 0.09% | 82.6% / 1.28% | 81.0% / 0.02% |
-| OpenStreetMap addresses and listings | 90.9% / 0.49% | 73.2% / 2.11% | 72.4% / 0.04% |
-| Latin script | 95.1% / 0.39% | 81.1% / 1.34% | 79.5% / 0.04% |
-| other scripts | 87.9% / 0.34% | 66.6% / 2.83% | 66.7% / 0.03% |
-| no commas | 84.8% / 0.33% | 76.0% / 1.89% | 70.6% / 0.03% |
-| transliterated | 59.0% / 0.25% | 35.2% / 0.25% | 35.1% / 0.00% |
+| OpenStreetMap addresses and listings | 90.9% / 0.45% | 73.2% / 2.11% | 72.5% / 0.05% |
+| Latin script | 95.1% / 0.36% | 81.1% / 1.34% | 79.5% / 0.04% |
+| other scripts | 87.9% / 0.32% | 66.6% / 2.83% | 66.7% / 0.04% |
+| no commas | 84.8% / 0.30% | 76.0% / 1.89% | 70.6% / 0.03% |
+| transliterated | 59.1% / 0.22% | 35.2% / 0.25% | 35.1% / 0.00% |
 
 "Both agree" answers `match` only when PlaceMatch and libpostal pick the same listing; it trades
 coverage for the fewest wrong picks. Most remaining misses are `none` or `ambiguous` answers

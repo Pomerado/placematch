@@ -9,7 +9,8 @@ export type AmbiguityReason =
   | "unit_not_given"
   | "postcode_differs"
   | "number_not_listed"
-  | "number_range";
+  | "number_range"
+  | "place_unconfirmed";
 
 /** Said beside a match: the row leaves out a unit the caller gave. */
 export type MatchNote = "unit_not_listed";
@@ -52,6 +53,16 @@ export interface PlaceMatch {
   pick(query: string, candidates: string[], country?: string): { outcome: "match"; index: number } | { outcome: "none" | "ambiguous"; index: null };
   compare(query: string, candidate: string, country?: string): "same" | "different" | "unknown";
   pickExplained(query: string, rows: Row[], options?: { country?: string } | null): Explained;
+  /** The row is a site's control ("See more results for <text>", "Search "<text>""), never a place. */
+  isControl(query: string, row: string): boolean;
+  /** The row shows the caller's whole text (of two parts or more) after at least `minWords` (default
+   * 1) words of its own first part ("The <text>"). */
+  showsTypedText(query: string, row: string, minWords?: number): boolean;
+  /** The row, after its first part, is in the area the caller gave after theirs. */
+  inArea(query: string, row: string, country?: string): boolean;
+  /** The caller's house, street and town with only the postcode different, in the same postal area
+   * and district: the same building under another postcode, which a read may accept. */
+  sameButPostcode(query: string, row: string, country?: string): boolean;
 }
 
 /** Load PlaceMatch from WebAssembly bytes. */

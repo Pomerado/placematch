@@ -10,6 +10,14 @@ fn fixture_cases() {
 /// Places named without a house number (tests/place-names.jsonl): the core answer for each, with
 /// the picker's answer for its mode alongside (a picker asks where PlaceMatch says none and rows
 /// were offered, and a read may take an in-area row).
+/// Cases that must never match a wrong place (tests/wrong-place.jsonl): branches on two streets,
+/// another town or region, spellings of other cities, another state, controls; plus the places that
+/// must still match beside them.
+#[test]
+fn wrong_place_cases() {
+    run_cases(include_str!("../../../tests/wrong-place.jsonl"));
+}
+
 #[test]
 fn place_name_cases() {
     run_cases(include_str!("../../../tests/place-names.jsonl"));

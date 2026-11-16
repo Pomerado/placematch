@@ -13,7 +13,8 @@ use std::sync::OnceLock;
 const HAN: &str = include_str!("../data/readings/han.txt");
 
 struct Readings {
-    zh: HashMap<char, Vec<String>>,
+    /// per character, its spellings in each system of `ZH_SYSTEMS`
+    zh: HashMap<char, [Vec<String>; 3]>,
     ja: HashMap<char, Vec<String>>,
 }
 
@@ -27,11 +28,13 @@ fn readings() -> &'static Readings {
             let (Some(c), Some(m), Some(on), Some(kun)) = (f.next(), f.next(), f.next(), f.next()) else { continue };
             let Some(ch) = c.chars().next() else { continue };
             if !m.is_empty() {
-                let mut v: Vec<String> = Vec::new();
-                for p in m.split(' ') {
-                    for x in zh_variants(p) {
-                        if !v.contains(&x) {
-                            v.push(x);
+                let mut v: [Vec<String>; 3] = Default::default();
+                for (si, &sys) in ZH_SYSTEMS.iter().enumerate() {
+                    for p in m.split(' ') {
+                        for x in zh_variants(p, sys) {
+                            if !v[si].contains(&x) {
+                                v[si].push(x);
+                            }
                         }
                     }
                 }
@@ -73,70 +76,88 @@ pub fn langs_for(cc: Option<&str>) -> &'static [Lang] {
 
 const ZH_INITIALS: &[&str] = &["zh", "ch", "sh", "b", "p", "m", "f", "d", "t", "n", "l", "g", "k", "h", "j", "q", "x", "r", "z", "c", "s", "y", "w"];
 
-/// Spellings of a toneless pinyin syllable in Hanyu Pinyin, Wade-Giles (apostrophes dropped) and
-/// Tongyong Pinyin, mixed per initial and final as Taiwanese signs often are.
-fn zh_variants(p: &str) -> Vec<String> {
+/// Romanization systems for Chinese. A romanization is read in one system at a time: a name written
+/// in Wade-Giles ("Kaohsiung") or Tongyong ("Sinjhuang") uses that system for every syllable, so a
+/// spelling of one system is never mixed into another's ("Suzhou" is not 徐州, "Xuzhou").
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum ZhSystem {
+    Hanyu,
+    WadeGiles,
+    Tongyong,
+}
+
+pub const ZH_SYSTEMS: [ZhSystem; 3] = [ZhSystem::Hanyu, ZhSystem::WadeGiles, ZhSystem::Tongyong];
+
+/// Spellings of a toneless Hanyu Pinyin syllable in one system (Wade-Giles without apostrophes or
+/// umlauts).
+fn zh_variants(p: &str, sys: ZhSystem) -> Vec<String> {
     let p = p.trim();
+    if sys == ZhSystem::Hanyu || p.is_empty() {
+        return vec![p.to_string()];
+    }
     let ini = ZH_INITIALS.iter().find(|i| p.starts_with(**i) && p.len() > i.len()).copied().unwrap_or("");
     let fin = &p[ini.len()..];
-    let inis: Vec<&str> = match ini {
-        "b" => vec!["b", "p"],
-        "p" => vec!["p"],
-        "d" => vec!["d", "t"],
-        "t" => vec!["t"],
-        "g" => vec!["g", "k"],
-        "k" => vec!["k"],
-        "zh" => vec!["zh", "ch", "jh", "j"],
-        "ch" => vec!["ch"],
-        "j" => vec!["j", "ch"],
-        "q" => vec!["q", "ch", "c"],
-        "x" => vec!["x", "hs", "s", "sh"],
-        "r" => vec!["r", "j"],
-        "z" => vec!["z", "ts", "tz"],
-        "c" => vec!["c", "ts", "tz"],
-        "s" => vec!["s", "ss", "sz"],
-        other => vec![other],
+    let palatal = matches!(ini, "j" | "q" | "x");
+    let retroflex = matches!(ini, "zh" | "ch" | "sh" | "r");
+    let dental = matches!(ini, "z" | "c" | "s");
+    let (inis, fins): (Vec<&str>, Vec<String>) = match sys {
+        ZhSystem::WadeGiles => {
+            let inis = match ini {
+                "b" => vec!["p"],
+                "d" => vec!["t"],
+                "g" => vec!["k"],
+                "zh" | "j" | "q" => vec!["ch"],
+                "x" => vec!["hs"],
+                "r" => vec!["j"],
+                "z" | "c" => vec!["ts", "tz"],
+                "s" => vec!["s", "ss", "sz"],
+                other => vec![other],
+            };
+            let f: Vec<&str> = match fin {
+                "i" if retroflex => vec!["ih"],
+                "i" if dental => vec!["u", "y"],
+                "ong" => vec!["ung"],
+                "iong" => vec!["iung"],
+                "ian" => vec!["ien"],
+                "ie" => vec!["ieh"],
+                "e" if matches!(ini, "g" | "k" | "h") => vec!["o"],
+                "e" if ini == "y" || ini.is_empty() => vec!["eh", "e"],
+                "e" => vec!["e", "eh"],
+                "uo" if matches!(ini, "g" | "k" | "h" | "zh" | "ch" | "sh" | "r" | "s" | "z" | "c") => vec!["uo"],
+                "uo" => vec!["o", "uo"],
+                "ui" => vec!["uei", "ui"],
+                "ue" | "ve" => vec!["ueh"],
+                "u" if palatal || ini == "y" => vec!["u"],
+                "ou" if ini == "y" => vec!["u"],
+                "an" if ini == "y" => vec!["en"],
+                other => vec![other],
+            };
+            (inis, f.into_iter().map(|x| x.to_string()).collect())
+        }
+        ZhSystem::Tongyong => {
+            let inis = match ini {
+                "zh" => vec!["jh"],
+                "q" => vec!["c"],
+                "x" => vec!["s"],
+                other => vec![other],
+            };
+            let f: Vec<&str> = match fin {
+                "i" if retroflex || dental => vec!["ih"],
+                "u" if palatal => vec!["yu"],
+                "un" if palatal => vec!["yun"],
+                "uan" if palatal => vec!["yuan"],
+                "ue" if palatal => vec!["yue"],
+                "iong" => vec!["yong"],
+                "eng" if matches!(ini, "b" | "p" | "m" | "f" | "w") => vec!["ong"],
+                "iu" => vec!["iou"],
+                "ui" => vec!["uei"],
+                "en" if ini == "w" => vec!["un"],
+                other => vec![other],
+            };
+            (inis, f.into_iter().map(|x| x.to_string()).collect())
+        }
+        ZhSystem::Hanyu => unreachable!(),
     };
-    let apical = matches!(ini, "zh" | "ch" | "sh" | "r" | "z" | "c" | "s");
-    let mut fins: Vec<String> = vec![fin.to_string()];
-    let mut add = |f: &str| {
-        if !fins.iter().any(|x| x == f) {
-            fins.push(f.to_string());
-        }
-    };
-    match fin {
-        "i" if apical => {
-            add("ih");
-            add("u");
-            add("y");
-            add("");
-        }
-        "ong" => add("ung"),
-        "iong" => {
-            add("iung");
-            add("yung");
-        }
-        "ian" => add("ien"),
-        "ie" => add("ieh"),
-        "e" => {
-            add("o");
-            add("eh");
-        }
-        "uo" => add("o"),
-        "ui" => add("uei"),
-        "iu" => add("iou"),
-        "un" => add("uen"),
-        "eng" => add("ong"),
-        "en" => add("un"),
-        "ue" => {
-            add("ueh");
-            add("ve");
-        }
-        "u" if matches!(ini, "j" | "q" | "x" | "y") => add("yu"),
-        "ou" if ini == "y" => add("u"),
-        "an" if ini == "y" => add("en"),
-        _ => {}
-    }
     let mut out = Vec::new();
     for i in &inis {
         for f in &fins {
@@ -226,7 +247,7 @@ pub fn ja_norm(s: &str) -> String {
 
 /// Voiced forms of a reading's first consonant (rendaku): "kawa" -> "gawa", "hashi" -> "basi".
 fn voiced(r: &str) -> Option<String> {
-    let (a, rest) = r.split_at(1);
+    let (a, rest) = (r.get(..1)?, r.get(1..)?);
     let v = match a {
         "k" => "g",
         "s" => "z",
@@ -309,6 +330,14 @@ pub fn readable(s: &str) -> bool {
 
 /// Does the romanized `latin` (ASCII letters) read as `native` (Han and Kana) in `lang`?
 pub fn reads_as(native: &str, latin: &str, lang: Lang) -> bool {
+    match lang {
+        Lang::Japanese => reads_as_in(native, latin, lang, ZhSystem::Hanyu),
+        Lang::Chinese => ZH_SYSTEMS.iter().any(|&sys| reads_as_in(native, latin, lang, sys)),
+    }
+}
+
+/// `reads_as`, with Chinese readings in one romanization system.
+fn reads_as_in(native: &str, latin: &str, lang: Lang, sys: ZhSystem) -> bool {
     if !readable(native) || latin.is_empty() || !latin.bytes().all(|b| b.is_ascii_lowercase()) {
         return false;
     }
@@ -333,6 +362,11 @@ pub fn reads_as(native: &str, latin: &str, lang: Lang) -> bool {
             if lang != Lang::Japanese {
                 return false;
             }
+            // a lone long-vowel or small-tsu mark has no reading of its own
+            if rom.as_deref() == Some("") {
+                i = j;
+                continue;
+            }
             units.push(rom.into_iter().collect());
             i = j;
             prev = None;
@@ -340,7 +374,7 @@ pub fn reads_as(native: &str, latin: &str, lang: Lang) -> bool {
         }
         let c = if c == '々' { prev.unwrap_or(c) } else { c };
         let opts: Vec<String> = match lang {
-            Lang::Chinese => r.zh.get(&c).cloned().unwrap_or_default(),
+            Lang::Chinese => r.zh.get(&c).map(|v| v[ZH_SYSTEMS.iter().position(|&x| x == sys).unwrap_or(0)].clone()).unwrap_or_default(),
             Lang::Japanese => {
                 if matches!(c, 'ヶ' | 'ケ') {
                     vec!["ga".into(), "ke".into(), "ka".into()]
@@ -522,6 +556,18 @@ mod tests {
         assert!(reads_as("朝阳", "chaoyang", Lang::Chinese));
         assert!(!reads_as("錦州", "jingcheng", Lang::Chinese));
         assert!(!reads_as("台中", "tainan", Lang::Chinese));
+        // one system per name: Wade-Giles, Tongyong and Hanyu names of real places
+        assert!(reads_as("台北", "taipei", Lang::Chinese));
+        assert!(reads_as("新竹", "hsinchu", Lang::Chinese));
+        assert!(reads_as("新莊", "sinjhuang", Lang::Chinese));
+        assert!(reads_as("中壢", "jhongli", Lang::Chinese));
+        assert!(reads_as("板橋", "banqiao", Lang::Chinese));
+        // never a spelling of one system inside another's: other cities stay other cities
+        assert!(!reads_as("徐州", "suzhou", Lang::Chinese));
+        assert!(!reads_as("漳州", "changzhou", Lang::Chinese));
+        assert!(!reads_as("株洲", "chuzhou", Lang::Chinese));
+        assert!(reads_as("常州", "changzhou", Lang::Chinese));
+        assert!(reads_as("苏州", "suzhou", Lang::Chinese));
     }
     #[test]
     fn thai_romanizations() {

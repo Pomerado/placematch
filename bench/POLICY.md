@@ -35,6 +35,9 @@ Hard components. A contradiction on any of them means a different place:
 - town when both sides give one, and every place name must fit: a shared district does not
   make `Centro, Cidade Alta` the same as `Centro, Vila Baixa`;
 - postcode when both sides give one;
+- state, province or region when both sides give one (`IL` and `Missouri` differ; `Texas` and
+  `TX` agree; a city that is a region of its own, such as `台中市`, counts as one);
+- country when both sides give one;
 - PO box number.
 
 Soft components may be missing on either side: postcode, region, country, district, business or
@@ -44,10 +47,15 @@ A different compass word is a different street (`1 N Main St` and `1 S Main St`)
 
 A caller who names a place and gives no house number (`Example Park, Exampleton, CA`) is matched
 by the name: a row whose first part is the same name word for word is the place, whatever street
-follows, when its area fits; a row with the caller's words in order and others added before or
-between them is `ambiguous`; a row that starts with the name and goes on (`Example Park Ferry
-Terminal`) is another place; a row that shows the caller's whole text after words of its own
-(`See more results for ...`) is a site control and never a place.
+follows, when its area fits (the same town, region, postcode and country), and when it is on the
+street the caller typed, if any. A row in another town, region or country is another place. A row
+that does not state the caller's town or street is `ambiguous`, and so is a row that adds a place
+the caller did not name when no country is given (`CA` may be California or Canada). Same-name rows
+on two streets or in two towns (two branches) are two places: `ambiguous`. A row with the caller's
+words in order and others added before or between them is `ambiguous`; a row that starts with the
+name and goes on (`Example Park Ferry Terminal`) is another place. A site control is never a place:
+a row that holds the caller's whole text and otherwise only control words (`See more results for
+...`, `Search "..."`); a row that adds a name (`Old Town Example Park`) is not a control.
 
 A candidate that adds a unit the caller did not give is not a match. In a `pick` case where the
 only candidates that fit add a unit, the answer is `ambiguous`: ask the caller which unit.

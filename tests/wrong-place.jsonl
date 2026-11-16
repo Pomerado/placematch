@@ -1,0 +1,40 @@
+{"id": "w01", "country": "US", "task": "pick", "query": "Example Cafe, Springfield, IL", "candidates": ["Example Cafe, 100 Main St, Springfield, IL", "Example Cafe, 200 Oak St, Springfield, IL"], "expected": "ambiguous", "accept": []}
+{"id": "w02", "country": "US", "task": "pick", "query": "Example Cafe, Springfield, IL", "candidates": ["Example Cafe, 100 Main St, Springfield, IL 62701", "Example Cafe, 200 Oak St, Springfield, IL 62704"], "expected": "ambiguous", "accept": []}
+{"id": "w03", "country": "US", "task": "pick", "query": "Example Cafe", "candidates": ["Example Cafe, 100 Main St, Springfield, IL", "Example Cafe, 200 Oak St, Springfield, IL"], "expected": "ambiguous", "accept": []}
+{"id": "w04", "country": "US", "task": "pick", "query": "Example Cafe, Oak St, Springfield, IL", "candidates": ["Example Cafe, 100 Main St, Springfield, IL", "Example Cafe, 200 Oak St, Springfield, IL"], "expected": "match", "accept": [1]}
+{"id": "w05", "country": "US", "task": "pick", "query": "Example Cafe, Oak St, Springfield, IL", "candidates": ["Example Cafe, 100 Main St, Springfield, IL"], "expected": "none", "accept": []}
+{"id": "w06", "country": "US", "task": "pick", "query": "Example Hospital, Springfield, IL", "candidates": ["Example Hospital, 1 Main St, Springfield, IL", "Example Hospital, 900 Elm Ave, Springfield, IL"], "expected": "ambiguous", "accept": []}
+{"id": "w07", "country": "US", "task": "pick", "query": "Example Cafe, Springfield, IL", "candidates": ["Example Cafe, 100 Main St, Springfield, IL"], "expected": "match", "accept": [0]}
+{"id": "w10", "country": "TW", "task": "pick", "query": "Example Park, Taichung", "candidates": ["Example Park, 台南市"], "expected": "none", "accept": []}
+{"id": "w11", "country": "TW", "task": "pick", "query": "中山公園, 台中", "candidates": ["中山公園, 台南市"], "expected": "none", "accept": []}
+{"id": "w12", "country": "RU", "task": "pick", "query": "Example Park, Moscow", "candidates": ["Example Park, Санкт-Петербург"], "expected": "none", "accept": []}
+{"id": "w13", "country": "US", "task": "pick", "query": "Example Park, California", "candidates": ["Example Park, Exampleton, NV"], "expected": "none", "accept": []}
+{"id": "w14", "country": "US", "task": "pick", "query": "Example Park, Texas", "candidates": ["Example Park, Exampleton, MO"], "expected": "none", "accept": []}
+{"id": "w15", "country": "TW", "task": "pick", "query": "Example Park, Taichung", "candidates": ["Example Park, 台中市", "Example Park, 台南市"], "expected": "match", "accept": [0]}
+{"id": "w16", "country": "US", "task": "pick", "query": "Example Park, Springfield, Illinois", "candidates": ["Example Park, Springfield, MO"], "expected": "none", "accept": []}
+{"id": "w17", "country": "US", "task": "pick", "query": "Example Park, Exampleton, CA", "candidates": ["Example Park, CA", "Example Park, Otherton, CA"], "expected": "ambiguous", "accept": []}
+{"id": "w18", "country": null, "task": "pick", "query": "Example Park, Exampleton, CA", "candidates": ["Example Park, Exampleton, Ontario"], "expected": "ambiguous", "accept": []}
+{"id": "w19", "country": null, "task": "pick", "query": "Example Park, Exampleton", "candidates": ["Example Park, Exampleton, CA", "Example Park, Exampleton, ON"], "expected": "ambiguous", "accept": []}
+{"id": "w20", "country": null, "task": "pick", "query": "Example Park, London, UK", "candidates": ["Example Park, London, Canada"], "expected": "none", "accept": []}
+{"id": "w21", "country": "US", "task": "pick", "query": "Example Park, Springfield, IL", "candidates": ["Example Park, Springfield, MO", "Example Park, Springfield, Illinois"], "expected": "match", "accept": [1]}
+{"id": "w22", "country": null, "task": "pick", "query": "Example Park, London, United Kingdom", "candidates": ["Example Park, London, Ontario"], "expected": "ambiguous", "accept": []}
+{"id": "w30", "country": "CN", "task": "pick", "query": "88 Renmin Road, Suzhou", "candidates": ["人民路88号, 徐州市"], "expected": "none", "accept": []}
+{"id": "w31", "country": "CN", "task": "pick", "query": "88 Renmin Road, Suzhou", "candidates": ["徐州市人民路88号"], "expected": "none", "accept": []}
+{"id": "w32", "country": "CN", "task": "pick", "query": "88 Renmin Road, Changzhou", "candidates": ["人民路88号, 漳州市"], "expected": "none", "accept": []}
+{"id": "w33", "country": "CN", "task": "pick", "query": "88 Renmin Road, Chuzhou", "candidates": ["人民路88号, 株洲市"], "expected": "none", "accept": []}
+{"id": "w34", "country": "CN", "task": "pick", "query": "88 Jiefang Road, Changzhou, Jiangsu", "candidates": ["福建省漳州市解放路88号"], "expected": "none", "accept": []}
+{"id": "w35", "country": "CN", "task": "pick", "query": "88 Jiefang Road, Changzhou, Jiangsu", "candidates": ["福建省常州市解放路88号"], "expected": "none", "accept": []}
+{"id": "w36", "country": "CN", "task": "pick", "query": "88 Jiefang Road, Changzhou, Jiangsu", "candidates": ["江苏省常州市解放路88号"], "expected": "match", "accept": [0]}
+{"id": "w37", "country": "CN", "task": "pick", "query": "88 Jiefang Road, Changzhou, Jiangsu", "candidates": ["福建省漳州市解放路88号", "江苏省常州市解放路88号"], "expected": "match", "accept": [1]}
+{"id": "w40", "country": "US", "task": "pick", "query": "10 Main St, Springfield, IL", "candidates": ["10 Main St, Springfield, MO"], "expected": "none", "accept": []}
+{"id": "w41", "country": "US", "task": "pick", "query": "10 Main St, Springfield, Illinois", "candidates": ["10 Main St, Springfield, MO"], "expected": "none", "accept": []}
+{"id": "w42", "country": "US", "task": "pick", "query": "10 Main St, Springfield, IL", "candidates": ["10 Main St, Springfield, Missouri", "10 Main St, Springfield, Illinois"], "expected": "match", "accept": [1]}
+{"id": "w50", "country": "US", "task": "pick", "query": "12 Main St, Springfield", "candidates": ["See more results for 12 Main St, Springfield"], "expected": "none", "accept": []}
+{"id": "w51", "country": "US", "task": "pick", "query": "12 Main St, Springfield, IL", "candidates": ["See more results for \"12 Main St, Springfield, IL\""], "expected": "none", "accept": []}
+{"id": "w52", "country": "US", "task": "pick", "query": "Example Park", "candidates": ["Example Park, Springfield, IL", "Search for Example Park"], "expected": "match", "accept": [0]}
+{"id": "w53", "country": "US", "task": "pick", "query": "Example Park", "candidates": ["See more results for Example Park"], "expected": "none", "accept": []}
+{"id": "w54", "country": "US", "task": "pick", "query": "Example Center, Springfield, IL", "candidates": ["Example Center, Springfield, IL", "Jane Q. Example Center, Springfield, IL"], "expected": "ambiguous", "accept": []}
+{"id": "w55", "country": "US", "task": "pick", "query": "Example Park", "candidates": ["Example Park, Springfield, IL", "Example Park - See all results"], "expected": "match", "accept": [0]}
+{"id": "w60", "country": "DE", "task": "pick", "query": "Munich", "candidates": ["München, Deutschland"], "expected": "match", "accept": [0]}
+{"id": "w61", "country": "IT", "task": "pick", "query": "Rome", "candidates": ["Roma, Italia"], "expected": "match", "accept": [0]}
+{"id": "w62", "country": "TH", "task": "pick", "query": "Nonthaburi", "candidates": ["นนทบุรี"], "expected": "match", "accept": [0]}
