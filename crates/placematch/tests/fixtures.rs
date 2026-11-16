@@ -35,13 +35,14 @@ fn run_cases(text: &str) {
                 Pick::Ambiguous(_) => expected == "ambiguous",
             }
         };
-        // a case may also name the notes its answer carries ("unit_not_listed")
-        let notes_ok = c.get("notes").map_or(true, |want| {
-            let rows: Vec<Row> = cands.iter().map(|&t| Row::from(t)).collect();
-            let got = m.pick_explained(q, &rows, &PickOptions { country: cc }).notes;
-            want.as_array().unwrap().iter().map(|x| x.as_str().unwrap()).collect::<Vec<_>>() == got
-        });
-        if !ok || !notes_ok {
+        // a case may also name the notes its answer carries ("unit_not_listed") and the row a read
+        // may take (`prefer_on_read`, given the case's `categorized` rows)
+        let categorized: Vec<bool> = c.get("categorized").map_or(vec![false; cands.len()], |v| v.as_array().unwrap().iter().map(|x| x.as_bool().unwrap()).collect());
+        let rows: Vec<Row> = cands.iter().zip(&categorized).map(|(&text, &categorized)| Row { text, categorized }).collect();
+        let e = m.pick_explained(q, &rows, &PickOptions { country: cc });
+        let notes_ok = c.get("notes").map_or(true, |want| want.as_array().unwrap().iter().map(|x| x.as_str().unwrap()).collect::<Vec<_>>() == e.notes);
+        let prefer_ok = c.get("prefer_on_read").map_or(true, |want| want.as_u64().map(|i| i as usize) == e.prefer_on_read);
+        if !ok || !notes_ok || !prefer_ok {
             failures.push(c["id"].as_str().unwrap().to_string());
         }
     }

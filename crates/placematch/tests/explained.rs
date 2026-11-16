@@ -84,6 +84,18 @@ fn a_house_number_range_holding_the_number_matches_under_the_same_postcode() {
     assert_eq!((e.outcome, e.index, e.same.clone()), (Outcome::Match, Some(1), vec![0, 1]));
 }
 
+/// Two different listed ranges that both hold the caller's number contradict each other: ask.
+/// Identical ranges are one place.
+#[test]
+fn two_different_ranges_holding_the_number_ask() {
+    let m = Matcher::new();
+    let q = "12 Example St, Springfield, IL 62701";
+    let e = explain(&m, q, &["10-14 Example St, Springfield, IL 62701", "12-16 Example St, Springfield, IL 62701"]);
+    assert_eq!((e.outcome, e.same.clone(), e.reasons.clone()), (Outcome::Ambiguous, vec![0, 1], vec!["several_places"]));
+    let e = explain(&m, q, &["Example Hotel, 10-14 Example St, Springfield, IL 62701", "10-14 Example St, Springfield, IL 62701"]);
+    assert_eq!((e.outcome, e.index, e.same.clone()), (Outcome::Match, Some(1), vec![0, 1]));
+}
+
 /// A hyphenated pair is read as a range only where it means one, so a range never makes another
 /// building the caller's: outside that, the pair is an ordinary house number.
 #[test]
@@ -178,23 +190,51 @@ fn a_same_name_pin_beside_a_categorized_venue_asks_and_a_read_may_take_the_venue
     assert_eq!((e.outcome, e.index, e.prefer_on_read), (Outcome::Match, Some(0), None));
 }
 
-/// A longer name that adds a place-type word is another place, with or without a leading article.
+/// A longer name that adds a place-type word, or goes on after the name behind a leading article,
+/// may be another place named after the caller's ("The Example Park Hotel"): it is still asked about,
+/// but a read never takes it on its category.
 #[test]
-fn a_longer_name_adding_a_place_type_is_another_place() {
+fn a_read_never_prefers_a_longer_name_adding_a_place_type() {
     let m = Matcher::new();
     let o = PickOptions { country: Some("US") };
     let hotel = Row { text: "The Example Park Hotel, 5 Sample Rd, Springfield, IL", categorized: true };
     let e = m.pick_explained("example park, springfield, il", &[Row::from("Example Park, Springfield, IL"), hotel], &o);
-    assert_eq!((e.outcome, e.index, e.prefer_on_read), (Outcome::Match, Some(0), None));
-    assert_eq!(e.rows[1].reasons, vec!["place_name"]);
+    assert_eq!((e.outcome, e.same.clone(), e.prefer_on_read), (Outcome::Ambiguous, vec![0, 1], None));
     let hotel = Row { text: "The Example Park Hotel, 5 Sample Rd, Shelbyville, IL", categorized: true };
     let e = m.pick_explained("example park", &[Row::from("Example Park, Springfield, IL"), hotel], &o);
-    assert_eq!((e.outcome, e.index, e.prefer_on_read), (Outcome::Match, Some(0), None));
-    for row in ["The Example Park Station, Springfield, IL", "Example Park North Mall, Springfield, IL", "The Example Park Gardens, Springfield, IL"] {
-        assert_eq!(explain(&m, "example park, springfield, il", &[row]).outcome, Outcome::None, "{}", row);
+    assert_eq!((e.outcome, e.prefer_on_read), (Outcome::Ambiguous, None));
+    // in one town, with the caller's area: the type word alone withholds the preference
+    for venue in ["Jane Q. Example Memorial Hospital, 5 Sample Rd, Exampleton, NY 10001", "The Example Memorial Hospital, 5 Sample Rd, Exampleton, NY 10001", "The Example Memorial Annex West, Exampleton, NY"] {
+        for q in ["example memorial", "example memorial, exampleton, ny"] {
+            let e = m.pick_explained(q, &[Row::from("Example Memorial, Exampleton, NY"), Row { text: venue, categorized: true }], &o);
+            assert_eq!((e.outcome, e.same.clone(), e.prefer_on_read), (Outcome::Ambiguous, vec![0, 1], None), "{} / {}", q, venue);
+        }
     }
-    // an article alone, or words that are not a place type, may still be the place
-    assert_eq!(explain(&m, "example park, springfield, il", &["The Example Park, Springfield, IL"]).outcome, Outcome::Ambiguous);
+    // a type word the caller typed is the caller's own
+    let e = m.pick_explained("example memorial hospital", &[Row::from("Example Memorial Hospital, Exampleton, NY"), Row { text: "Jane Q. Example Memorial Hospital, 5 Sample Rd, Exampleton, NY 10001", categorized: true }], &o);
+    assert_eq!((e.outcome, e.prefer_on_read), (Outcome::Ambiguous, Some(1)));
+}
+
+/// A same-name row in another town beside a venue whose longer name ends in a place-type word is
+/// still a question: `pick`, `compare` and `pick_explained` all keep asking.
+#[test]
+fn a_type_word_venue_beside_a_same_name_row_elsewhere_still_asks() {
+    let m = Matcher::new();
+    let cases: [(&str, &str, [&str; 2]); 7] = [
+        ("US", "example memorial", ["Example Memorial, Othertown, NY", "Jane Q. Example Memorial Hospital, 5 Sample Rd, Exampleton, NY 10001"]),
+        ("US", "example square", ["Example Square, Othertown, NY", "Jane Q. Example Square Garden, Exampleton, NY"]),
+        ("US", "example international", ["Example International, Othertown, CA", "Exampleton Example International Airport, Exampleton, CA"]),
+        ("US", "example central", ["Example Central, Othertown, NY", "Exampleton Example Central Terminal, Exampleton, NY"]),
+        ("US", "example field", ["Example Field, Othertown, NY", "Jane Q. Example Field Stadium, Exampleton, NY"]),
+        ("US", "example cross", ["Example Cross, Othertown", "Exampleton Example Cross Station, Exampleton"]),
+        ("GB", "example cross", ["Example Cross, Othertown", "Exampleton Example Cross Station, Exampleton"]),
+    ];
+    for (cc, q, rows) in cases {
+        let e = m.pick_explained(q, &[Row::from(rows[0]), Row { text: rows[1], categorized: true }], &PickOptions { country: Some(cc) });
+        assert_eq!((e.outcome, e.same.clone(), e.prefer_on_read), (Outcome::Ambiguous, vec![0, 1], None), "{} {}", cc, q);
+        assert_eq!(m.pick(q, &rows, Some(cc)), Pick::Ambiguous(vec![0, 1]), "{} {}", cc, q);
+        assert_eq!(m.compare(q, rows[1], Some(cc)).0, Verdict::Unknown, "{} {}", cc, q);
+    }
 }
 
 #[test]

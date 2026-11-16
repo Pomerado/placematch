@@ -219,8 +219,8 @@ fn range_holds(range: &str, number: &str) -> bool {
     lo < hi && hi - lo <= RANGE_WIDTH && lo % 2 == hi % 2 && n % 2 == lo % 2 && lo <= n && n <= hi
 }
 
-/// Words that make a longer name another place: a place of its own type at or near the named one
-/// ("Example Park Hotel", "The Example Park Station").
+/// Words that mark a longer name as possibly another place, of its own type, named after the
+/// caller's ("The Example Park Hotel"): a read never prefers such a row.
 const PLACE_TYPES: &[&str] = &[
     "hotel", "motel", "inn", "hostel", "resort", "lodge", "station", "stn", "terminal", "ferry", "pier", "port", "harbor", "harbour", "airport",
     "garden", "gardens", "mall", "market", "plaza", "garage", "parking", "carpark", "hospital", "clinic", "school", "college", "university",
@@ -919,16 +919,6 @@ impl Matcher {
         if row.len() <= name.len() {
             return 0;
         }
-        // a place-type word the caller did not write makes another place ("The Example Park Hotel")
-        if row.iter().any(|w| PLACE_TYPES.contains(&w.0.as_str()) && !name.iter().any(|n| eq(n, w))) {
-            return 0;
-        }
-        // the name followed by more words is another place, with or without a leading article
-        let bare = |v: &'_ [(String, Vec<u32>)]| -> usize { usize::from(v.len() > 1 && ARTICLES.contains(&v[0].0.as_str())) };
-        let (n2, r2) = (&name[bare(name)..], &row[bare(row)..]);
-        if r2.len() > n2.len() && n2.iter().zip(r2).all(|(a, b)| eq(a, b)) {
-            return 0;
-        }
         if name.iter().zip(row).all(|(a, b)| eq(a, b)) {
             return 0;
         }
@@ -943,6 +933,20 @@ impl Matcher {
         } else {
             0
         }
+    }
+
+    /// A longer name that may be another place named after the caller's: it adds a place-type word
+    /// the caller did not write ("Jane Q. Example Memorial Hospital"), or goes on after the caller's
+    /// name behind a leading article ("The Example Park Annex West"). Still asked about, but never
+    /// preferred on a read.
+    fn named_after(name: &[(String, Vec<u32>)], row: &[(String, Vec<u32>)]) -> bool {
+        let eq = |a: &(String, Vec<u32>), b: &(String, Vec<u32>)| a.0 == b.0 || intersects(&a.1, &b.1);
+        if row.iter().any(|w| PLACE_TYPES.contains(&w.0.as_str()) && !name.iter().any(|n| eq(n, w))) {
+            return true;
+        }
+        let bare = |v: &[(String, Vec<u32>)]| -> usize { usize::from(v.len() > 1 && ARTICLES.contains(&v[0].0.as_str())) };
+        let (n2, r2) = (&name[bare(name)..], &row[bare(row)..]);
+        r2.len() > n2.len() && n2.iter().zip(r2).all(|(a, b)| eq(a, b))
     }
 
     /// A site's control rather than a place: a row whose first part shows the caller's whole text,
@@ -1033,6 +1037,8 @@ impl Matcher {
         let mut exact: Vec<(usize, bool, Components)> = Vec::new();
         let mut variant: Vec<usize> = Vec::new();
         let mut variant_area: Vec<(bool, Components)> = Vec::new();
+        // a longer-name row that may be another place named after the caller's
+        let mut named_after_any = false;
         for (i, row) in rows.iter().enumerate() {
             let c = row.text;
             if self.is_control(query, c) {
@@ -1040,7 +1046,8 @@ impl Matcher {
                 continue;
             }
             let first = c.split(',').next().unwrap_or("");
-            let rel = self.name_relation(name, &self.name_words(first));
+            let words = self.name_words(first);
+            let rel = self.name_relation(name, &words);
             if rel == 0 {
                 reports.push(report(Verdict::Different, vec!["place_name"]));
                 continue;
@@ -1058,6 +1065,7 @@ impl Matcher {
                 reports.push(report(Verdict::Unknown, vec!["place_name_variant"]));
                 variant.push(i);
                 variant_area.push((full, ca));
+                named_after_any |= Self::named_after(name, &words);
             }
         }
         if exact.is_empty() {
@@ -1077,12 +1085,13 @@ impl Matcher {
             }
             let mut e = Explained::ambiguous(ids.clone(), reasons, reports);
             // the venue the site categorized, beside a same-name row it did not (or the reverse), when
-            // the rows name one town, and the caller's area in full when the caller gave one
+            // the rows name one town, and the caller's area in full when the caller gave one, and no
+            // longer-name row may be another place named after the caller's
             let areas: Vec<(bool, &Components)> = exact.iter().map(|x| (x.1, &x.2)).chain(variant_area.iter().map(|x| (x.0, &x.1))).collect();
             let has_town = |x: &Components| x.localities.iter().any(|t| !x.regions.contains(&t.key) && !self.data.is_country_name(&t.key));
             let caller_area = qa.postcode.is_some() || !qa.localities.is_empty() || !qa.regions.is_empty();
             let one_town = areas.iter().all(|(full, a)| has_town(a) && (*full || !caller_area) && areas.iter().all(|(_, b)| self.area_fits(a, b).0 && self.area_fits(b, a).0));
-            if !towns_apart && one_town {
+            if !towns_apart && one_town && !named_after_any {
                 let categorized: Vec<usize> = ids.iter().copied().filter(|&i| rows[i].categorized).collect();
                 if categorized.len() == 1 {
                     e.prefer_on_read = Some(categorized[0]);
@@ -1502,6 +1511,7 @@ impl Matcher {
         // a listing's range holding the caller's number ("10-14" for 12) is read as that number: the
         // caller's building when both sides give the same postcode, asked about otherwise
         let mut ranged = vec![false; cs.len()];
+        let listed_house: Vec<Option<String>> = cs.iter().map(|c| c.house.clone()).collect();
         if let (true, Some(qh)) = (ranges, &q.house) {
             for i in 0..cs.len() {
                 let holds = verdicts[i].1 == ["house_number"] && cs[i].house.as_deref().map_or(false, |h| range_holds(h, qh)) && Self::range_reading(&q, &cs[i]);
@@ -1557,7 +1567,9 @@ impl Matcher {
         for &i in &same {
             let mut placed = false;
             for cl in clusters.iter_mut() {
-                if cl.iter().all(|&j| self.compare_parsed(&cs[i], &cs[j], Mode::Peer).0 != Verdict::Different && self.compare_parsed(&cs[j], &cs[i], Mode::Peer).0 != Verdict::Different) {
+                // two different listed ranges holding the caller's number are two claims, not one place
+                let ranges_differ = |j: usize| ranged[i] && ranged[j] && listed_house[i] != listed_house[j];
+                if cl.iter().all(|&j| !ranges_differ(j) && self.compare_parsed(&cs[i], &cs[j], Mode::Peer).0 != Verdict::Different && self.compare_parsed(&cs[j], &cs[i], Mode::Peer).0 != Verdict::Different) {
                     cl.push(i);
                     placed = true;
                     break;

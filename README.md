@@ -114,9 +114,7 @@ name decides:
   street follows the name, when its town, region and postcode fit the caller's;
 - a row that holds the caller's words in order with others added before or between them ("The
   Example Park", or a venue under its full name) is `ambiguous`: it may be the place;
-- a row that starts with the name and goes on ("Example Park Ferry Terminal"), with or without a
-  leading article, or that adds a place-type word ("The Example Park Hotel", "Example Park
-  Station") is another place;
+- a row that starts with the name and goes on ("Example Park Ferry Terminal") is another place;
 - a row that shows the caller's whole text after words of its own ("See more results for ...") is
   a site control, not a place.
 
@@ -125,7 +123,10 @@ under the name next to the venue under its official name), the answer is `ambigu
 that the site shows it with a category of its own (`Row { text, categorized: true }`, a venue type
 such as "Convention center"). When exactly one of those rows is categorized, and the rows name one
 town (the caller's, when the caller gave an area), `prefer_on_read` names it: a picker reading the
-site may take it, and a write still asks.
+site may take it, and a write still asks. A longer-name row that may be another place named after
+the caller's gets no preference: one that adds a place-type word the caller did not type ("The
+Example Park Hotel", "Jane Q. Example Memorial Hospital"), or goes on after the caller's name behind
+a leading article. The answer stays `ambiguous`, so a write asks and a read takes neither.
 
 A picker around PlaceMatch decides what to do with `none` and `ambiguous` (ask in a write, refuse or
 read on in a read). `Matcher::is_control`, `Matcher::in_area` and `Matcher::same_but_postcode`
