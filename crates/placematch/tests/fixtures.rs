@@ -62,3 +62,45 @@ fn readme_example() {
     );
     assert_eq!(pick, Pick::Match(0));
 }
+
+/// The picker built on PlaceMatch, as the place-name cases describe it: a write asks when PlaceMatch
+/// finds no place among usable rows; a read that finds none takes the site's first usable row when
+/// it is in the caller's area, and otherwise refuses. Controls are never usable.
+#[test]
+fn place_name_picker_modes() {
+    let m = Matcher::new();
+    let mut failures = Vec::new();
+    for line in include_str!("../../../tests/place-names.jsonl").lines().filter(|l| !l.trim().is_empty()) {
+        let c: Value = serde_json::from_str(line).unwrap();
+        let q = c["query"].as_str().unwrap();
+        let cands: Vec<&str> = c["candidates"].as_array().unwrap().iter().map(|x| x.as_str().unwrap()).collect();
+        let usable: Vec<usize> = (0..cands.len()).filter(|&i| !m.is_control(q, cands[i])).collect();
+        let read = c["mode"] == "read";
+        let named = !q.split(',').next().unwrap().chars().any(|ch| ch.is_ascii_digit());
+        let answer: (&str, Option<usize>) = match m.pick(q, &cands, Some("US")) {
+            Pick::Match(i) => ("match", Some(i)),
+            _ if usable.is_empty() => ("none", None),
+            // a read of a named place takes the site's first usable row in the caller's area, unless
+            // that row shows the typed text after words of its own
+            _ if read && named => match usable.first().filter(|&&i| !m.shows_typed_text(q, cands[i], 1) && m.in_area(q, cands[i], Some("US"))) {
+                Some(&i) => ("match", Some(i)),
+                None => ("ambiguous", None),
+            },
+            // a read of a street address accepts the caller's place under another postcode
+            _ if read => match usable.iter().find(|&&i| m.same_but_postcode(q, cands[i], Some("US"))) {
+                Some(&i) => ("match", Some(i)),
+                None => ("none", None),
+            },
+            _ => ("ambiguous", None),
+        };
+        let want = c["picker"].as_str().unwrap();
+        let accept: Vec<usize> = c["picker_accept"].as_array().unwrap().iter().map(|x| x.as_u64().unwrap() as usize).collect();
+        let ok = answer.0 == want && (want != "match" || answer.1.map_or(false, |i| accept.contains(&i)));
+        // two answers are proposals that differ from the earlier picker on purpose (see the notes)
+        let proposal = c["proposal"].as_bool().unwrap_or(false);
+        if ok == proposal {
+            failures.push(format!("{} {:?}", c["id"].as_str().unwrap(), answer));
+        }
+    }
+    assert!(failures.is_empty(), "picker answers differ: {:?}", failures);
+}

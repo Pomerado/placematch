@@ -70,6 +70,11 @@ name decides:
 - a row that shows the caller's whole text after words of its own ("See more results for ...") is
   a site control, not a place.
 
+A picker around PlaceMatch decides what to do with `none` and `ambiguous` (ask in a write, refuse or
+read on in a read). `Matcher::is_control`, `Matcher::in_area` and `Matcher::same_but_postcode`
+answer the questions such a picker asks; `tests/place-names.jsonl` holds the cases, with the
+picker's answer for each mode beside PlaceMatch's own.
+
 ## Accuracy
 
 Measured on real addresses held out by region (see [bench/real](bench/real)): whole states,

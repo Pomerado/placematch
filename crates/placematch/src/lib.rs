@@ -744,20 +744,42 @@ impl Matcher {
         }
     }
 
-    /// A site's control rather than a place: a row showing the caller's whole text, of two parts or
-    /// more, after two or more words of its own ("See more results for <text>", "Search for <text>").
-    fn is_control(&self, query: &str, row: &str) -> bool {
+    /// A site's control rather than a place: a row whose first part shows the caller's whole text,
+    /// of two parts or more, after two or more words of its own ("See more results for <text>",
+    /// "Search for <text>"), ending with the text or the text and a count.
+    pub fn is_control(&self, query: &str, row: &str) -> bool {
+        self.shows_typed_text(query, row, 2)
+    }
+
+    /// The row shows the caller's whole text, of two parts or more, starting inside its own first
+    /// part after at least `min_words` words of it ("Search "<text>"", "The <text>").
+    pub fn shows_typed_text(&self, query: &str, row: &str, min_words: usize) -> bool {
         if !query.contains(',') {
             return false;
         }
         let q: Vec<String> = self.name_words(query).into_iter().map(|w| w.0).collect();
         let r: Vec<String> = self.name_words(row).into_iter().map(|w| w.0).collect();
-        if r.len() < q.len() + 2 {
+        let first_len = self.name_words(row.split(',').next().unwrap_or("")).len();
+        if q.is_empty() || r.len() < q.len() + min_words.max(1) || r[0].chars().any(|ch| ch.is_ascii_digit()) {
             return false;
         }
-        (2..=r.len() - q.len()).any(|at| {
-            r[at..at + q.len()] == q[..] && !r[0].chars().any(|ch| ch.is_ascii_digit()) && (at + q.len() == r.len() || (at + q.len() + 1 == r.len() && r[r.len() - 1].chars().all(|ch| ch.is_ascii_digit())))
+        (min_words.max(1)..=r.len() - q.len()).any(|at| {
+            at < first_len && r[at..at + q.len()] == q[..] && (at + q.len() == r.len() || (at + q.len() + 1 == r.len() && r[r.len() - 1].chars().all(|ch| ch.is_ascii_digit())) || min_words < 2)
         })
+    }
+
+    /// The caller's house number, street and town, with only the postcode different: the same
+    /// building under another postcode, or a postcode typed wrong. A picker reading a site may
+    /// accept it; a write asks.
+    pub fn same_but_postcode(&self, query: &str, row: &str, country: Option<&str>) -> bool {
+        let ctx = self.ctx(country);
+        let (mut q, mut c) = (parse::parse(&ctx, query), parse::parse(&ctx, row));
+        if q.house.is_none() || q.postcode.is_none() || c.postcode.is_none() || q.postcode == c.postcode || (q.city.is_none() && q.regions.is_empty()) {
+            return false;
+        }
+        q.postcode = None;
+        c.postcode = None;
+        self.compare_parsed(&q, &c, Mode::Query).0 == Verdict::Same
     }
 
     /// Does the row's area fit the caller's? Returns (fits, holds every area part the caller gave).
@@ -1148,6 +1170,37 @@ impl Matcher {
             }
         }
         false
+    }
+
+    /// Is the row in the caller's area, whatever place it is? The caller gave a town, region or
+    /// postcode after the first part, and the row, after its own first part, shows no other postcode
+    /// and either the caller's postcode or each town and region the caller gave. A picker that must
+    /// read something can take such a row when no row is the caller's place.
+    pub fn in_area(&self, query: &str, row: &str, country: Option<&str>) -> bool {
+        let ctx = self.ctx(country);
+        let rest = |s: &str| -> String { s.splitn(2, ',').nth(1).unwrap_or("").to_string() };
+        let (qr, rr) = (rest(query), rest(row));
+        if qr.trim().is_empty() || rr.trim().is_empty() {
+            return false;
+        }
+        let qa = parse::parse(&ctx, &qr);
+        let ra = parse::parse(&ctx, &rr);
+        if qa.postcode.is_some() && qa.postcode == ra.postcode && ra.postcode.is_some() {
+            return true;
+        }
+        if qa.localities.is_empty() && qa.regions.is_empty() {
+            return false;
+        }
+        // with no town given, the caller's first part (the place, or a town) must be in the row
+        if qa.localities.iter().all(|t| qa.regions.contains(&t.key) || self.data.is_country_name(&t.key)) {
+            let name: Vec<String> = self.name_words(query.split(',').next().unwrap_or("")).into_iter().map(|w| w.0).collect();
+            let r: Vec<String> = self.name_words(&rr).into_iter().map(|w| w.0).collect();
+            if name.is_empty() || !r.windows(name.len()).any(|w| w == &name[..]) {
+                return false;
+            }
+        }
+        let (fits, full) = self.area_fits(&qa, &ra);
+        fits && full
     }
 
     /// Choose the candidate that is the same place as the query.
