@@ -219,17 +219,14 @@ fn range_holds(range: &str, number: &str) -> bool {
     lo < hi && hi - lo <= RANGE_WIDTH && lo % 2 == hi % 2 && n % 2 == lo % 2 && lo <= n && n <= hi
 }
 
-/// Words that mark a longer name as possibly another place, of its own type, named after the
-/// caller's ("The Example Park Hotel"): a read never prefers such a row.
-const PLACE_TYPES: &[&str] = &[
-    "hotel", "motel", "inn", "hostel", "resort", "lodge", "station", "stn", "terminal", "ferry", "pier", "port", "harbor", "harbour", "airport",
-    "garden", "gardens", "mall", "market", "plaza", "garage", "parking", "carpark", "hospital", "clinic", "school", "college", "university",
-    "library", "museum", "stadium", "arena", "church", "cemetery", "store", "shop", "restaurant", "cafe", "bar", "tower", "apartments",
-    "condominiums", "condos", "office", "offices", "entrance", "gate", "annex", "annexe", "lot",
+/// Age and size words that, before a place's name, may name another place ("Old Example Park",
+/// "Upper Example Park"), in the languages PlaceMatch reads; compass words come from the dictionaries.
+const AGE_WORDS: &[&str] = &[
+    "old", "new", "upper", "lower", "little", "great", "vieux", "vieil", "vieille", "nouveau", "nouvel", "nouvelle", "haut", "haute", "bas", "basse",
+    "petit", "petite", "grand", "grande", "viejo", "vieja", "nuevo", "nueva", "alto", "alta", "bajo", "baja", "alt", "alte", "alten", "neu", "neue",
+    "neuen", "ober", "obere", "unter", "untere", "klein", "kleine", "gross", "grosse", "vecchio", "vecchia", "nuovo", "nuova", "piccolo", "piccola",
+    "velho", "velha", "novo", "nova", "oud", "oude", "nieuw", "nieuwe", "stary", "stara", "nowy", "nowa",
 ];
-
-/// Leading articles a place name may be written with or without.
-const ARTICLES: &[&str] = &["the", "la", "le", "les", "el", "los", "las", "il", "lo", "der", "die", "das", "het"];
 
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -935,18 +932,33 @@ impl Matcher {
         }
     }
 
-    /// A longer name that may be another place named after the caller's: it adds a place-type word
-    /// the caller did not write ("Jane Q. Example Memorial Hospital"), or goes on after the caller's
-    /// name behind a leading article ("The Example Park Annex West"). Still asked about, but never
-    /// preferred on a read.
-    fn named_after(name: &[(String, Vec<u32>)], row: &[(String, Vec<u32>)]) -> bool {
+    /// A longer name a read must not take for the caller's place: it does not end with the caller's
+    /// name (words follow the caller's last word: "The Example Park Hotel", "Jane Q. Example Park
+    /// Suites"), or a word it adds is a compass, age or size word ("North Example Park", "Old Example
+    /// Park"). Given names and initials before the name ("Jane Q. Example Convention Center" for
+    /// "Example Center") are fine.
+    fn named_after(&self, name: &[(String, Vec<u32>)], row: &[(String, Vec<u32>)]) -> bool {
         let eq = |a: &(String, Vec<u32>), b: &(String, Vec<u32>)| a.0 == b.0 || intersects(&a.1, &b.1);
-        if row.iter().any(|w| PLACE_TYPES.contains(&w.0.as_str()) && !name.iter().any(|n| eq(n, w))) {
+        let (Some(last), Some(row_last)) = (name.last(), row.last()) else {
+            return true;
+        };
+        if !eq(last, row_last) {
             return true;
         }
-        let bare = |v: &[(String, Vec<u32>)]| -> usize { usize::from(v.len() > 1 && ARTICLES.contains(&v[0].0.as_str())) };
-        let (n2, r2) = (&name[bare(name)..], &row[bare(row)..]);
-        r2.len() > n2.len() && n2.iter().zip(r2).all(|(a, b)| eq(a, b))
+        // the caller's other words, in order, before the row's last word; every other row word is added
+        let mut matched = vec![false; row.len()];
+        matched[row.len() - 1] = true;
+        let mut j = 0;
+        for (i, w) in row[..row.len() - 1].iter().enumerate() {
+            if j + 1 < name.len() && eq(&name[j], w) {
+                matched[i] = true;
+                j += 1;
+            }
+        }
+        if j + 1 != name.len() {
+            return true;
+        }
+        row.iter().zip(&matched).any(|(w, &m)| !m && (AGE_WORDS.contains(&w.0.as_str()) || self.data.lookup(&w.0).iter().any(|e| e.class == data::Class::Directional)))
     }
 
     /// A site's control rather than a place: a row whose first part shows the caller's whole text,
@@ -1065,7 +1077,7 @@ impl Matcher {
                 reports.push(report(Verdict::Unknown, vec!["place_name_variant"]));
                 variant.push(i);
                 variant_area.push((full, ca));
-                named_after_any |= Self::named_after(name, &words);
+                named_after_any |= self.named_after(name, &words);
             }
         }
         if exact.is_empty() {
@@ -1090,7 +1102,10 @@ impl Matcher {
             let areas: Vec<(bool, &Components)> = exact.iter().map(|x| (x.1, &x.2)).chain(variant_area.iter().map(|x| (x.0, &x.1))).collect();
             let has_town = |x: &Components| x.localities.iter().any(|t| !x.regions.contains(&t.key) && !self.data.is_country_name(&t.key));
             let caller_area = qa.postcode.is_some() || !qa.localities.is_empty() || !qa.regions.is_empty();
-            let one_town = areas.iter().all(|(full, a)| has_town(a) && (*full || !caller_area) && areas.iter().all(|(_, b)| self.area_fits(a, b).0 && self.area_fits(b, a).0));
+            // with no area from the caller, the rows must also state one region (another state's
+            // Springfield is another place)
+            let one_region = |a: &Components, b: &Components| caller_area || (!a.regions.is_empty() && a.regions.iter().any(|r| b.regions.contains(r)));
+            let one_town = areas.iter().all(|(full, a)| has_town(a) && (*full || !caller_area) && areas.iter().all(|(_, b)| self.area_fits(a, b).0 && self.area_fits(b, a).0 && one_region(a, b)));
             if !towns_apart && one_town && !named_after_any {
                 let categorized: Vec<usize> = ids.iter().copied().filter(|&i| rows[i].categorized).collect();
                 if categorized.len() == 1 {

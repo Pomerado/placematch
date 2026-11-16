@@ -123,10 +123,12 @@ under the name next to the venue under its official name), the answer is `ambigu
 that the site shows it with a category of its own (`Row { text, categorized: true }`, a venue type
 such as "Convention center"). When exactly one of those rows is categorized, and the rows name one
 town (the caller's, when the caller gave an area), `prefer_on_read` names it: a picker reading the
-site may take it, and a write still asks. A longer-name row that may be another place named after
-the caller's gets no preference: one that adds a place-type word the caller did not type ("The
-Example Park Hotel", "Jane Q. Example Memorial Hospital"), or goes on after the caller's name behind
-a leading article. The answer stays `ambiguous`, so a write asks and a read takes neither.
+site may take it, and a write still asks. With no area from the caller, the rows must also state
+the same region. The longer row is preferred only when its name ends with the caller's name and the
+words it adds before it are not compass, age or size words: "Jane Q. Example Convention Center" for
+"Example Center" may be preferred, but "The Example Park Hotel", "Jane Q. Example Park Suites" and
+"North Example Park" may be other places named after the caller's, so the answer stays `ambiguous`
+with no preference: a write asks and a read takes neither.
 
 A picker around PlaceMatch decides what to do with `none` and `ambiguous` (ask in a write, refuse or
 read on in a read). `Matcher::is_control`, `Matcher::in_area` and `Matcher::same_but_postcode`
