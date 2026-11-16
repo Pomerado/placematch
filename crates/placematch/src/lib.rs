@@ -242,13 +242,18 @@ const LATIN_ADMIN: &[&str] = &["shi", "ku", "ken", "fu", "to", "do", "gun", "son
 
 /// One side is Han or Kana and the other a romanization that reads as it.
 fn reading_eq(q: &Text, c: &Text) -> bool {
-    let (nat, lat) = if reading::readable(&q.native) && is_latinish(c.script) {
+    let ok = |t: &Text| reading::readable(&t.native) || reading::thai(&t.native);
+    let (nat, lat) = if ok(q) && is_latinish(c.script) {
         (q, c)
-    } else if reading::readable(&c.native) && is_latinish(q.script) {
+    } else if ok(c) && is_latinish(q.script) {
         (c, q)
     } else {
         return false;
     };
+    if reading::thai(&nat.native) {
+        let full: String = if lat.native.is_empty() { lat.key.clone() } else { lat.native.chars().filter(|ch| ch.is_ascii_alphabetic()).collect() };
+        return full.len() >= 4 && reading::thai_reads_as(&nat.native, &full);
+    }
     // the romanization as written: the ASCII key folds "ae" as an umlaut ("Kitaen" is not "Kitan")
     let letters = |t: &Text| -> String { if t.native.is_empty() { t.key.clone() } else { t.native.chars().filter(|ch| ch.is_ascii_alphabetic()).collect() } };
     let full = letters(lat);

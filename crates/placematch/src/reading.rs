@@ -414,6 +414,101 @@ pub fn reads_as(native: &str, latin: &str, lang: Lang) -> bool {
     reach[n].contains(&lb.len())
 }
 
+/// Thai consonants as the consonants of a romanization: initial and final sounds differ ("ด" is
+/// "d" leading a syllable and "t" closing one), and some letters are silent or vowels.
+fn thai_options(c: char) -> Option<&'static [&'static str]> {
+    Some(match c {
+        'ก' | 'ข' | 'ฃ' | 'ค' | 'ฅ' | 'ฆ' => &["k"],
+        'ง' => &["N"],
+        'จ' | 'ฉ' | 'ช' | 'ฌ' => &["c", "t", "s"],
+        'ซ' | 'ศ' | 'ษ' | 'ส' => &["s", "t"],
+        'ญ' => &["", "n"],
+        'ฎ' | 'ด' => &["d", "t"],
+        'ฏ' | 'ต' | 'ฐ' | 'ถ' | 'ท' | 'ธ' => &["t"],
+        'ฑ' | 'ฒ' => &["t", "d"],
+        'ณ' | 'น' => &["n"],
+        'บ' => &["b", "p"],
+        'ป' | 'ผ' | 'พ' | 'ภ' => &["p"],
+        'ฝ' | 'ฟ' => &["f", "p"],
+        'ม' => &["m"],
+        'ย' | 'ว' | 'ห' | 'ฮ' | 'อ' => &[""],
+        'ร' => &["r", "n", ""],
+        'ล' | 'ฬ' => &["l", "n"],
+        'ฤ' | 'ฦ' => &["r", "l"],
+        'ำ' => &["m"],
+        _ if ('\u{0E30}'..='\u{0E4F}').contains(&c) => &[""],
+        _ => return None,
+    })
+}
+
+/// The consonants of a romanized Thai name in the same classes: aspiration and vowels dropped,
+/// "ng" one sound, doubled letters once.
+fn thai_latin_key(s: &str) -> String {
+    let t = s.replace("ng", "N").replace("ch", "c").replace('j', "c");
+    let mut out = String::new();
+    for ch in t.chars() {
+        if matches!(ch, 'a' | 'e' | 'i' | 'o' | 'u' | 'y' | 'w' | 'h') {
+            continue;
+        }
+        if out.ends_with(ch) {
+            continue;
+        }
+        out.push(ch);
+    }
+    out
+}
+
+/// Does the romanized `latin` (ASCII letters) read as the Thai `thai`?
+pub fn thai_reads_as(thai: &str, latin: &str) -> bool {
+    let key = thai_latin_key(latin);
+    let kb: Vec<char> = key.chars().collect();
+    if kb.len() < 2 {
+        return false;
+    }
+    let mut opts: Vec<&'static [&'static str]> = Vec::new();
+    for c in thai.chars() {
+        match thai_options(c) {
+            Some(o) => opts.push(o),
+            None => return false,
+        }
+    }
+    // reach: positions in the key; a letter equal to the last matched one may repeat
+    let mut reach = vec![0usize];
+    for o in opts {
+        let mut next: Vec<usize> = Vec::new();
+        for &p in &reach {
+            for f in o.iter() {
+                let fc: Vec<char> = f.chars().collect();
+                let mut q = p;
+                if fc.is_empty() || (p > 0 && fc.len() == 1 && kb[p - 1] == fc[0]) {
+                    if !next.contains(&p) {
+                        next.push(p);
+                    }
+                    if fc.is_empty() {
+                        continue;
+                    }
+                }
+                if kb.len() >= q + fc.len() && kb[q..q + fc.len()] == fc[..] {
+                    q += fc.len();
+                    if !next.contains(&q) {
+                        next.push(q);
+                    }
+                }
+            }
+        }
+        if next.is_empty() {
+            return false;
+        }
+        reach = next;
+    }
+    reach.contains(&kb.len())
+}
+
+/// The text is Thai letters only.
+pub fn thai(s: &str) -> bool {
+    !s.is_empty() && s.chars().all(|c| ('\u{0E01}'..='\u{0E4F}').contains(&c))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -427,6 +522,15 @@ mod tests {
         assert!(reads_as("朝阳", "chaoyang", Lang::Chinese));
         assert!(!reads_as("錦州", "jingcheng", Lang::Chinese));
         assert!(!reads_as("台中", "tainan", Lang::Chinese));
+    }
+    #[test]
+    fn thai_romanizations() {
+        assert!(thai_reads_as("มหาไชย", "mahachai"));
+        assert!(thai_reads_as("อุปราช", "upparat"));
+        assert!(thai_reads_as("สุวรรณศร", "suwannason"));
+        assert!(thai_reads_as("เพชรเกษม", "phetkasem"));
+        assert!(!thai_reads_as("ชีท่าขอน", "adunyaram"));
+        assert!(!thai_reads_as("มหาไชย", "mahasarakham"));
     }
     #[test]
     fn japanese_readings() {
