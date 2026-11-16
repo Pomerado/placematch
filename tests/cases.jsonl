@@ -60,3 +60,23 @@
 {"id":"f60","country":"EG","task":"pair","query":"7 Al Nakheel Street","candidates":["9 شارع النخيل"],"expected":"none","accept":[],"same":[],"tags":["translit","neg_number"]}
 {"id":"f61","country":"UA","task":"pair","query":"Садова вулиця 8-А, 73000","candidates":["Садова вулиця 8, 73000"],"expected":"none","accept":[],"same":[],"tags":["neg_suffix"]}
 {"id":"f62","country":"TW","task":"pair","query":"金門縣範例路5巷12弄6之6號","candidates":["金門縣範例路5巷12弄6號"],"expected":"none","accept":[],"same":[],"tags":["neg_number"]}
+{"id":"f63","country":"JP","task":"pair","query":"12 Asahicho, Kurume-shi","candidates":["久留米市旭町12"],"expected":"match","accept":[0],"same":[],"tags":["translit","reading"]}
+{"id":"f64","country":"JP","task":"pair","query":"12 Sakuragicho, Kurume-shi","candidates":["久留米市旭町12"],"expected":"none","accept":[],"same":[],"tags":["translit","neg_street_name"]}
+{"id":"f65","country":"JP","task":"pair","query":"3 Asahicho 6-chome, Niihama-shi","candidates":["新居浜市旭町6丁目3"],"expected":"match","accept":[0],"same":[],"tags":["translit","jp_form","reading"]}
+{"id":"f66","country":"TW","task":"pair","query":"No. 88, Jinzhou Road, Taichung","candidates":["台中市錦州路88號"],"expected":"match","accept":[0],"same":[],"tags":["translit","reading"]}
+{"id":"f67","country":"TW","task":"pair","query":"No. 88, Jinzhou Road, Tainan","candidates":["台中市錦州路88號"],"expected":"none","accept":[],"same":[],"tags":["translit","neg_city"]}
+{"id":"f68","country":"TW","task":"pair","query":"高雄市中山一路100號","candidates":["高雄市中山二路100號"],"expected":"none","accept":[],"same":[],"tags":["neg_street_name"]}
+{"id":"f69","country":"TW","task":"pair","query":"No. 100, Nanjing West Road, Taipei","candidates":["台北市南京東路100號"],"expected":"none","accept":[],"same":[],"tags":["translit","neg_street_name"]}
+{"id":"f70","country":"TW","task":"pair","query":"No. 100, Nanjing West Road, Taipei","candidates":["台北市南京西路100號"],"expected":"match","accept":[0],"same":[],"tags":["translit","reading"]}
+{"id":"f71","country":"KR","task":"pair","query":"16 Gyeongwon-daero 1418beon-gil, Incheon","candidates":["인천광역시 경원대로1418번길 16"],"expected":"match","accept":[0],"same":[],"tags":["translit","kr_road"]}
+{"id":"f72","country":"KR","task":"pair","query":"16 Gyeongwon-daero 1418beon-gil, Incheon","candidates":["인천광역시 경원대로1419번길 16"],"expected":"none","accept":[],"same":[],"tags":["translit","neg_street_name"]}
+{"id":"f73","country":"TH","task":"pair","query":"41 Phetkasem Road","candidates":["41 ถนนเพชรเกษม"],"expected":"match","accept":[0],"same":[],"tags":["translit","reading"]}
+{"id":"f74","country":"TH","task":"pair","query":"41 Sukhumvit Road","candidates":["41 ถนนเพชรเกษม"],"expected":"none","accept":[],"same":[],"tags":["translit","neg_street_name"]}
+{"id":"f75","country":"US","task":"pair","query":"1 S Example Rd, Exampleton, CA","candidates":["1 N Example Rd, Exampleton, CA"],"expected":"none","accept":[],"same":[],"tags":["neg_direction"]}
+{"id":"f76","country":"US","task":"pair","query":"1 Example Rd, Exampleton, CA","candidates":["1 N Example Rd, Exampleton, CA"],"expected":"none","accept":[],"same":[],"tags":["neg_direction"]}
+{"id":"f77","country":"US","task":"pair","query":"1 Harbor Building, Exampleton, CA 90000","candidates":["1 Harbor Bldg, Exampleton, CA 90000-1234"],"expected":"match","accept":[0],"same":[],"tags":["abbrev","zip4"]}
+{"id":"f78","country":"TR","task":"pair","query":"1244. Sokak 6 Ornekkoy","candidates":["1244. Sokak 6, Ornekkoy, Türkiye"],"expected":"match","accept":[0],"same":[],"tags":["no_commas","numbered_street"]}
+{"id":"f79","country":"BG","task":"pick","query":"Ornek 6","candidates":["Grand 2009 Ltd, Ornek 6, Townone","Ornek 6, 2700 Towntwo"],"expected":"ambiguous","accept":[],"same":[0,1],"tags":["amb_city","business"]}
+{"id":"f80","country":"RO","task":"pair","query":"Strada Exemplu 12, Bukarest","candidates":["Strada Exemplu 12, 010011 București"],"expected":"match","accept":[0],"same":[],"tags":["exonym"]}
+{"id":"f81","country":"DE","task":"pair","query":"Friedrichstraße 43, Berlin","candidates":["Friedrichstr. 43, 10117 Berlin, Germany"],"expected":"match","accept":[0],"same":[],"tags":["postcode_dropped","abbrev"]}
+{"id":"f82","country":"IT","task":"pair","query":"Via del Corso 12, Rome","candidates":["Via del Corso, 12, 00186 Roma RM, Italia"],"expected":"match","accept":[0],"same":[],"tags":["exonym"]}

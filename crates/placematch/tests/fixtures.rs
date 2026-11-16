@@ -4,8 +4,19 @@ use serde_json::Value;
 
 #[test]
 fn fixture_cases() {
+    run_cases(include_str!("../../../tests/cases.jsonl"));
+}
+
+/// Places named without a house number (tests/place-names.jsonl): the core answer for each, with
+/// the picker's answer for its mode alongside (a picker asks where PlaceMatch says none and rows
+/// were offered, and a read may take an in-area row).
+#[test]
+fn place_name_cases() {
+    run_cases(include_str!("../../../tests/place-names.jsonl"));
+}
+
+fn run_cases(text: &str) {
     let m = Matcher::new();
-    let text = include_str!("../../../tests/cases.jsonl");
     let mut failures = Vec::new();
     for line in text.lines().filter(|l| !l.trim().is_empty()) {
         let c: Value = serde_json::from_str(line).unwrap();

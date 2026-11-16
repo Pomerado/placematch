@@ -40,6 +40,15 @@ Hard components. A contradiction on any of them means a different place:
 Soft components may be missing on either side: postcode, region, country, district, business or
 building name.
 
+A different compass word is a different street (`1 N Main St` and `1 S Main St`), never a typo.
+
+A caller who names a place and gives no house number (`Example Park, Exampleton, CA`) is matched
+by the name: a row whose first part is the same name word for word is the place, whatever street
+follows, when its area fits; a row with the caller's words in order and others added before or
+between them is `ambiguous`; a row that starts with the name and goes on (`Example Park Ferry
+Terminal`) is another place; a row that shows the caller's whole text after words of its own
+(`See more results for ...`) is a site control and never a place.
+
 A candidate that adds a unit the caller did not give is not a match. In a `pick` case where the
 only candidates that fit add a unit, the answer is `ambiguous`: ask the caller which unit.
 
