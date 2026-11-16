@@ -180,3 +180,14 @@ fn pick_agrees_with_pick_explained() {
         }
     }
 }
+
+#[test]
+fn readme_explained_example() {
+    let m = Matcher::new();
+    let rows = [Row::from("Example Hotel, 10 Example St, Springfield, IL 62701"), Row::from("10 Example St, Springfield, IL 62701")];
+    let e = m.pick_explained("10 Example St, Apt 4, Springfield, IL", &rows, &PickOptions { country: Some("US") });
+    assert_eq!(e.outcome, Outcome::Match);
+    assert_eq!(e.index, Some(1));
+    assert_eq!(e.same, vec![0, 1]);
+    assert_eq!(e.notes, vec!["unit_not_listed"]);
+}
