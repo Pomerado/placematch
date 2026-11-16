@@ -65,15 +65,16 @@ assert_eq!(e.notes, vec!["unit_not_listed"]); // type the unit into the site's o
 A caller's country is the best guide, but it may be left out. Then PlaceMatch reads the texts by
 the one country they show: a country's name, a state or province with its postcode ("IL 62701",
 "ON K1A 0B1"), or a postcode only one country writes ("K1A 0B1", "SW1A 1AA"). The caller's text
-decides when it shows a country and no row shows another; otherwise the rows decide when they all
-show one country and the caller's text fits it (a state or postcode of it, or no place at all). A
-US state with a row's ZIP code in its zone counts too. When the texts show nothing, or two
-countries, they are read with no country, which asks more often and never guesses; a country the
-caller gives is never replaced. `Matcher::infer_country` answers on its own.
+decides when it shows a country, and a row that shows another is then another place; otherwise the
+rows decide when they all show one country and the caller's text fits it (a state or postcode of it,
+or no place at all). A US state with a row's ZIP code of that state counts too. When the texts show
+nothing, or rows of two countries, they are read with no country, which asks more often and never
+guesses; a country the caller gives is never replaced. `Matcher::infer_country` answers on its own.
 
 On the US cases of the benchmark and fixtures, answers with no country equal the answers with `US`
-in all but 16 of 1,540 tuning cases, none of 160 held-out cases and 15 of 154 fixtures, and none of
-those differences picks a wrong row: most ask where the US answer matched. Outside the US, pass the country: with none, wrong picks are two to three times those with it.
+in all but 15 of 1,540 tuning cases, none of 160 held-out cases and 17 of 164 fixtures, and none of
+those differences picks a wrong row: most ask where the US answer matched. Outside the US, pass the
+country: with none, wrong picks are two to three times those with it.
 
 `pick` and `compare` keep their answers: they answer whether a row is the place. `pick_explained`
 also says what a picker should ask about, so it asks where `pick` says `none` because only near
@@ -99,9 +100,11 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
 - A business listing at the address is the same place as the plain address.
 - The town must be right: a shared district or region name does not make two towns one. A row
   that names no town, or (in the US, Canada and Australia) neither a state nor a postcode where the
-  caller gave one, does not confirm the caller's place. A state comes from its own part or code,
+  caller gave one, does not confirm the caller's place; a US ZIP code confirms or contradicts a state
+  by its first three digits. A state comes from its own part or code,
   never from a town named like a state ("Washington, PA" is not "Washington, DC").
-- A country the caller gives is never crossed ("Paris, TX" is not in France).
+- A country the caller gives or writes is never crossed: a row that shows another country is another
+  place ("Paris, TX 75460" is not in France; "London, ON N6A 1A1" is not in the United Kingdom).
 - Spellings that mean the same thing agree: abbreviations, diacritics, case and punctuation,
   component order (number before or after the street), joined or split compound names, native
   digits, Japanese block addresses, transliteration, and a one-letter typo in a long name.
@@ -192,8 +195,8 @@ Held-out split: 76,722 cases from 62 countries, 11 scripts. Cells are accuracy /
 | government and open-data addresses | 96.0% / 0.05% | 82.6% / 1.28% | 80.7% / 0.00% |
 | OpenStreetMap addresses and listings | 90.5% / 0.43% | 73.2% / 2.11% | 72.1% / 0.04% |
 | Latin script | 94.6% / 0.33% | 81.1% / 1.34% | 79.1% / 0.03% |
-| other scripts | 87.7% / 0.31% | 66.6% / 2.83% | 66.6% / 0.04% |
-| no commas | 84.5% / 0.29% | 76.0% / 1.89% | 70.3% / 0.03% |
+| other scripts | 87.6% / 0.31% | 66.6% / 2.83% | 66.6% / 0.04% |
+| no commas | 84.4% / 0.29% | 76.0% / 1.89% | 70.3% / 0.03% |
 | transliterated | 58.6% / 0.25% | 35.2% / 0.25% | 35.1% / 0.00% |
 
 "Both agree" answers `match` only when PlaceMatch and libpostal pick the same listing; it trades

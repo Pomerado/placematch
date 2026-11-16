@@ -380,9 +380,14 @@ fn a_country_the_texts_show_is_read_when_none_is_given() {
     assert_eq!(inferred("Example Park, Exampleton, CA", &["Example Park, Exampleton, CA, USA"]).as_deref(), Some("US"));
     assert_eq!(inferred("1 Example St, Exampleton, FL", &["1 Example St, Exampleton 32500"]).as_deref(), Some("US"));
     assert_eq!(inferred("12 Example St", &["12 Example St, Exampleton, IL 60000"]).as_deref(), Some("US"));
-    // two countries, or too little to tell: none, and the texts are read with no country
-    assert_eq!(inferred("1 Example St, Exampleton, IL 60000", &["1 Example St, Exampleton, ON, Canada"]), None);
-    assert_eq!(inferred("Example Park, London, United Kingdom", &["Example Park, London, Ontario"]), None);
+    // the caller's own country decides, and a row that shows another is another place
+    assert_eq!(inferred("1 Example St, Exampleton, IL 60000", &["1 Example St, Exampleton, ON, Canada"]).as_deref(), Some("US"));
+    let e = explain_in(&m, None, "1 Example St, Exampleton, IL 60000", &["1 Example St, Exampleton, ON, Canada"]);
+    assert_eq!((e.outcome, e.rows[0].reasons.clone()), (Outcome::None, vec!["country"]));
+    assert_eq!(inferred("Example Park, London, United Kingdom", &["Example Park, London, Ontario"]).as_deref(), Some("GB"));
+    // rows of two countries and nothing from the caller, or too little to tell: none, and the
+    // texts are read with no country
+    assert_eq!(inferred("12 Example St, Exampleton", &["12 Example St, Exampleton, IL 60000", "12 Example St, Exampleton, ON K1A 0B1"]), None);
     assert_eq!(inferred("12 Example St, Springfield", &["12 Example St, Springfield"]), None);
     assert_eq!(inferred("Example Park, Exampleton, CA", &["Example Park, Exampleton, CA"]), None);
     // a country the caller gives is never replaced

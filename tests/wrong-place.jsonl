@@ -17,7 +17,7 @@
 {"id": "w19", "country": null, "task": "pick", "query": "Example Park, Exampleton", "candidates": ["Example Park, Exampleton, CA", "Example Park, Exampleton, ON"], "expected": "ambiguous", "accept": []}
 {"id": "w20", "country": null, "task": "pick", "query": "Example Park, London, UK", "candidates": ["Example Park, London, Canada"], "expected": "none", "accept": []}
 {"id": "w21", "country": "US", "task": "pick", "query": "Example Park, Springfield, IL", "candidates": ["Example Park, Springfield, MO", "Example Park, Springfield, Illinois"], "expected": "match", "accept": [1]}
-{"id": "w22", "country": null, "task": "pick", "query": "Example Park, London, United Kingdom", "candidates": ["Example Park, London, Ontario"], "expected": "ambiguous", "accept": []}
+{"id": "w22", "country": null, "task": "pick", "query": "Example Park, London, United Kingdom", "candidates": ["Example Park, London, Ontario"], "expected": "not_match", "accept": [], "note": "The caller wrote the United Kingdom; a row in Ontario, a region only another country has, is another place."}
 {"id": "w30", "country": "CN", "task": "pick", "query": "88 Renmin Road, Suzhou", "candidates": ["人民路88号, 徐州市"], "expected": "none", "accept": []}
 {"id": "w31", "country": "CN", "task": "pick", "query": "88 Renmin Road, Suzhou", "candidates": ["徐州市人民路88号"], "expected": "none", "accept": []}
 {"id": "w32", "country": "CN", "task": "pick", "query": "88 Renmin Road, Changzhou", "candidates": ["人民路88号, 漳州市"], "expected": "none", "accept": []}
@@ -94,3 +94,36 @@
 {"id": "w129", "country": null, "task": "pick", "query": "Paris", "candidates": ["Paris, TX"], "expected": "not_match", "accept": [], "note": "With no country, a town typed alone is not confirmed by a row adding a state the caller did not name."}
 {"id": "w130", "country": null, "task": "pick", "query": "Lisbon", "candidates": ["Lisbon, ME"], "expected": "not_match", "accept": [], "note": "With no country, a town typed alone is not confirmed by a row adding a state the caller did not name."}
 {"id": "w131", "country": "AR", "task": "pick", "query": "512 Avenida San Ejemplo", "candidates": ["Av S. Ejemplo 512, 6000 Exampleton", "Avenida San Ejemplo 512, Otherton, Argentina"], "expected": "ambiguous", "accept": [], "note": "\"S.\" here is San, not South: both rows are the caller's street, in two towns, so the answer asks."}
+{"id": "w132", "country": "FR", "task": "pick", "query": "10 Main St, Paris", "candidates": ["10 Main St, Paris, TX 75460"], "expected": "not_match", "accept": []}
+{"id": "w133", "country": "FR", "task": "pick", "query": "10 Main St, Paris", "candidates": ["10 Main St, Paris, TX"], "expected": "not_match", "accept": []}
+{"id": "w134", "country": "GB", "task": "pick", "query": "10 Example St, London", "candidates": ["10 Example St, London, ON N6A 1A1"], "expected": "not_match", "accept": []}
+{"id": "w135", "country": "GB", "task": "pick", "query": "10 Example St, London", "candidates": ["10 Example St, London, KY 40741"], "expected": "not_match", "accept": []}
+{"id": "w136", "country": "GB", "task": "pick", "query": "Example Park, London", "candidates": ["Example Park, London, ON N6A 1A1"], "expected": "not_match", "accept": []}
+{"id": "w137", "country": "AU", "task": "pick", "query": "10 Example St, Sydney", "candidates": ["10 Example St, Sydney, NS B1P 1A1"], "expected": "not_match", "accept": []}
+{"id": "w138", "country": "GB", "task": "pick", "query": "10 Example St, Birmingham", "candidates": ["10 Example St, Birmingham, AL 35203"], "expected": "not_match", "accept": []}
+{"id": "w139", "country": null, "task": "pick", "query": "10 Example St, London, United Kingdom", "candidates": ["10 Example St, London, ON N6A 1A1"], "expected": "not_match", "accept": []}
+{"id": "w140", "country": null, "task": "pick", "query": "10 Example St, London, United Kingdom", "candidates": ["10 Example St, London, KY 40741"], "expected": "not_match", "accept": []}
+{"id": "w141", "country": null, "task": "pick", "query": "10 Example St, Birmingham, England", "candidates": ["10 Example St, Birmingham, AL 35203"], "expected": "not_match", "accept": []}
+{"id": "w142", "country": null, "task": "pick", "query": "10 Example St, Sydney, Australia", "candidates": ["10 Example St, Sydney, NS B1P 1A1"], "expected": "not_match", "accept": []}
+{"id": "w143", "country": null, "task": "pick", "query": "10 Main St, Paris, France", "candidates": ["10 Main St, Paris, TX 75460"], "expected": "not_match", "accept": []}
+{"id": "w144", "country": null, "task": "pick", "query": "10 Example Rd, Toronto 12345-6789", "candidates": ["10 Example Rd, Toronto, ON M5V 1A1"], "expected": "not_match", "accept": []}
+{"id": "w145", "country": "US", "task": "pick", "query": "10 Main St, Kansas City, KS", "candidates": ["10 Main St, Kansas City 64105"], "expected": "not_match", "accept": []}
+{"id": "w146", "country": null, "task": "pick", "query": "10 Main St, Kansas City, KS", "candidates": ["10 Main St, Kansas City 64105"], "expected": "not_match", "accept": []}
+{"id": "w147", "country": "US", "task": "pick", "query": "Example Park, Kansas City, Kansas", "candidates": ["Example Park, Kansas City 64105"], "expected": "not_match", "accept": []}
+{"id": "w148", "country": null, "task": "pick", "query": "Example Park, Kansas City, KS", "candidates": ["Example Park, Kansas City 64105"], "expected": "not_match", "accept": []}
+{"id": "w149", "country": "US", "task": "pick", "query": "10 Main St, Springfield, IL", "candidates": ["10 Main St, Springfield 65801"], "expected": "not_match", "accept": []}
+{"id": "w150", "country": null, "task": "pick", "query": "10 Main St, Springfield, IL", "candidates": ["10 Main St, Springfield 65801"], "expected": "not_match", "accept": []}
+{"id": "w151", "country": "US", "task": "pick", "query": "Example Park, Springfield, IL", "candidates": ["Example Park, Springfield 65801"], "expected": "not_match", "accept": []}
+{"id": "w152", "country": "US", "task": "pick", "query": "10 Main St, Texarkana, TX", "candidates": ["10 Main St, Texarkana 71854"], "expected": "not_match", "accept": []}
+{"id": "w153", "country": null, "task": "pick", "query": "Example Park, New York", "candidates": ["Example Park, Buffalo, NY 14201"], "expected": "not_match", "accept": []}
+{"id": "w154", "country": null, "task": "pick", "query": "Example Park, Washington", "candidates": ["Example Park, Seattle, WA 98101"], "expected": "not_match", "accept": []}
+{"id": "w155", "country": null, "task": "pick", "query": "Example Park, Ontario", "candidates": ["Example Park, Toronto, ON M5V 1A1"], "expected": "not_match", "accept": []}
+{"id": "w156", "country": null, "task": "pick", "query": "Example Park, Georgia", "candidates": ["Example Park, Atlanta, GA 30303"], "expected": "not_match", "accept": []}
+{"id": "w157", "country": "US", "task": "pick", "query": "10 Main St, Kansas City, KS", "candidates": ["10 Main St, Kansas City 66101"], "expected": "match", "accept": [0]}
+{"id": "w158", "country": "US", "task": "pick", "query": "10 Main St, Texarkana, AR", "candidates": ["10 Main St, Texarkana 71854"], "expected": "match", "accept": [0]}
+{"id": "w159", "country": "US", "task": "pick", "query": "1 Example St, Koror, PW 96940", "candidates": ["1 Example St, Koror, PW 96940"], "expected": "match", "accept": [0]}
+{"id": "w160", "country": "US", "task": "pick", "query": "1 Example St, Washington, DC", "candidates": ["1 Example St, Washington 56901"], "expected": "match", "accept": [0]}
+{"id": "w161", "country": "US", "task": "pick", "query": "10 Main St, San Juan, PR 00901", "candidates": ["10 Main St, San Juan, Puerto Rico 00901"], "expected": "match", "accept": [0]}
+{"id": "w162", "country": null, "task": "pick", "query": "10 Example St, London, United Kingdom", "candidates": ["10 Example St, London, ON N6A 1A1", "10 Example St, London SW1A 1AA"], "expected": "match", "accept": [1]}
+{"id": "w163", "country": "JE", "task": "pick", "query": "10 Example Rd, Saint Helier, Jersey", "candidates": ["10 Example Rd, Saint Helier, JE2 3AB, Jersey"], "expected": "match", "accept": [0], "note": "The Crown Dependencies share the United Kingdom's postcode form; that is no other country."}
+{"id": "w164", "country": null, "task": "pick", "query": "10 Example Rd, Toronto 12345-6789", "candidates": ["10 Example Rd, Toronto"], "expected": "not_match", "accept": [], "note": "With no country, a row with no postcode does not confirm the caller's."}

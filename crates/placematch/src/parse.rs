@@ -57,6 +57,8 @@ pub struct Components {
     pub script: Option<Script>,
     /// the country hint the text was read with
     pub cc: Option<String>,
+    /// the hint was read from the texts, not given by the caller
+    pub cc_inferred: bool,
 }
 
 pub struct Ctx<'a> {
@@ -64,6 +66,8 @@ pub struct Ctx<'a> {
     pub langs: Option<&'a [u8]>,
     pub cc: Option<&'a str>,
     pub cjk: &'a CjkRules,
+    /// `cc` was read from the texts, not given by the caller
+    pub inferred: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -373,7 +377,7 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
     let is_start = |k: usize| spans[k].as_ref().map_or(false, |s| s.start == k);
 
     let mut used = vec![false; n];
-    let mut c = Components { script, cc: ctx.cc.map(|x| x.to_string()), ..Default::default() };
+    let mut c = Components { script, cc: ctx.cc.map(|x| x.to_string()), cc_inferred: ctx.inferred, ..Default::default() };
     let mut house_kw_next: Vec<usize> = Vec::new();
 
     // value token after a keyword span starting at k (skip "#", "no", ":" style tokens)

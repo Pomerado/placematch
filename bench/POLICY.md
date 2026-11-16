@@ -47,15 +47,23 @@ building name. A row must still confirm where the caller's place is:
   Example St` for `..., Exampleton, IL`) is not the caller's place unless the postcodes agree;
 - where towns share names across states (the US, Canada, Australia), a row with neither a state
   nor a postcode does not confirm the caller's state or postcode (`1 Example St, Exampleton` for
-  `..., Exampleton, IL 60000`); a US ZIP code confirms a state in its zone (the ZIP's first digit)
-  and contradicts one outside it (`... 60000` is not in Pennsylvania);
+  `..., Exampleton, IL 60000`); a US ZIP code confirms or contradicts a state by its first three
+  digits (`Kansas City 64100` is in Missouri, not Kansas);
 - with no country given or shown by the texts, a row that leaves out a place the caller named
   does not confirm it;
 - a state comes only from the state part or code, never from a town named like a state
   (`Washington, PA` is not `Washington, DC`; `Nevada, MO` is not `Nevada, IA`);
 - a two-letter code after the town is the state, never the town (`Exampleton, NE`);
-- a country the caller gives is never crossed: a row naming another country, or a state code of
-  another country that writes one after the town (`Paris, TX` for France), is another place.
+- a country the caller gives, or writes (`London, United Kingdom`), is never crossed: a row that
+  shows another country is another place, on every path. A row shows a country by its name, a
+  state or province with that country's postcode (`ON N6A 1A1`), a postcode form only that country
+  writes, a state or province named in full after the town where only other countries have it
+  (`London, Ontario` for the United Kingdom), or a two-letter state code after the town that only
+  other countries use (`Paris, TX` for France). Ireland, the United Kingdom and the Crown
+  Dependencies are not told apart this way. When the row taken shows nothing of the caller's
+  country and a row left out for its country would also have been the place, the answer asks;
+- with no country given, a place name that is also a state's or province's (`Example Park, New
+  York`) does not confirm a row in another town of that state: it may be the city.
 
 A different compass word is a different street (`1 N Main St` and `1 S Main St`), never a typo, and
 so is a compass word on one side only of the same street words (`1 Example St NE` and `1 Example
