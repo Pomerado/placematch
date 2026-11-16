@@ -39,6 +39,11 @@ fn main() {
         let f: Vec<&str> = line.splitn(3, '\t').collect();
         out.push_str(&format!("D\t{}\t{}\t{}\n", f[0], f[1], f[2]));
     }
+    // Wikidata's names first, so the hand list wins where both name a city
+    for line in fs::read_to_string(data.join("extra/exonyms-wikidata.txt")).unwrap().lines() {
+        if line.starts_with('#') || line.trim().is_empty() { continue; }
+        out.push_str(&format!("E\t{}\n", line.trim()));
+    }
     for line in fs::read_to_string(data.join("extra/exonyms.txt")).unwrap().lines() {
         if line.starts_with('#') || line.trim().is_empty() { continue; }
         out.push_str(&format!("E\t{}\n", line.trim()));
