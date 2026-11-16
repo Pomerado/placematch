@@ -24,7 +24,7 @@ fn readings() -> &'static Readings {
         let mut ja = HashMap::with_capacity(12000);
         for line in HAN.lines() {
             let mut f = line.split('\t');
-            let (Some(c), Some(m), Some(j)) = (f.next(), f.next(), f.next()) else { continue };
+            let (Some(c), Some(m), Some(on), Some(kun)) = (f.next(), f.next(), f.next(), f.next()) else { continue };
             let Some(ch) = c.chars().next() else { continue };
             if !m.is_empty() {
                 let mut v: Vec<String> = Vec::new();
@@ -37,10 +37,11 @@ fn readings() -> &'static Readings {
                 }
                 zh.insert(ch, v);
             }
-            if !j.is_empty() {
+            if !on.is_empty() || !kun.is_empty() {
                 let mut v: Vec<String> = Vec::new();
-                for r in j.split(' ') {
-                    for x in ja_variants(r) {
+                let all = on.split(' ').filter(|x| !x.is_empty()).map(|x| (x, false)).chain(kun.split(' ').filter(|x| !x.is_empty()).map(|x| (x, true)));
+                for (r, is_kun) in all {
+                    for x in ja_variants(r, is_kun) {
                         if !v.contains(&x) {
                             v.push(x);
                         }
@@ -168,22 +169,44 @@ fn morae(s: &str) -> Vec<&str> {
     out
 }
 
-/// A Japanese reading as names use it: the reading itself, the stem of a kun reading without its
-/// inflected ending ("tomeru" -> "tome", "nagai" -> "naga"), each normalized.
-fn ja_variants(r: &str) -> Vec<String> {
+/// A Japanese reading as names use it: the reading itself and, for a kun reading, its stem
+/// without the inflected ending and the stem's i-form ("tomeru" -> "tome", "nagai" -> "naga",
+/// "iru" -> "i", "tatsu" -> "tachi"), each normalized.
+fn ja_variants(r: &str, kun: bool) -> Vec<String> {
     let mut v = vec![ja_norm(r)];
     let m = morae(r);
-    if m.len() >= 3 {
+    if kun && m.len() >= 2 {
+        let last = m[m.len() - 1];
         let stem: String = m[..m.len() - 1].concat();
-        v.push(ja_norm(&stem));
-    }
-    if m.len() >= 4 {
-        let stem: String = m[..m.len() - 2].concat();
-        v.push(ja_norm(&stem));
+        if matches!(last, "ru" | "u" | "ku" | "su" | "tsu" | "mu" | "bu" | "gu" | "i" | "nu") {
+            v.push(ja_norm(&stem));
+            let i_form = match last {
+                "ru" => "ri",
+                "u" => "i",
+                "ku" => "ki",
+                "su" => "shi",
+                "tsu" => "chi",
+                "mu" => "mi",
+                "bu" => "bi",
+                "gu" => "gi",
+                _ => "",
+            };
+            if !i_form.is_empty() {
+                v.push(ja_norm(&format!("{}{}", stem, i_form)));
+            }
+        }
+        if m.len() >= 4 && matches!(last, "ru" | "i") {
+            v.push(ja_norm(&m[..m.len() - 2].concat()));
+        }
     }
     v.retain(|x| !x.is_empty());
-    v.dedup();
-    v
+    let mut out: Vec<String> = Vec::new();
+    for x in v {
+        if !out.contains(&x) {
+            out.push(x);
+        }
+    }
+    out
 }
 
 /// Romaji to one spelling: Kunrei forms for Hepburn ones, long vowels single, "m" before a labial
@@ -355,6 +378,10 @@ pub fn reads_as(native: &str, latin: &str, lang: Lang) -> bool {
                         forms.push(format!("p{}", &o[1..]));
                     }
                 }
+                // a long vowel across two characters is written once ("nii" + "i" + "hama" -> "niihama")
+                if lang == Lang::Japanese && p > 0 && !o.is_empty() && o.as_bytes()[0] == lb[p - 1] && b"aeiou".contains(&lb[p - 1]) {
+                    forms.push(o[1..].to_string());
+                }
                 for f in &forms {
                     if lb.len() >= p + f.len() && &lat[p..p + f.len()] == f.as_str() {
                         let q = p + f.len();
@@ -409,6 +436,10 @@ mod tests {
         assert!(reads_as("京都", "kyoto", Lang::Japanese));
         assert!(reads_as("長岡", "nagaoka", Lang::Japanese));
         assert!(!reads_as("長岡", "nagano", Lang::Japanese));
+        assert!(reads_as("新居浜", "niihama", Lang::Japanese));
+        assert!(reads_as("日立", "hitachi", Lang::Japanese));
+        assert!(reads_as("三郷", "misato", Lang::Japanese));
+        assert!(reads_as("府内町", "funaicho", Lang::Japanese));
         assert!(!reads_as("旭町", "sakuragicho", Lang::Japanese));
     }
 }

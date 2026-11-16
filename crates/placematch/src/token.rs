@@ -77,7 +77,8 @@ fn is_seg_sep(c: char) -> bool {
 
 /// Japanese: split after municipality suffixes only (道/街 occur inside city names).
 fn jp_split_after(c: char, cur: &str) -> bool {
-    matches!(c, '都' | '府' | '県' | '市' | '区' | '郡' | '町' | '村') || cur == "北海道"
+    // 都 and 府 end a prefecture only in 東京都, 京都府 and 大阪府 ("府内町" is a town)
+    matches!(c, '県' | '市' | '区' | '郡' | '町' | '村') || cur == "北海道" || cur.ends_with("東京都") || cur.ends_with("京都府") || cur.ends_with("大阪府")
 }
 
 /// Characters after which a CJK run is split (admin and street suffixes).

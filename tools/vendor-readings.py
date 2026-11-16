@@ -4,8 +4,8 @@
 Usage: python3 -I tools/vendor-readings.py path/to/Unihan_Readings.txt > crates/placematch/data/readings/han.txt
 
 One line per Han character in the Basic Multilingual Plane that has a reading:
-  <char> TAB <Mandarin readings, toneless pinyin, space-separated> TAB <Japanese readings, lowercase Hepburn>
-Japanese readings are kJapaneseOn and kJapaneseKun as listed; the matcher adds the stems and sound
+  <char> TAB <Mandarin, toneless pinyin> TAB <Japanese on readings> TAB <Japanese kun readings>
+Readings are space-separated, Japanese in lowercase Hepburn as listed; the matcher adds the stems and sound
 changes that place names use.
 """
 import sys, unicodedata, collections
@@ -16,7 +16,8 @@ def toneless(p):
     return p.lower().replace("ü", "u")
 
 man = collections.defaultdict(list)
-jp = collections.defaultdict(list)
+on = collections.defaultdict(list)
+kun = collections.defaultdict(list)
 def add(d, ch, vals):
     for v in vals:
         if v and v not in d[ch]:
@@ -34,11 +35,13 @@ for line in open(sys.argv[1], encoding="utf-8"):
     elif field == "kHanyuPinyin":
         for part in val.split():
             add(man, ch, [toneless(x) for x in part.split(":", 1)[1].split(",")])
-    elif field in ("kJapaneseOn", "kJapaneseKun"):
-        add(jp, ch, [x.lower() for x in val.split()])
+    elif field == "kJapaneseOn":
+        add(on, ch, [x.lower() for x in val.split()])
+    elif field == "kJapaneseKun":
+        add(kun, ch, [x.lower() for x in val.split()])
 
-for ch in sorted(set(man) | set(jp)):
-    m = [x for x in man.get(ch, []) if x.isascii() and x.isalpha()]
-    j = [x for x in jp.get(ch, []) if x.isascii() and x.isalpha()]
-    if m or j:
-        print(f"{ch}\t{' '.join(m)}\t{' '.join(j)}")
+ok = lambda xs: [x for x in xs if x.isascii() and x.isalpha()]
+for ch in sorted(set(man) | set(on) | set(kun)):
+    m, o, k = ok(man.get(ch, [])), ok(on.get(ch, [])), ok(kun.get(ch, []))
+    if m or o or k:
+        print(f"{ch}\t{' '.join(m)}\t{' '.join(o)}\t{' '.join(k)}")
