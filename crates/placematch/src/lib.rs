@@ -99,7 +99,7 @@ const TYPE_GROUPS: &[&[&str]] = &[
     &["street", "st", "str", "شارع", "ش", "רחוב", "רח", "улица", "ул", "вулиця", "вул", "οδός", "οδ", "ถนน", "ถ", "улица", "ulitsa", "vulytsia", "odos", "shari", "thanon", "街", "jie", "gai"],
     &["road", "rd", "طريق", "דרך", "шоссе", "шосе", "ถนน", "tariq", "derekh", "thanon", "路", "lu", "通", "tori", "dori", "로", "ro", "lo"],
     &["avenue", "ave", "av", "проспект", "просп", "пр", "λεωφόρος", "λεωφ", "שדרות", "שד", "prospekt", "prospekt", "leoforos", "sderot", "大道", "dadao", "대로", "daero", "daelo"],
-    &["boulevard", "blvd", "бульвар", "бул", "бульв", "bulvar", "bulevard"],
+    &["boulevard", "blvd", "бульвар", "бул", "бульв", "bulvar", "bulevard", "大道", "dadao"],
     &["lane", "ln", "alley", "soi", "ซอย", "переулок", "пер", "провулок", "пров", "סמטה", "زقاق", "pereulok", "provulok", "巷", "xiang", "hang", "弄", "nong", "long", "길", "gil"],
     &["square", "sq", "plaza", "площадь", "пл", "площа", "כיכר", "ميدان", "πλατεία", "ploshchad", "ploshcha", "kikar", "midan", "plateia"],
 ];
@@ -267,6 +267,16 @@ fn reading_eq(q: &Text, c: &Text) -> bool {
         natives.push(s);
     }
     let mut lats = vec![full.clone()];
+    // a direction translated in the romanization ("南京西" / "Nanjing West")
+    let mut natives = natives;
+    for (w, h) in [("north", '北'), ("south", '南'), ("east", '東'), ("east", '东'), ("west", '西')] {
+        if full.len() > w.len() + 1 && full.ends_with(w) && nat.native.ends_with(h) && nat.native.chars().count() >= 2 {
+            let mut n = nat.native.clone();
+            n.pop();
+            natives.push(n);
+            lats.push(full[..full.len() - w.len()].to_string());
+        }
+    }
     if let Some(last) = lat.toks.last() {
         if lat.toks.len() >= 2 && LATIN_ADMIN.contains(&last.0.as_str()) && full.ends_with(last.0.as_str()) {
             lats.push(full[..full.len() - last.0.len()].to_string());
