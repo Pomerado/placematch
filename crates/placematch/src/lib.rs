@@ -41,6 +41,168 @@ pub enum Pick {
     Ambiguous(Vec<usize>),
 }
 
+/// A row a site offers for the caller's text.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Row<'a> {
+    /// The row's text as the site shows it.
+    pub text: &'a str,
+    /// The site shows the row with a category of its own (a venue type such as "Convention
+    /// center"), as it does for a listed venue and not for a dropped pin or a plain address.
+    pub categorized: bool,
+}
+
+impl<'a> From<&'a str> for Row<'a> {
+    fn from(text: &'a str) -> Self {
+        Row { text, categorized: false }
+    }
+}
+
+impl<'a> From<&'a String> for Row<'a> {
+    fn from(text: &'a String) -> Self {
+        Row { text, categorized: false }
+    }
+}
+
+/// Options for `Matcher::pick_explained`.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct PickOptions<'a> {
+    /// The site's country (ISO 3166-1 alpha-2), when known.
+    pub country: Option<&'a str>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Outcome {
+    /// One place among the rows is the caller's.
+    Match,
+    /// No row is the caller's place.
+    None,
+    /// The caller should choose: see `Explained::reasons`.
+    Ambiguous,
+}
+
+/// Why an `ambiguous` answer asks, in this order:
+/// - `several_places`: two or more different places fit (the same street and number in two towns,
+///   or a row that may be the caller's street in another place);
+/// - `place_name_variant`: the caller named a place, and a row holds the name with other words added
+///   (a venue under its longer official name), so it may be the place;
+/// - and, only when no row is the caller's place, the near rows: they add a unit the caller did not
+///   give (`unit_not_given`), show another postcode at the caller's number, street and town
+///   (`postcode_differs`), list the caller's street without a house number (`number_not_listed`), or
+///   give a house-number range holding the caller's number with no postcode on both sides to confirm
+///   it (`number_range`).
+pub const AMBIGUITY_REASONS: &[&str] = &["several_places", "place_name_variant", "unit_not_given", "postcode_differs", "number_not_listed", "number_range"];
+
+/// Notes beside a `match`: `unit_not_listed` when the row leaves out a unit the caller gave (a
+/// picker types the unit into the site's own unit field).
+pub const MATCH_NOTES: &[&str] = &["unit_not_listed"];
+
+/// One row's verdict against the caller's text, with its reasons ("house_number", "postcode",
+/// "place_name", "area", "control", "unit_not_listed", "cross_script" and so on).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RowReport {
+    pub verdict: Verdict,
+    pub reasons: Vec<&'static str>,
+}
+
+/// `Matcher::pick_explained`'s answer.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Explained {
+    pub outcome: Outcome,
+    /// `match`: the row PlaceMatch takes (the row `pick` returns).
+    pub index: Option<usize>,
+    /// `match`: every row that is the caller's place, in site order, so a picker may take the site's
+    /// own first; `ambiguous`: the rows to choose between; `none`: empty.
+    pub same: Vec<usize>,
+    /// `ambiguous`: why, from `AMBIGUITY_REASONS`.
+    pub reasons: Vec<&'static str>,
+    /// `match`: notes from `MATCH_NOTES`.
+    pub notes: Vec<&'static str>,
+    /// `match`: the row was read across scripts ("Ulitsa Primer" for "Улица Пример", "Asahicho" for
+    /// "旭町").
+    pub cross_script: bool,
+    /// `ambiguous` between a same-name row and a row with the name in a longer form: the one row of
+    /// them the site categorized, when exactly one is. A read may take it; a write still asks.
+    pub prefer_on_read: Option<usize>,
+    /// Each row's verdict and reasons, by row index.
+    pub rows: Vec<RowReport>,
+}
+
+impl Explained {
+    fn none(rows: Vec<RowReport>) -> Explained {
+        Explained { outcome: Outcome::None, index: None, same: vec![], reasons: vec![], notes: vec![], cross_script: false, prefer_on_read: None, rows }
+    }
+
+    fn ambiguous(same: Vec<usize>, reasons: Vec<&'static str>, rows: Vec<RowReport>) -> Explained {
+        let mut reasons = reasons;
+        reasons.sort_by_key(|r| AMBIGUITY_REASONS.iter().position(|x| x == r));
+        reasons.dedup();
+        Explained { outcome: Outcome::Ambiguous, index: None, same, reasons, notes: vec![], cross_script: false, prefer_on_read: None, rows }
+    }
+
+    /// The answer as one line of JSON: `outcome` ("match", "none", "ambiguous"), `index`, `same`,
+    /// `reasons`, `notes`, `cross_script`, `prefer_on_read` and `rows` (each `verdict` and `reasons`).
+    pub fn to_json(&self) -> String {
+        fn words(v: &[&str]) -> String {
+            format!("[{}]", v.iter().map(|w| format!("\"{}\"", w)).collect::<Vec<_>>().join(","))
+        }
+        fn opt(v: Option<usize>) -> String {
+            v.map_or("null".to_string(), |i| i.to_string())
+        }
+        let outcome = match self.outcome {
+            Outcome::Match => "match",
+            Outcome::None => "none",
+            Outcome::Ambiguous => "ambiguous",
+        };
+        let rows: Vec<String> = self
+            .rows
+            .iter()
+            .map(|r| {
+                let v = match r.verdict {
+                    Verdict::Same => "same",
+                    Verdict::Different => "different",
+                    Verdict::Unknown => "unknown",
+                };
+                format!("{{\"verdict\":\"{}\",\"reasons\":{}}}", v, words(&r.reasons))
+            })
+            .collect();
+        format!(
+            "{{\"outcome\":\"{}\",\"index\":{},\"same\":[{}],\"reasons\":{},\"notes\":{},\"cross_script\":{},\"prefer_on_read\":{},\"rows\":[{}]}}",
+            outcome,
+            opt(self.index),
+            self.same.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(","),
+            words(&self.reasons),
+            words(&self.notes),
+            self.cross_script,
+            opt(self.prefer_on_read),
+            rows.join(",")
+        )
+    }
+}
+
+/// Scripts that name the same thing only through a reading: Latin (with digits and punctuation),
+/// Han and Kana together, and each other script on its own.
+fn script_group(s: Option<Script>) -> u8 {
+    match s {
+        None | Some(Script::Latin) | Some(Script::Digit) | Some(Script::Other) => 0,
+        Some(Script::Han) | Some(Script::Kana) => 1,
+        Some(x) => 2 + x as u8,
+    }
+}
+
+/// A listing's house-number range ("10-14") holds the caller's number: within it and, when both
+/// ends are on one side of the street (both even or both odd), on that side.
+fn range_holds(range: &str, number: &str) -> bool {
+    let digits = |s: &str| !s.is_empty() && s.len() <= 6 && s.bytes().all(|b| b.is_ascii_digit());
+    let Some((lo, hi)) = range.split_once('-') else {
+        return false;
+    };
+    if !digits(lo) || !digits(hi) || !digits(number) {
+        return false;
+    }
+    let (lo, hi, n): (u32, u32, u32) = (lo.parse().unwrap(), hi.parse().unwrap(), number.parse().unwrap());
+    lo < hi && lo <= n && n <= hi && (lo % 2 != hi % 2 || n % 2 == lo % 2)
+}
+
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum Tri {
     Yes,
@@ -347,7 +509,7 @@ impl Matcher {
         let ctx = self.ctx(country);
         let q = parse::parse(&ctx, query);
         if let Some(name) = self.place_name(query, &q) {
-            return match self.named_pick(&ctx, query, &name, &[candidate]) {
+            return match self.named_decide(&ctx, query, &name, &[Row::from(candidate)]).0 {
                 Pick::Match(_) => (Verdict::Same, vec![]),
                 Pick::Ambiguous(_) => (Verdict::Unknown, vec!["place_name_variant"]),
                 Pick::None => (Verdict::Different, vec!["place_name"]),
@@ -445,6 +607,8 @@ impl Matcher {
         let peer = matches!(mode, Mode::Peer);
         let mut reasons = Vec::new();
         let mut unknown = false;
+        // the caller's number lies in the listing's house-number range; the postcode must confirm it
+        let mut ranged = false;
         // PO box
         match (&q.po_box, &c.po_box) {
             (Some(a), Some(b)) if a != b => return (Verdict::Different, vec!["po_box"]),
@@ -460,7 +624,13 @@ impl Matcher {
                         let (qq, cc2) = if q.house.as_ref().map_or(0, |h| h.len()) > c.house.as_ref().map_or(0, |h| h.len()) { (&x2, c) } else { (q, &x2) };
                         return self.compare_parsed(qq, cc2, mode);
                     }
-                    return (Verdict::Different, vec!["house_number"]);
+                    // a listing's range holding the caller's number ("10-14" for 12); two listings, one
+                    // a range and one a number in it, may be one building
+                    let holds = Self::ranges_apply(q, c) && (range_holds(b, a) || (peer && range_holds(a, b)));
+                    if !holds {
+                        return (Verdict::Different, vec!["house_number"]);
+                    }
+                    ranged = !peer;
                 }
             }
             (Some(_), None) => {
@@ -564,6 +734,9 @@ impl Matcher {
             if a != b {
                 return (Verdict::Different, vec!["postcode"]);
             }
+        } else if ranged {
+            unknown = true;
+            reasons.push("number_range");
         }
         // two listings that place themselves by different means (one by town, one by postcode only)
         // cannot be shown to be one place
@@ -773,13 +946,20 @@ impl Matcher {
     /// accept it; a write asks.
     pub fn same_but_postcode(&self, query: &str, row: &str, country: Option<&str>) -> bool {
         let ctx = self.ctx(country);
-        let (mut q, mut c) = (parse::parse(&ctx, query), parse::parse(&ctx, row));
+        self.postcode_only_differs(&parse::parse(&ctx, query), &parse::parse(&ctx, row), false)
+    }
+
+    /// `same_but_postcode` on parsed text; with `range`, a range holding the caller's number counts
+    /// as the caller's number.
+    fn postcode_only_differs(&self, q: &Components, c: &Components, range: bool) -> bool {
         if q.house.is_none() || q.postcode.is_none() || c.postcode.is_none() || q.postcode == c.postcode || (q.city.is_none() && q.regions.is_empty()) {
             return false;
         }
+        let (mut q, mut c) = (q.clone(), c.clone());
         q.postcode = None;
         c.postcode = None;
-        self.compare_parsed(&q, &c, Mode::Query).0 == Verdict::Same
+        let (v, r) = self.compare_parsed(&q, &c, Mode::Query);
+        v == Verdict::Same || (range && v == Verdict::Unknown && r == ["number_range"])
     }
 
     /// Does the row's area fit the caller's? Returns (fits, holds every area part the caller gave).
@@ -817,46 +997,75 @@ impl Matcher {
     /// Choose among rows for a caller who named a place. The same name in the caller's area is the
     /// place; a variant of the name asks; a row that names the place and then another street is still
     /// the place ("Example Park, 12 Sample Plaza"). A same-name row next to a variant asks too: the
-    /// variant may be the place under its full name.
-    fn named_pick<S: AsRef<str>>(&self, ctx: &Ctx, query: &str, name: &[(String, Vec<u32>)], candidates: &[S]) -> Pick {
+    /// variant may be the place under its full name, and a read may take the one of them the site
+    /// categorized.
+    fn named_decide(&self, ctx: &Ctx, query: &str, name: &[(String, Vec<u32>)], rows: &[Row]) -> (Pick, Explained) {
         let rest = |s: &str| -> String { s.splitn(2, ',').nth(1).unwrap_or("").to_string() };
         let qa = parse::parse(ctx, &rest(query));
+        let report = |verdict: Verdict, reasons: Vec<&'static str>| RowReport { verdict, reasons };
+        let mut reports: Vec<RowReport> = Vec::with_capacity(rows.len());
         let mut exact: Vec<(usize, bool, Components)> = Vec::new();
         let mut variant: Vec<usize> = Vec::new();
-        for (i, c) in candidates.iter().enumerate() {
-            let c = c.as_ref();
+        for (i, row) in rows.iter().enumerate() {
+            let c = row.text;
             if self.is_control(query, c) {
+                reports.push(report(Verdict::Different, vec!["control"]));
                 continue;
             }
             let first = c.split(',').next().unwrap_or("");
             let rel = self.name_relation(name, &self.name_words(first));
             if rel == 0 {
+                reports.push(report(Verdict::Different, vec!["place_name"]));
                 continue;
             }
             let ca = parse::parse(ctx, &rest(c));
             let (fits, full) = self.area_fits(&qa, &ca);
             if !fits {
+                reports.push(report(Verdict::Different, vec!["area"]));
                 continue;
             }
             if rel == 2 {
+                reports.push(report(Verdict::Same, vec![]));
                 exact.push((i, full, ca));
             } else {
+                reports.push(report(Verdict::Unknown, vec!["place_name_variant"]));
                 variant.push(i);
             }
         }
         if exact.is_empty() {
-            return if variant.is_empty() { Pick::None } else { Pick::Ambiguous(variant) };
+            return if variant.is_empty() { (Pick::None, Explained::none(reports)) } else { (Pick::Ambiguous(variant.clone()), Explained::ambiguous(variant, vec!["place_name_variant"], reports)) };
         }
         // same-name rows in two towns are two places
         let towns_apart = exact.iter().any(|a| exact.iter().any(|b| !self.area_fits(&a.2, &b.2).0 || !self.area_fits(&b.2, &a.2).0));
         if towns_apart || !variant.is_empty() {
-            let mut ids: Vec<usize> = exact.iter().map(|e| e.0).chain(variant).collect();
+            let mut ids: Vec<usize> = exact.iter().map(|e| e.0).chain(variant.iter().copied()).collect();
             ids.sort();
-            return Pick::Ambiguous(ids);
+            let mut reasons = Vec::new();
+            if towns_apart {
+                reasons.push("several_places");
+            }
+            if !variant.is_empty() {
+                reasons.push("place_name_variant");
+            }
+            let mut e = Explained::ambiguous(ids.clone(), reasons, reports);
+            // the venue the site categorized, beside a same-name row it did not (or the reverse)
+            if !towns_apart {
+                let categorized: Vec<usize> = ids.iter().copied().filter(|&i| rows[i].categorized).collect();
+                if categorized.len() == 1 {
+                    e.prefer_on_read = Some(categorized[0]);
+                }
+            }
+            return (Pick::Ambiguous(ids), e);
         }
         // the site's first row that holds every area part the caller gave, else its first
         let best = exact.iter().find(|e| e.1).unwrap_or(&exact[0]).0;
-        Pick::Match(best)
+        let first = |s: &str| fold::dominant_script(s.split(',').next().unwrap_or(""));
+        let cross = script_group(Some(first(query))) != script_group(Some(first(rows[best].text)));
+        let mut e = Explained { outcome: Outcome::Match, index: Some(best), same: exact.iter().map(|x| x.0).collect(), cross_script: cross, ..Explained::none(reports) };
+        if cross {
+            e.rows[best].reasons.push("cross_script");
+        }
+        (Pick::Match(best), e)
     }
 
     /// A rejected candidate that may be the same street and number in another place, rejected for a
@@ -928,6 +1137,14 @@ impl Matcher {
         let full = |x: &Components| -> String { if x.street_type_compound && !x.street_type_first { format!("{}{}", x.street.key, x.street_type_word) } else { x.street.key.clone() } };
         let same_type = (q.street_type.is_empty() && c.street_type.is_empty()) || intersects(&q.street_type, &c.street_type) || q.street_type.is_empty() || c.street_type.is_empty();
         (q.street_type_compound || c.street_type_compound) && same_type && typo_in_long_word(&[full(q).as_str()], &full(c))
+    }
+
+    /// House-number ranges are read only where "10-14" is not another kind of number: not in block
+    /// addresses (Japan, Korea, China, Taiwan), not where it is a house and its flat (Russia, Ukraine,
+    /// Belarus, Kazakhstan), not in Colombian street-and-distance numbers, and only in Latin script.
+    fn ranges_apply(q: &Components, c: &Components) -> bool {
+        let cc = q.cc.as_deref().or(c.cc.as_deref());
+        !matches!(cc, Some("JP" | "KR" | "CN" | "TW" | "RU" | "UA" | "BY" | "KZ" | "CO")) && script_group(q.script) == 0 && script_group(c.script) == 0
     }
 
     /// `x` with house "73k" when `y` has house "73" and a street starting with the word "k":
@@ -1203,25 +1420,57 @@ impl Matcher {
         fits && full
     }
 
+    /// Choose among a site's rows, saying why: the outcome, every row that is the caller's place
+    /// (so a picker may choose by the site's own order among rows of one place), each row's verdict
+    /// and reasons, the reasons an `ambiguous` answer asks, notes beside a `match`, and the row a read
+    /// may take when a write asks. Unlike `pick`, it also asks where the only rows near the caller's
+    /// place show another postcode, leave out the house number, or give an unconfirmed range.
+    pub fn pick_explained(&self, query: &str, rows: &[Row], options: &PickOptions) -> Explained {
+        self.decide(query, rows, options.country).1
+    }
+
     /// Choose the candidate that is the same place as the query.
     pub fn pick<S: AsRef<str>>(&self, query: &str, candidates: &[S], country: Option<&str>) -> Pick {
+        let rows: Vec<Row> = candidates.iter().map(|c| Row::from(c.as_ref())).collect();
+        self.decide(query, &rows, country).0
+    }
+
+    /// `pick`'s answer and `pick_explained`'s.
+    fn decide(&self, query: &str, rows: &[Row], country: Option<&str>) -> (Pick, Explained) {
         let ctx = self.ctx(country);
         let q = parse::parse(&ctx, query);
         if let Some(name) = self.place_name(query, &q) {
-            return self.named_pick(&ctx, query, &name, candidates);
+            return self.named_decide(&ctx, query, &name, rows);
         }
-        let cs: Vec<Components> = candidates.iter().map(|c| parse::parse(&ctx, c.as_ref())).collect();
+        let candidates: Vec<&str> = rows.iter().map(|r| r.text).collect();
+        let cs: Vec<Components> = candidates.iter().map(|c| parse::parse(&ctx, c)).collect();
         let alts: Vec<Components> = Self::comma_free_readings(query).iter().map(|a| parse::parse(&ctx, a)).collect();
-        let calts: Vec<Option<Components>> = candidates.iter().map(|c| Self::without_leading_name(c.as_ref()).map(|t| parse::parse(&ctx, &t))).collect();
+        let calts: Vec<Option<Components>> = candidates.iter().map(|c| Self::without_leading_name(c).map(|t| parse::parse(&ctx, &t))).collect();
         let verdicts: Vec<(Verdict, Vec<&'static str>)> = cs.iter().zip(&calts).map(|(c, ca)| self.compare_any(&q, &alts, c, ca.as_ref())).collect();
+        let mut reports: Vec<RowReport> = verdicts.iter().map(|(v, r)| RowReport { verdict: *v, reasons: r.clone() }).collect();
         let same: Vec<usize> = (0..cs.len()).filter(|&i| verdicts[i].0 == Verdict::Same).collect();
         if same.is_empty() {
             // the caller gave no unit and the site lists the place only with units: ask which one
             let with_unit: Vec<usize> = (0..cs.len()).filter(|&i| verdicts[i].1 == ["candidate_adds_unit"]).collect();
-            if !with_unit.is_empty() {
-                return Pick::Ambiguous(with_unit);
+            let strict = if with_unit.is_empty() { Pick::None } else { Pick::Ambiguous(with_unit) };
+            // rows near the caller's place: a picker asks about them
+            let mut near: Vec<usize> = Vec::new();
+            let mut reasons: Vec<&'static str> = Vec::new();
+            for (i, (v, r)) in verdicts.iter().enumerate() {
+                let why = match (v, r.as_slice()) {
+                    (_, ["candidate_adds_unit"]) => "unit_not_given",
+                    (Verdict::Unknown, ["candidate_has_no_house_number"]) => "number_not_listed",
+                    (Verdict::Unknown, ["number_range"]) => "number_range",
+                    (Verdict::Different, ["postcode"]) if self.postcode_only_differs(&q, &cs[i], true) => "postcode_differs",
+                    _ => continue,
+                };
+                near.push(i);
+                reasons.push(why);
+                if !reports[i].reasons.contains(&why) {
+                    reports[i].reasons.push(why);
+                }
             }
-            return Pick::None;
+            return if near.is_empty() { (strict, Explained::none(reports)) } else { (strict, Explained::ambiguous(near, reasons, reports)) };
         }
         // cluster into distinct places
         let mut clusters: Vec<Vec<usize>> = Vec::new();
@@ -1263,17 +1512,36 @@ impl Matcher {
                 clusters = vec![clusters[k].clone()];
             }
         }
-        if clusters.len() == 1 && self.has_shadow(&q, &cs, &clusters[0], candidates) {
-            let mut ids = clusters[0].clone();
-            ids.sort();
-            return Pick::Ambiguous(ids);
+        if clusters.len() > 1 {
+            return (Pick::Ambiguous(same.clone()), Explained::ambiguous(same, vec!["several_places"], reports));
         }
-        if clusters.len() == 1 {
-            // prefer the listing without a business name, then the most complete one
-            let best = clusters[0].iter().copied().min_by_key(|&i| (cs[i].units != q.units, cs[i].business.len(), usize::MAX - cs[i].localities.len())).unwrap();
-            Pick::Match(best)
-        } else {
-            Pick::Ambiguous(same)
+        let mut place = clusters[0].clone();
+        place.sort();
+        if self.has_shadow(&q, &cs, &clusters[0], &candidates) {
+            return (Pick::Ambiguous(place.clone()), Explained::ambiguous(place, vec!["several_places"], reports));
         }
+        // prefer the listing with the caller's own number over a range holding it, the listing
+        // without a business name, then the most complete one
+        let ranged = |i: usize| cs[i].house != q.house && cs[i].house.as_deref().map_or(false, |h| h.contains('-'));
+        let best = clusters[0].iter().copied().min_by_key(|&i| (cs[i].units != q.units, ranged(i), cs[i].business.len(), usize::MAX - cs[i].localities.len())).unwrap();
+        // a row read across scripts: its street or town is written in another script than the caller's
+        let across = |i: usize| {
+            let (c, qq) = (&cs[i], &q);
+            (!qq.street.is_empty() && !c.street.is_empty() && script_group(qq.street.script) != script_group(c.street.script))
+                || matches!((&qq.city, &c.city), (Some(a), Some(b)) if script_group(a.script) != script_group(b.script))
+        };
+        // a row that leaves out a unit the caller gave
+        let unit_left_out = |i: usize| q.units.iter().any(|u| !cs[i].units.iter().any(|v| v[1..] == u[1..]));
+        for &i in &place {
+            if unit_left_out(i) {
+                reports[i].reasons.push("unit_not_listed");
+            }
+            if across(i) {
+                reports[i].reasons.push("cross_script");
+            }
+        }
+        let notes = if unit_left_out(best) { vec!["unit_not_listed"] } else { vec![] };
+        let e = Explained { outcome: Outcome::Match, index: Some(best), same: place, notes, cross_script: across(best), ..Explained::none(reports) };
+        (Pick::Match(best), e)
     }
 }

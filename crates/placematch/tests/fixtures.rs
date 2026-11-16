@@ -1,5 +1,5 @@
 //! Hand-written fictional cases (tests/cases.jsonl): every one must get its expected outcome.
-use placematch::{Matcher, Pick, Verdict};
+use placematch::{Matcher, Outcome, Pick, PickOptions, Row, Verdict};
 use serde_json::Value;
 
 #[test]
@@ -35,7 +35,13 @@ fn run_cases(text: &str) {
                 Pick::Ambiguous(_) => expected == "ambiguous",
             }
         };
-        if !ok {
+        // a case may also name the notes its answer carries ("unit_not_listed")
+        let notes_ok = c.get("notes").map_or(true, |want| {
+            let rows: Vec<Row> = cands.iter().map(|&t| Row::from(t)).collect();
+            let got = m.pick_explained(q, &rows, &PickOptions { country: cc }).notes;
+            want.as_array().unwrap().iter().map(|x| x.as_str().unwrap()).collect::<Vec<_>>() == got
+        });
+        if !ok || !notes_ok {
             failures.push(c["id"].as_str().unwrap().to_string());
         }
     }
@@ -64,8 +70,9 @@ fn readme_example() {
 }
 
 /// The picker built on PlaceMatch, as the place-name cases describe it: a write asks when PlaceMatch
-/// finds no place among usable rows; a read that finds none takes the site's first usable row when
-/// it is in the caller's area, and otherwise refuses. Controls are never usable.
+/// finds no place among usable rows; a read takes the row PlaceMatch prefers on a read (the
+/// categorized venue beside a same-name pin), else, for a named place, the site's first usable row
+/// when it is in the caller's area, and otherwise refuses. Controls are never usable.
 #[test]
 fn place_name_picker_modes() {
     let m = Matcher::new();
@@ -74,12 +81,16 @@ fn place_name_picker_modes() {
         let c: Value = serde_json::from_str(line).unwrap();
         let q = c["query"].as_str().unwrap();
         let cands: Vec<&str> = c["candidates"].as_array().unwrap().iter().map(|x| x.as_str().unwrap()).collect();
+        let categorized: Vec<bool> = c.get("categorized").map_or(vec![false; cands.len()], |v| v.as_array().unwrap().iter().map(|x| x.as_bool().unwrap()).collect());
+        let rows: Vec<Row> = cands.iter().zip(&categorized).map(|(&text, &categorized)| Row { text, categorized }).collect();
         let usable: Vec<usize> = (0..cands.len()).filter(|&i| !m.is_control(q, cands[i])).collect();
         let read = c["mode"] == "read";
         let named = !q.split(',').next().unwrap().chars().any(|ch| ch.is_ascii_digit());
-        let answer: (&str, Option<usize>) = match m.pick(q, &cands, Some("US")) {
-            Pick::Match(i) => ("match", Some(i)),
+        let e = m.pick_explained(q, &rows, &PickOptions { country: Some("US") });
+        let answer: (&str, Option<usize>) = match e.outcome {
+            Outcome::Match => ("match", e.index),
             _ if usable.is_empty() => ("none", None),
+            _ if read && e.prefer_on_read.is_some() => ("match", e.prefer_on_read),
             // a read of a named place takes the site's first usable row in the caller's area, unless
             // that row shows the typed text after words of its own
             _ if read && named => match usable.first().filter(|&&i| !m.shows_typed_text(q, cands[i], 1) && m.in_area(q, cands[i], Some("US"))) {
@@ -96,9 +107,7 @@ fn place_name_picker_modes() {
         let want = c["picker"].as_str().unwrap();
         let accept: Vec<usize> = c["picker_accept"].as_array().unwrap().iter().map(|x| x.as_u64().unwrap() as usize).collect();
         let ok = answer.0 == want && (want != "match" || answer.1.map_or(false, |i| accept.contains(&i)));
-        // two answers are proposals that differ from the earlier picker on purpose (see the notes)
-        let proposal = c["proposal"].as_bool().unwrap_or(false);
-        if ok == proposal {
+        if !ok {
             failures.push(format!("{} {:?}", c["id"].as_str().unwrap(), answer));
         }
     }
