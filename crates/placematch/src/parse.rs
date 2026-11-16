@@ -1048,7 +1048,9 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
         let words: Vec<usize> = ks.iter().copied().filter(|&q| !toks[q].num).collect();
         let letters: usize = words.iter().map(|&q| toks[q].s.chars().count()).sum();
         let more_after = (0..n).any(|q| toks[q].seg > s2);
-        if nums.len() == 1 && words.len() == 1 && letters <= 6 && words[0] < nums[0] && more_after {
+        // a long number is a postcode after a town ("Askar 0000", "Areal 25845-000"), not a unit
+        let long_num = nums.first().map_or(false, |&q| toks[q].s.chars().filter(|ch| ch.is_ascii_digit()).count() >= 4);
+        if nums.len() == 1 && words.len() == 1 && letters <= 6 && words[0] < nums[0] && more_after && !long_num {
             c.units.push(format!("u{}", norm_number(&toks[nums[0]].s)));
             for q in ks {
                 used[q] = true;

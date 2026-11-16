@@ -347,15 +347,35 @@ impl Matcher {
         let q = parse::parse(&ctx, query);
         let c = parse::parse(&ctx, candidate);
         let alts: Vec<Components> = Self::comma_free_readings(query).iter().map(|a| parse::parse(&ctx, a)).collect();
-        self.compare_any(&q, &alts, &c)
+        let calt = Self::without_leading_name(candidate).map(|t| parse::parse(&ctx, &t));
+        self.compare_any(&q, &alts, &c, calt.as_ref())
+    }
+
+    /// A listing that starts with a business or building name holding digits ("Grand 2009 Ltd,
+    /// Main St 6, Town"): the listing without that first part, so its digits are not read as the
+    /// house number.
+    fn without_leading_name(candidate: &str) -> Option<String> {
+        let parts: Vec<&str> = candidate.split(',').collect();
+        if parts.len() < 3 || !parts[0].chars().any(|ch| ch.is_numeric()) || !parts[1].chars().any(|ch| ch.is_numeric()) {
+            return None;
+        }
+        Some(parts[1..].join(","))
     }
 
     /// The query as read, or as one of its comma-free readings if that reading is the candidate's
     /// place.
-    fn compare_any(&self, q: &Components, alts: &[Components], c: &Components) -> (Verdict, Vec<&'static str>) {
+    fn compare_any(&self, q: &Components, alts: &[Components], c: &Components, calt: Option<&Components>) -> (Verdict, Vec<&'static str>) {
         let first = self.compare_parsed(q, c, Mode::Query);
         if first.0 == Verdict::Same {
             return first;
+        }
+        if let Some(c2) = calt {
+            if c2.house != c.house && q.house.is_some() && c2.house == q.house {
+                let r = self.compare_parsed(q, c2, Mode::Query);
+                if r.0 == Verdict::Same {
+                    return r;
+                }
+            }
         }
         for a in alts {
             // a reading counts only when it takes another number as the house number, keeps a
@@ -961,7 +981,8 @@ impl Matcher {
         let q = parse::parse(&ctx, query);
         let cs: Vec<Components> = candidates.iter().map(|c| parse::parse(&ctx, c.as_ref())).collect();
         let alts: Vec<Components> = Self::comma_free_readings(query).iter().map(|a| parse::parse(&ctx, a)).collect();
-        let verdicts: Vec<(Verdict, Vec<&'static str>)> = cs.iter().map(|c| self.compare_any(&q, &alts, c)).collect();
+        let calts: Vec<Option<Components>> = candidates.iter().map(|c| Self::without_leading_name(c.as_ref()).map(|t| parse::parse(&ctx, &t))).collect();
+        let verdicts: Vec<(Verdict, Vec<&'static str>)> = cs.iter().zip(&calts).map(|(c, ca)| self.compare_any(&q, &alts, c, ca.as_ref())).collect();
         let same: Vec<usize> = (0..cs.len()).filter(|&i| verdicts[i].0 == Verdict::Same).collect();
         if same.is_empty() {
             // the caller gave no unit and the site lists the place only with units: ask which one
