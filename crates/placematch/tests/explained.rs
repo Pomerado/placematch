@@ -482,3 +482,31 @@ fn rows_asked_about_may_each_be_the_place() {
     let e = explain(&m, "Example Park, Exampleton, CA", &["The Example Park, Exampleton, CA, USA", "Example Gardens, Exampleton, CA"]);
     assert_eq!((e.outcome, e.same), (Outcome::Ambiguous, vec![0]));
 }
+
+#[test]
+fn the_callers_town_as_written_wins_over_a_hyphenated_form() {
+    let m = Matcher::new();
+    let opts = PickOptions { country: Some("DE") };
+    let rows = [Row::from("Beispielweg 3, Berlin-Mitte, Germany"), Row::from("Beispielweg 3, Berlin, Germany")];
+    let e = m.pick_explained("Beispielweg 3, Berlin, Germany", &rows, &opts);
+    assert_eq!((e.outcome, e.index), (Outcome::Match, Some(1)));
+    let opts = PickOptions { country: Some("US") };
+    let rows = [Row::from("1 Example St, Dallas-Fort Worth, TX"), Row::from("1 Example St, Dallas, TX")];
+    let e = m.pick_explained("1 Example St, Dallas, TX", &rows, &opts);
+    assert_eq!((e.outcome, e.index), (Outcome::Match, Some(1)));
+}
+
+#[test]
+fn a_row_that_adds_a_place_is_asked_about_beside_a_hyphenated_form_of_the_town() {
+    let m = Matcher::new();
+    let opts = PickOptions { country: Some("DE") };
+    // the hyphenated row may be the caller's town with a district; the other adds a place the
+    // caller did not write, so neither is taken
+    let rows = [Row::from("Beispielplatz 8, Munich-Altstadt-Lehel, Germany"), Row::from("Beispielplatz 8, Sampledorf, Munich, Germany")];
+    let e = m.pick_explained("Beispielplatz 8, Munich, Germany", &rows, &opts);
+    assert_eq!((e.outcome, e.same.clone(), e.reasons.clone()), (Outcome::Ambiguous, vec![0, 1], vec!["place_unconfirmed"]));
+    // a row that adds nothing is still taken
+    let rows = [Row::from("Beispielplatz 8, Munich-Altstadt-Lehel, Germany"), Row::from("Beispielplatz 8, Munich, Germany")];
+    let e = m.pick_explained("Beispielplatz 8, Munich, Germany", &rows, &opts);
+    assert_eq!((e.outcome, e.index), (Outcome::Match, Some(1)));
+}

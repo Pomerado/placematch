@@ -3252,6 +3252,31 @@ impl Matcher {
             }
             return (Pick::Ambiguous(ids.clone()), Explained::ambiguous(ids, vec!["several_places", "unit_not_given"], reports));
         }
+        // the caller's place names a row keeps, and those it adds that the caller did not write
+        let named = |t: &Text| q.localities.iter().any(|u| text_eq(self, u, t, false) == Tri::Yes);
+        let kept = |i: usize| cs[i].localities.iter().filter(|t| named(t)).count();
+        let added = |i: usize| cs[i].localities.len() - kept(i);
+        // the same address in a town that opens with the caller's town and goes on
+        // ("Exampleton-North" or "Exampleton Beach" for "Exampleton") may be the caller's town
+        // with a district, or another town: when every row of the caller's place adds a place the
+        // caller did not write, the rows are asked about, so such a row is never passed over unseen
+        let opens_town = |i: usize| {
+            let (Some(qc), Some(rc)) = (&q.city, &cs[i].city) else {
+                return false;
+            };
+            let first = rc.toks.first().map(|t| t.0.as_str()).unwrap_or("");
+            let first = self.data.exonyms.get(first).map_or(first, |c| c.as_str());
+            rc.toks.len() >= 2 && qc.toks.len() == 1 && !first.is_empty() && first == qc.key
+        };
+        let opening: Vec<usize> = (0..cs.len()).filter(|&i| verdicts[i].0 != Verdict::Same && verdicts[i].1 == ["city"] && opens_town(i)).collect();
+        if !opening.is_empty() && same.iter().all(|&i| added(i) > 0) {
+            let mut ids: Vec<usize> = same.iter().chain(&opening).copied().collect();
+            ids.sort();
+            for &i in &opening {
+                reports[i].reasons.push("place_unconfirmed");
+            }
+            return (Pick::Ambiguous(ids.clone()), Explained::ambiguous(ids, vec!["place_unconfirmed"], reports));
+        }
         // more distinct rows of the caller's place than `MAX_COMPARED_ROWS` are not compared with
         // each other, but asked about
         if distinct_texts(same.iter().map(|&i| candidates[i])) > MAX_COMPARED_ROWS {
@@ -3327,7 +3352,9 @@ impl Matcher {
         // prefer the listing with the caller's own number over a range holding it, a listing that is
         // the caller's place as written over one read without its leading name, the listing without
         // a business name, then the most complete one
-        let best = clusters[0].iter().copied().min_by_key(|&i| (cs[i].units != q.units, ranged[i], rewritten[i], cs[i].business.len(), usize::MAX - cs[i].localities.len())).unwrap();
+        // (the most complete: the most of the caller's own place names, then the fewest the caller
+        // did not name, so a row that adds a town or district is not taken over one that adds none)
+        let best = clusters[0].iter().copied().min_by_key(|&i| (cs[i].units != q.units, ranged[i], rewritten[i], cs[i].business.len(), usize::MAX - kept(i), added(i))).unwrap();
         // a row read across scripts: its street or town is written in another script than the caller's
         let across = |i: usize| {
             let (c, qq) = (&cs[i], &q);
