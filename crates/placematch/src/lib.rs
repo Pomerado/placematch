@@ -1359,12 +1359,42 @@ impl Matcher {
     /// A listing that starts with a business or building name holding digits ("Grand 2009 Ltd,
     /// Main St 6, Town"): the listing without that first part, so its digits are not read as the
     /// house number.
+    /// A listing may also open with the distance to it ("0.2 mi, Sample Cafe, 12 Example St"):
+    /// the listing without the distance, then without a numbered name as above.
     fn without_leading_name(candidate: &str) -> Option<String> {
+        if let Some(rest) = Self::without_leading_distance(candidate) {
+            return Some(Self::without_leading_name(&rest).unwrap_or(rest));
+        }
         let parts: Vec<&str> = candidate.split(',').collect();
         if parts.len() < 3 || !parts[0].chars().any(|ch| ch.is_numeric()) || !parts[1].chars().any(|ch| ch.is_numeric()) {
             return None;
         }
         Some(parts[1..].join(","))
+    }
+
+    /// A listing that opens with a distance ("0.2 mi", "1.4 km", "350 ft", "0,3 km") and goes on:
+    /// the rest of it.
+    fn without_leading_distance(candidate: &str) -> Option<String> {
+        let t = candidate.trim_start();
+        let digits = |s: &str| s.len() - s.trim_start_matches(|ch: char| ch.is_ascii_digit()).len();
+        let mut i = digits(t);
+        if i == 0 {
+            return None;
+        }
+        // a decimal part, with a point or a comma
+        if let Some(sep) = t[i..].chars().next().filter(|ch| *ch == '.' || *ch == ',') {
+            let n = digits(&t[i + sep.len_utf8()..]);
+            if n > 0 {
+                i += sep.len_utf8() + n;
+            }
+        }
+        let rest = t[i..].trim_start();
+        let unit_len = ["miles", "mile", "mi", "km", "ft", "yd", "m"]
+            .iter()
+            .find(|u| rest.get(..u.len()).map_or(false, |h| h.eq_ignore_ascii_case(u)) && rest.get(u.len()..).map_or(false, |t| t.trim_start().starts_with(',')))?
+            .len();
+        let after = rest[unit_len..].trim_start().strip_prefix(',')?.trim_start();
+        (after.split(',').count() >= 2).then(|| after.to_string())
     }
 
     /// The query as read, or as one of its comma-free readings if that reading is the candidate's
@@ -1375,7 +1405,8 @@ impl Matcher {
             return first;
         }
         if let Some(c2) = calt {
-            if c2.house != c.house && q.house.is_some() && c2.house == q.house {
+            // (a numbered name may open with the caller's own number: "12 Hour Sample, 12 Example St")
+            if q.house.is_some() && c2.house == q.house {
                 let r = self.compare_parsed(q, c2, Mode::Query);
                 if r.0 == Verdict::Same {
                     return r;

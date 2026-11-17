@@ -471,3 +471,14 @@ fn a_town_named_like_its_state_is_the_callers_area() {
     // a ZIP code alone is an area too
     assert!(m.in_area("Example Tower, 94133", "Example Tower, 5 Sample St, Exampleton, CA 94133, USA", us));
 }
+
+/// Rows asked about are only those that may be the caller's place: another street that holds the
+/// caller's town in its name, or a place of another name, is never among them.
+#[test]
+fn rows_asked_about_may_each_be_the_place() {
+    let m = Matcher::new();
+    let e = explain(&m, "1 Example St, Exampleton, IL", &["1 Exampleton Rd, Sampleton, IL, USA", "1 Example St, Exampleton, NY, USA"]);
+    assert_eq!((e.outcome, e.same.clone()), (Outcome::None, vec![]));
+    let e = explain(&m, "Example Park, Exampleton, CA", &["The Example Park, Exampleton, CA, USA", "Example Gardens, Exampleton, CA"]);
+    assert_eq!((e.outcome, e.same), (Outcome::Ambiguous, vec![0]));
+}
