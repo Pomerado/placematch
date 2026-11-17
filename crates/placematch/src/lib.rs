@@ -1420,11 +1420,27 @@ impl Matcher {
     }
 
     /// The caller wrote the part too ("Sample 57", "11, 12 Example Ave"), other than as the house
-    /// number or postcode alone ("7" for a caller at 7 Example St).
+    /// number or postcode alone ("7" for a caller at 7 Example St) inside another part.
     fn caller_wrote(query: &str, q: &Components, part: &str) -> bool {
         let key = |t: &str| t.chars().filter(|ch| ch.is_alphanumeric()).collect::<String>().to_lowercase();
         let own = [q.house.as_deref(), q.postcode.as_deref()].iter().flatten().any(|h| key(part) == key(h));
-        !own && Self::holds_part(query, part)
+        // a part of its own in the caller's text counts, even a number ("306, 11 Example Rd")
+        let own_part = query.split(',').any(|p| !key(p).is_empty() && key(p) == key(part));
+        own_part || (!own && Self::holds_part(query, part))
+    }
+
+    /// A part that reads as a place's name rather than a unit: two words or more, with the number
+    /// not at the end ("24 Hour Sample", "7 Eleven Store", "Sample Grand 2009 Ltd"). A unit puts
+    /// its number last ("Villa No 7", "Lower Level 7") or has a single word ("Studio 12", "7e
+    /// étage"), and a street address of its own ("50 Example Street") is no name either.
+    fn named_part(&self, part: &str) -> bool {
+        let toks: Vec<&str> = part.split_whitespace().map(|t| t.trim_matches(|ch: char| !ch.is_alphanumeric())).filter(|t| !t.is_empty()).collect();
+        let words = toks.iter().filter(|t| t.chars().count() >= 2 && t.chars().all(|ch| ch.is_alphabetic())).count();
+        let last_number = toks.last().map_or(true, |t| t.chars().any(|ch| ch.is_numeric()));
+        let key = data::phrase_key(part);
+        let typed = key.split(' ').any(|w| self.data.lookup(w).iter().any(|e| e.class == data::Class::StreetType));
+        let address = typed && toks.first().map_or(false, |t| t.chars().all(|ch| ch.is_numeric()));
+        words >= 2 && !last_number && !address
     }
 
     /// The text holds the part's words in a row.
@@ -1565,7 +1581,7 @@ impl Matcher {
                     // address's is at most asked about for a caller with a unit, and a short part
                     // is asked about for a caller with none. A row with the caller's own unit still
                     // wins beside it.
-                    if let Some(n) = name.as_ref().filter(|n| c2.house != c.house && c2.units.is_empty() && !numbered_name(n) && !Self::postcode_number(n, c2) && !Self::caller_wrote(query, q, n)) {
+                    if let Some(n) = name.as_ref().filter(|n| c2.house != c.house && c2.units.is_empty() && !numbered_name(n) && !self.named_part(n) && !Self::postcode_number(n, c2) && !Self::caller_wrote(query, q, n)) {
                         let digits = |t: &str| t.split(|ch: char| !ch.is_numeric()).filter(|d| !d.is_empty()).map(str::to_string).collect::<Vec<String>>();
                         let house: String = c2.house.as_deref().map(|h| h.chars().filter(|ch| ch.is_numeric()).collect()).unwrap_or_default();
                         let other = digits(n).iter().any(|d| *d != house);
@@ -3130,6 +3146,17 @@ impl Matcher {
             .map(|((c, ca), text)| if self.is_control(query, text) { (Verdict::Different, vec!["control"]) } else { self.compare_any(query, &q, &alts, c, ca.as_ref()) })
             .collect();
         let mut reports: Vec<RowReport> = verdicts.iter().map(|(v, r)| RowReport { verdict: *v, reasons: r.clone(), notes: vec![] }).collect();
+        // a listing taken by its address after a leading name ("24 Hour Sample, 12 Example St") is
+        // read as that address from here on (a row that only looks like the caller's place is still
+        // checked against the listing as written)
+        let as_written = cs.clone();
+        for i in 0..cs.len() {
+            if let (Verdict::Same, Some((c2, _))) = (verdicts[i].0, &calts[i]) {
+                if self.compare_parsed(&q, &cs[i], Mode::Query).0 != Verdict::Same && self.compare_parsed(&q, c2, Mode::Query).0 == Verdict::Same {
+                    cs[i] = c2.clone();
+                }
+            }
+        }
         // a listing's range holding the caller's number ("10-14" for 12) is read as that number: the
         // caller's building when both sides give the same postcode, asked about otherwise
         let mut ranged = vec![false; cs.len()];
@@ -3261,7 +3288,7 @@ impl Matcher {
         }
         let mut place = clusters[0].clone();
         place.sort();
-        if self.has_shadow(&q, &cs, &clusters[0], &compared) {
+        if self.has_shadow(&q, &as_written, &clusters[0], &compared) {
             return (Pick::Ambiguous(place.clone()), Explained::ambiguous(place, vec!["several_places"], reports));
         }
         // rows that leave out the caller's state, beside the same address in another state: they

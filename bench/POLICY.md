@@ -117,7 +117,10 @@ place's name.
 
 Any other leading part with a number that a row is compared without (`Lower Level 7`, `P.H. 7`,
 `Sample Shop 3`) is at most asked about when its number is not the address's and the caller gave
-a unit, or when it has three words or fewer and the caller gave no unit. Beside a row with the
+a unit, or when it has three words or fewer and the caller gave no unit. A part with two words or
+more and its number not last (`24 Hour Sample`, `7 Sample Store`) is a place's name and is taken
+by its address, unless it is a street address of its own (`50 Example Street`); a row taken this
+way is told apart from other rows by its address. Beside a row with the
 caller's own unit, that row is still taken. A distance a row opens with (`0.2 mi`, `350 ft`) is
 left out before the row is read, so it is never the house number. A whole number with a unit of
 length right before the address (`5M, 350 Example Ave`, `5 m, 12 Example St`) is read as a
