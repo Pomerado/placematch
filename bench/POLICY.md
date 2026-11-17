@@ -108,10 +108,18 @@ only candidates that fit add a unit, the answer is `ambiguous`: ask the caller w
 A short part before the address that may name a unit, whatever its word, is read as the row's
 unit: a number with a letter or "F" (`7F`, `12B`, `7/F`), a symbol and a number (`№7`, `#7`),
 one or two letters glued to a number (`U7`), or one word and a number (`Studio 12`, `No. 7`).
-Another unit is not the caller's. The caller's own unit number, or no unit from the caller, is
-at most asked about, also beside a row that fits, since a place's name may look the same
-(`Sample 57, 12 Example St`). A part the caller wrote too is not read this way, and a longer name
-(`Studio 12 Hair`, `12 Hour Sample`) is a place's name.
+A number alone or with a letter (`7`, `7 B`, `7-B`, `U-7`) counts too. Another unit is not the
+caller's. The caller's own unit number, or no unit from the caller, is at most asked about, also
+beside a row that fits, since a place's name may look the same (`Sample 57, 12 Example St`). A
+part the caller wrote too, or whose number is the row's postcode (a postal branch), is not read
+this way, and a longer name holding the caller's number (`Studio 12 Hair`, `12 Hour Sample`) is a
+place's name.
+
+Any other leading part with a number that a row is compared without (`Lower Level 7`, `P.H. 7`,
+`Sample Shop 3`) is at most asked about when its number is not the address's and the caller gave
+a unit, or when it has three words or fewer and the caller gave no unit. Beside a row with the
+caller's own unit, that row is still taken. A distance a row opens with (`0.2 mi`, `350 ft`) is
+left out before the row is read, so it is never the house number.
 
 Business listings count: `Cafe Luna, 10 Main St, Springfield` is the same place as
 `10 Main St, Springfield`.
