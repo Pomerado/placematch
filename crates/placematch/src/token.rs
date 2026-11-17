@@ -23,6 +23,7 @@ impl CjkRules {
         let r = |p: &str| Regex::new(p).unwrap();
         CjkRules {
             rules: vec![
+                (r(r"(\d+(?:-\d+)+)\s*(?:番地|番|号|號)"), " $1 "),
                 (r(r"(\d+)\s*丁目\s*(\d+)\s*番地?\s*の?\s*(\d+)\s*号?"), " $1-$2-$3 "),
                 (r(r"(\d+)\s*丁目\s*(\d+)\s*[-‐−の]\s*(\d+)\s*号?"), " $1-$2-$3 "),
                 (r(r"(\d+)\s*丁目\s*(\d+)\s*番地?"), " $1-$2 "),
@@ -36,6 +37,8 @@ impl CjkRules {
                 (r(r"(\d+)\s*(?:階|楼|層|层|층)"), " floor $1 "),
                 (r(r"(\d+)\s*(?:号|號|번지|번)"), " no $1 "),
                 (r(r"(\d+)\s*-?\s*chome\s*,?\s*(\d+)\s*-?\s*ban(?:chi)?\s*,?\s*(\d+)\s*-?\s*go\b"), " $1-$2-$3 "),
+                // "3 Shonai-cho 6-chome": the lot number written before the town and its chome
+                (r(r"\b(\d+)\s+([a-z][a-z\- ]*?)\s+(\d+)\s*-?\s*chome\b"), " $2 $3-$1 "),
                 (r(r"(\d+)\s*-?\s*chome\s*,?\s*(\d+)\s*-?\s*ban(?:chi)?\b"), " $1-$2 "),
                 (r(r"\bchome\s*(\d+)\b"), " $1 "),
                 (r(r"(\d+)\s*-?\s*chome\b"), " $1 "),
@@ -58,13 +61,14 @@ impl CjkRules {
         if !has_marker {
             return s.to_string();
         }
-        let mut t = cjk_numerals(s);
+        // "10번길" is a road ("road 10, lane"), not house number 10
+        let mut t = cjk_numerals(s).replace("번길", "\u{E000}");
         for (re, rep) in &self.rules {
             if re.is_match(&t) {
                 t = re.replace_all(&t, *rep).into_owned();
             }
         }
-        t
+        t.replace('\u{E000}', "번길")
     }
 }
 
@@ -74,7 +78,8 @@ fn is_seg_sep(c: char) -> bool {
 
 /// Japanese: split after municipality suffixes only (道/街 occur inside city names).
 fn jp_split_after(c: char, cur: &str) -> bool {
-    matches!(c, '都' | '府' | '県' | '市' | '区' | '郡' | '町' | '村') || cur == "北海道"
+    // 都 and 府 end a prefecture only in 東京都, 京都府 and 大阪府 ("府内町" is a town)
+    matches!(c, '県' | '市' | '区' | '郡' | '町' | '村') || cur == "北海道" || cur.ends_with("東京都") || cur.ends_with("京都府") || cur.ends_with("大阪府")
 }
 
 /// Characters after which a CJK run is split (admin and street suffixes).

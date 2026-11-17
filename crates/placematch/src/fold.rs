@@ -89,7 +89,7 @@ pub fn cjk_numerals(s: &str) -> String {
         }
         if i > start {
             let next = chars.get(i).copied();
-            let marker = matches!(next, Some('丁' | '番' | '号' | '號' | '条' | '階' | '楼' | '层' | '室' | '弄' | '巷'));
+            let marker = matches!(next, Some('丁' | '番' | '号' | '號' | '条' | '階' | '楼' | '樓' | '层' | '室' | '弄' | '巷'));
             if marker {
                 out.push_str(&parse_kanji_number(&chars[start..i]).to_string());
             } else {

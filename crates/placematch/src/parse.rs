@@ -13,6 +13,8 @@ pub struct Text {
     pub toks: Vec<(String, Vec<u32>)>,
     /// per-token: written as an abbreviation
     pub abbr: Vec<bool>,
+    /// the folded native-script text of the name, for reading comparisons ("台中")
+    pub native: String,
 }
 
 impl Text {
@@ -37,6 +39,8 @@ pub struct Components {
     pub street_type_guess: bool,
     /// the type is written before the name ("Rue X", "ул. X")
     pub street_type_first: bool,
+    /// characters of a compound type split off the name's last word
+    pub street_type_word_chars: usize,
     pub units: Vec<String>,
     pub po_box: Option<String>,
     pub postcode: Option<String>,
@@ -76,7 +80,7 @@ impl Span {
     }
 }
 
-const NAME_CLASSES: &[Class] = &[Class::Synonym, Class::Directional, Class::Title, Class::StreetType, Class::Qualifier];
+const NAME_CLASSES: &[Class] = &[Class::Synonym, Class::Directional, Class::Title, Class::StreetType, Class::Qualifier, Class::Building];
 
 fn lookup(ctx: &Ctx, key: &str) -> Vec<Entry> {
     let es = ctx.data.lookup(key);
@@ -228,6 +232,66 @@ fn thai_fold(s: &str) -> String {
     words.join(" ")
 }
 
+/// Korean road names carry their own numbers and type words: "경원대로1418번길", "Gyeongwon-daero
+/// 1418beon-gil", "Namak 2-ro 22beon-gil". Join each into one romanized word, written the same way
+/// in both scripts, so the numbers are not read as house numbers and the spelling of the joins
+/// does not matter.
+fn merge_korean_roads(toks: Vec<crate::token::Tok>) -> Vec<crate::token::Tok> {
+    let is_type = |s: &str| matches!(s, "로" | "길" | "번길" | "대로" | "가길" | "ro" | "gil" | "beongil" | "daero" | "dae" | "lo" | "beon" | "ga" | "gagil" | "번" | "가");
+    let hangul = |c: char| ('\u{AC00}'..='\u{D7AF}').contains(&c);
+    let numeric = |s: &str| s.chars().next().map_or(false, |c| c.is_ascii_digit()) && s.trim_start_matches(|c: char| c.is_ascii_digit()).chars().all(|c| c.is_ascii_alphabetic() || hangul(c));
+    let road_end = |s: &str| is_type(s) || (s.chars().count() >= 2 && (s.ends_with('로') || s.ends_with('길')) && s.chars().all(hangul));
+    // (token, original segment)
+    let mut out: Vec<(crate::token::Tok, usize)> = Vec::with_capacity(toks.len());
+    let mut shift = 0;
+    let mut i = 0;
+    while i < toks.len() {
+        let mut t = toks[i].clone();
+        let seg = t.seg;
+        t.seg += shift;
+        out.push((t, seg));
+        i += 1;
+        // a run ends at a type word that is followed by no further road part
+        let last = &out.last().unwrap().0;
+        let next_continues = i < toks.len() && toks[i].seg == seg && (is_type(&toks[i].s) || (numeric(&toks[i].s) && toks.get(i + 1).map_or(false, |t| t.seg == seg && is_type(&t.s))));
+        if !road_end(&last.s) || next_continues {
+            continue;
+        }
+        // walk back over numbers and type words to the name word
+        let mut k = out.len() - 1;
+        let mut named = !is_type(&out[k].0.s);
+        while !named && k > 0 && out[k - 1].1 == seg && !out[k - 1].0.abbr {
+            k -= 1;
+            let s = &out[k].0.s;
+            if is_type(s) || numeric(s) {
+                continue;
+            }
+            if s.chars().all(|c| c.is_alphabetic()) {
+                named = true;
+            } else {
+                break;
+            }
+        }
+        if !named || (k == out.len() - 1 && !(k > 0 && out[k - 1].1 == seg && out[k].0.s.chars().all(hangul))) {
+            continue;
+        }
+        // one spelling for both scripts: final consonants as RR writes them, r and l alike
+        let joined: String = out[k..].iter().map(|t| crate::fold::ascii_key(&t.0.s)).collect::<String>().replace('r', "l").replace('k', "g").replace('t', "d").replace('p', "b").replace("nl", "ll").replace("ln", "ll");
+        let first = out[k].0.clone();
+        // words before the road in the same segment are places ("통영시 무전3길 23-7"): the road
+        // starts a segment of its own, and so does what follows
+        let split = k > 0 && out[k - 1].1 == seg;
+        out.truncate(k);
+        let mut tok = crate::token::Tok { s: joined, script: Script::Latin, num: false, abbr: false, ..first };
+        if split {
+            shift += 1;
+            tok.seg += 1;
+        }
+        out.push((tok, seg));
+    }
+    out.into_iter().map(|x| x.0).collect()
+}
+
 pub fn parse(ctx: &Ctx, text: &str) -> Components {
     let text = drop_paren_articles(text);
     let text = text.as_ref();
@@ -242,6 +306,13 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
     if matches!(ctx.cc, Some("UA") | Some("BY")) && folded.contains('г') {
         folded = folded.replace('г', "h");
     }
+    // Korean city ranks written onto the name ("서울특별시", "인천광역시") are left out in
+    // romanizations ("Seoul", "Incheon")
+    if folded.contains("특별") || folded.contains("광역시") {
+        for w in ["특별자치시", "특별자치도", "특별시", "광역시"] {
+            folded = folded.replace(w, "");
+        }
+    }
     let jp = ctx.cc == Some("JP") || folded.chars().any(|ch| script_of(ch) == Script::Kana);
     let mut toks = tokenize(&folded, jp);
     // Korean road names carry numbers: "효목로5길 55", "Seoyang-ro 49beon-gil 42". The number before
@@ -252,6 +323,9 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
                 toks[q].num = false;
             }
         }
+    }
+    if ctx.cc == Some("KR") || folded.chars().any(|ch| script_of(ch) == Script::Hangul) {
+        toks = merge_korean_roads(toks);
     }
     let script = Some(dominant_script(&folded));
     let n = toks.len();
@@ -941,6 +1015,7 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
                     *a = false;
                 }
                 c.street_type_word = ascii_key(&suf);
+                c.street_type_word_chars = sl;
                 c.street_type_compound = true;
                 c.street_type = vec![e.canon];
                 c.street_type_script = Some(toks[lastk].script);
@@ -949,7 +1024,17 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
         }
         let key: String = toks_out.iter().map(|t| t.0.as_str()).collect();
         let sc = name_idx.first().map(|&k| toks[k].script);
-        c.street = Text { skel: skeleton(&key), key, script: sc, toks: toks_out, abbr: abbr_out };
+        let mut native: String = name_idx.iter().map(|&k| toks[k].s.as_str()).collect();
+        if c.street_type_compound {
+            let lastk = *name_idx.last().unwrap();
+            let surf = &toks[lastk].s;
+            let keep = surf.chars().count().saturating_sub(c.street_type_word_chars);
+            let cut: String = surf.chars().skip(keep).collect();
+            if native.ends_with(cut.as_str()) {
+                native.truncate(native.len() - cut.len());
+            }
+        }
+        c.street = Text { skel: skeleton(&key), key, script: sc, toks: toks_out, abbr: abbr_out, native };
         for &k in &idx {
             used[k] = true;
         }
@@ -963,7 +1048,9 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
         let words: Vec<usize> = ks.iter().copied().filter(|&q| !toks[q].num).collect();
         let letters: usize = words.iter().map(|&q| toks[q].s.chars().count()).sum();
         let more_after = (0..n).any(|q| toks[q].seg > s2);
-        if nums.len() == 1 && words.len() == 1 && letters <= 6 && words[0] < nums[0] && more_after {
+        // a long number is a postcode after a town ("Askar 0000", "Areal 25845-000"), not a unit
+        let long_num = nums.first().map_or(false, |&q| toks[q].s.chars().filter(|ch| ch.is_ascii_digit()).count() >= 4);
+        if nums.len() == 1 && words.len() == 1 && letters <= 6 && words[0] < nums[0] && more_after && !long_num {
             c.units.push(format!("u{}", norm_number(&toks[nums[0]].s)));
             for q in ks {
                 used[q] = true;
@@ -992,7 +1079,11 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
                     ks.insert(0, k0 - 1);
                 }
             }
-            let pc: String = ks.iter().map(|&k| toks[k].s.as_str()).collect::<String>().chars().filter(|ch| ch.is_ascii_alphanumeric()).collect::<String>().to_ascii_uppercase();
+            let mut pc: String = ks.iter().map(|&k| toks[k].s.as_str()).collect::<String>().chars().filter(|ch| ch.is_ascii_alphanumeric()).collect::<String>().to_ascii_uppercase();
+            // a ZIP+4 is its ZIP ("90000-1234")
+            if ctx.cc == Some("US") && pc.len() == 9 && pc.chars().all(|ch| ch.is_ascii_digit()) {
+                pc.truncate(5);
+            }
             c.postcode = Some(pc);
             for k in ks {
                 used[k] = true;
@@ -1063,7 +1154,8 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
             }
             let sc = text_words.first().map(|&k| toks[k].script);
             let ab: Vec<bool> = text_words.iter().map(|&k| toks[k].abbr).collect();
-            let t = Text { skel: skeleton(&key), key, script: sc, toks: tk, abbr: ab };
+            let native: String = text_words.iter().map(|&k| toks[k].s.as_str()).collect();
+            let t = Text { skel: skeleton(&key), key, script: sc, toks: tk, abbr: ab, native };
             seg_texts.push((g[0], t, is_region, is_country));
         }
     }

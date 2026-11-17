@@ -5,7 +5,7 @@ website offers. Give it the caller's text and the site's candidates; it answers 
 candidate that is the same place, with `none`, or with `ambiguous` when it should ask.
 
 It is a small Rust library with no network access, no model and no runtime data files. It also
-builds to a 1.5 MB WebAssembly module.
+builds to a 2.4 MB WebAssembly module.
 
 ```rust
 use placematch::{Matcher, Pick};
@@ -48,9 +48,32 @@ names for every country from [Google libaddressinput](https://github.com/google/
 and house-number-after-street conventions.
 
 Transliteration works when the romanization keeps the consonants (Cyrillic, Greek, Korean and
-Arabic street names, for example). Japanese and Chinese place names cannot be recovered from a
-romanization without a reading dictionary, so a romanized Japanese address compared with a
-Japanese-script listing gets `ambiguous` or `none`, never a guess.
+Arabic street names, for example). Japanese and Chinese names are read with per-character
+readings from the Unicode Han database: a romanization matches when it splits, in order, into one
+reading for each character (Hepburn or Kunrei for Japanese, with long vowels written or not and the
+sound changes of compound names; Hanyu Pinyin, Wade-Giles or Tongyong for Chinese). Thai names
+are compared with their romanizations by consonant sounds. Korean road names ("경원대로1418번길",
+"Gyeongwon-daero 1418beon-gil") are read as one word in both scripts. A Japanese place name whose
+reading is not built from its characters' listed readings gets `ambiguous` or `none`, never a
+guess.
+
+## Places named without a house number
+
+When the caller gives a place's name and no house number ("Example Park, Exampleton, CA"), the
+name decides:
+
+- a row whose first part is the same name, word for word (Street for St), is the place, whatever
+  street follows the name, when its town, region and postcode fit the caller's;
+- a row that holds the caller's words in order with others added before or between them ("The
+  Example Park", or a venue under its full name) is `ambiguous`: it may be the place;
+- a row that starts with the name and goes on ("Example Park Ferry Terminal") is another place;
+- a row that shows the caller's whole text after words of its own ("See more results for ...") is
+  a site control, not a place.
+
+A picker around PlaceMatch decides what to do with `none` and `ambiguous` (ask in a write, refuse or
+read on in a read). `Matcher::is_control`, `Matcher::in_area` and `Matcher::same_but_postcode`
+answer the questions such a picker asks; `tests/place-names.jsonl` holds the cases, with the
+picker's answer for each mode beside PlaceMatch's own.
 
 ## Accuracy
 
@@ -63,22 +86,22 @@ Held-out split: 76,722 cases from 62 countries, 11 scripts. Cells are accuracy /
 
 | | PlaceMatch | libpostal baseline | both agree |
 |---|---|---|---|
-| all cases | 91.6% / 0.39% | 75.9% / 1.87% | 74.6% / 0.04% |
-| one candidate (`pair`) | 92.7% / 0.17% | 79.3% / 0.44% | 77.6% / 0.01% |
-| 2 to 8 candidates (`pick`) | 90.1% / 0.69% | 71.3% / 3.81% | 70.6% / 0.10% |
-| government and open-data addresses | 96.2% / 0.09% | 82.6% / 1.28% | 80.9% / 0.02% |
-| OpenStreetMap addresses and listings | 89.7% / 0.51% | 73.2% / 2.11% | 72.1% / 0.05% |
-| Latin script | 94.7% / 0.40% | 81.1% / 1.34% | 79.3% / 0.04% |
-| other scripts | 86.0% / 0.38% | 66.6% / 2.83% | 66.2% / 0.05% |
-| no commas | 82.8% / 0.38% | 76.0% / 1.89% | 69.4% / 0.04% |
-| transliterated | 53.5% / 0.22% | 35.2% / 0.25% | 34.4% / 0.00% |
+| all cases | 92.5% / 0.37% | 75.9% / 1.87% | 74.9% / 0.04% |
+| one candidate (`pair`) | 93.6% / 0.18% | 79.3% / 0.44% | 77.9% / 0.01% |
+| 2 to 8 candidates (`pick`) | 91.0% / 0.63% | 71.3% / 3.81% | 70.9% / 0.08% |
+| government and open-data addresses | 96.4% / 0.09% | 82.6% / 1.28% | 81.0% / 0.02% |
+| OpenStreetMap addresses and listings | 90.9% / 0.49% | 73.2% / 2.11% | 72.4% / 0.04% |
+| Latin script | 95.1% / 0.39% | 81.1% / 1.34% | 79.5% / 0.04% |
+| other scripts | 87.9% / 0.34% | 66.6% / 2.83% | 66.7% / 0.03% |
+| no commas | 84.8% / 0.33% | 76.0% / 1.89% | 70.6% / 0.03% |
+| transliterated | 59.0% / 0.25% | 35.2% / 0.25% | 35.1% / 0.00% |
 
 "Both agree" answers `match` only when PlaceMatch and libpostal pick the same listing; it trades
 coverage for the fewest wrong picks. Most remaining misses are `none` or `ambiguous` answers
-where a listing did match: romanized Japanese, Chinese and Thai names (no reading dictionary is
-embedded), comma-less addresses where town and region names collide, and label noise in the
-source data. The project's goal is 97% with fewer wrong picks than the baseline; the second
-part holds today, the first does not yet.
+where a listing did match: Chinese addresses that write sections, lanes and alleys in another order,
+Japanese and Thai names read irregularly, Hebrew and Cyrillic romanizations, and label noise in the
+source data. The project's goal is 97% with fewer wrong picks than the baseline; the second part
+holds today, the first does not yet.
 
 A wrong pick is a `match` answer naming a listing that is not the caller's place.
 

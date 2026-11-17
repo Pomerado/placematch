@@ -1,0 +1,2489 @@
+# City names in other languages, English first, from Wikidata (CC0); see tools/vendor-exonyms.py
+10th of ramadan city|10e ramadan stad|cidade do ramadão|città del decimo ramadan|ciudad del ramadon 10|kota 10 ramadan|madinat al ashir min ramadan|stadt des 10. ramadan|ville de 10 ramadan
+6th of october city|6 octombrie|bandar 6 oktober|ciutat 6 d'octubre|kota 6 oktober|madinat sittah uktobar|madinat sittah uktubar|madinat as-sadis min uktubar|seis de octubre|thành phố ngày sáu tháng mười|ville du 6 octobre|zes oktober
+aachen|achenas|aix-la-chapelle|aken|akisgran|akwizgran|aquisgrana|aquisgrà|aquisgrán|cáchy|āhene
+aarhus|orhusas|orhūsa|árósar|århus
+abadan|abadanas|abadāna
+abakan|abakana|abakanas
+abbotsford|abotsforda|abotsfordas
+abengourou|abengouro|abenguru
+aberdeen|aberdynas|aberdīna|obar dheathain
+abha|ebha
+abidjan|abidžan|abidžana|abidžanas|abiyán
+abu dhabi|abou dabi|abu dabis|abu-dzabi|abú dabí|abú daibí|abú zabí
+abu kabir|abu kabira|abu kabiras
+abuja|abudža|abuxha|abuya|abútja
+acapulco de juárez|acapulco|akapulkas|akapúlkó
+acarígua|akarigva
+accra|acra|akkra|akra
+adama|nazret|nazretas
+adapazarı|adapazaris|sakarya
+addis ababa|adas ababa|addis abeba|addisz-abeba|adís abeba
+adelaide|adelaida
+adlersky city district|adler|adleras rajons|adlerský rajón|distretto di adler|district adlerski|distrito de ádler|raïon d'adler
+ado ekiti|ado ekitis
+adén|adena|adenas|áidin
+adıyaman|adeiamane|adijamana|adijamanas
+afyonkarahisar|afioncaraquissar|afjonkarahisar|afjonkarahisara|afjonkarahisaras|afyon
+agadir|agadiras|agādīra
+agartala|agratala
+aguascalientes city|aguascalientes|aguaskaljentesa|aguaskaljentesas|cathair aguascalientes
+ahilyanagar|ahmadnagar|ahmadnagara|ahmadnagaras|ahmednagar
+ahmedabad|ahmadabadas|ahmadábád|amdāvāda
+ahmedpur east|ahmadpur east|ahmedpur sharqia|ahmedpur timur|ahmedpur śarki|doğu ahmedpur|timur ahmedpur
+ahvaz|ahvazas|ahvāza|ahwaz
+ait melloul|ajt mallul|ayt mallul
+aizawl|aijal|aizavlis|áizól|āīzola
+ajloun|aclun|adžlunas|adžlún|ajlun
+ajman|adschman|adzsmán|adżman|adžmāna|ajmanas|axman
+ajmer|adžmera|adžmeras|adžmér|ecmir|ádzsmír
+akashi|akaši|akašis
+akhisar|akchisaras
+akron|akrona|akronas
+aksaray|acsarai|aksaraja|aksarajus
+aktau|akhtau|aktaou|aktav|aqtau|aqtaw
+aktobe|aktebe|aktioubé|aqtöbe
+akurė|akura
+al ain|aina|ainas|al-'ayn|el-ajn|al-ajn
+al bayda|al-baida|al-bajda|baida|bajdá|bayda|beida|el bayda|el beïda
+al diwaniyah|ad-diwanijja|ad-dīwānīyah|al divanija|al-diwaniyya|divaniye|diwaniya|diwaniyya|dívánijja|dīvānīja
+al hudaydah|al-hudaida|al-hudajda|chudaida|hodeida|hudaida|hudajda|hudeyde|al-hudayda
+al mokattam|al-muqaṭṭam
+al-fashir|al fašir|al-faschir|al-faszir|el fasher|fašira|faširas|fášir
+al-kharj|al-chardsch|al-chardż|al-saih|el-harc|al-sih
+al-muharraq|al-muharrak|muharaka|muharakas|muharrak|muharraq
+al-qadarif|al kadarifas|al-kadarif|el gadarif|gadaref|gadarif|gadārifa|gedarif
+alagoinhas|alagoinjasa|alagoinjasas
+albacete city|albacete|cathair albacete|ciudad de albacete
+albuquerque|albukerkė
+aleppo|alepas|alepo|haleba|halep|ḩalab
+algiers|algeirsborg|alger|algeri|algier|algír|aljer|aljir|alxer|alžiir|alžyras|alžír|alžīra|argel|cathair na hailgéire|cezayir
+alicante|alacant|alikantė
+aligarh|aligarhas|alīgarha
+almaty|alma-ata|almata|almati|almatõ
+almería city|cathair almería|ville d'almérie|ciudad de almería
+almetyevsk|al'met'evsk|aljmetjevsk|almetjevskas|almetjewsk|almetyjevszk|almeťjevsk|almietjewsk|almétievsk|aļmetjevska|elmet
+alor setar|alor setaras|alor star|alorserata
+altona|hambourg-altona|hamburg-altona|hamburgo-altona
+alwar|alvar|alvara
+amagasaki|amagasakis|amagaszaki
+amarah|al-amara|al-‘amārah|amara|amare
+amarillo|amarila|amarilas
+ambato|ambatas|san juan de ambato
+ambon|ambona|ambonas|kota ambon
+americana|amerikana
+amman|aman|amanas|ammāna
+amol|amolis|amül|āmola
+amravati|amravatis
+amritsar|amritsara|amritsaras|amritszár
+anaco|anakas|anako
+anaheim|anahaima|anahaimas
+ananindeua|ananindeva
+ananthapuram|anantapur
+anapolis|anapolisa
+anchorage|ankoridža|ankoridžas
+ancient carthage|antiga cartago|antik kartaca|antikkens karthago|antzinako kartago|cartagina|carthage cổ đại|civilização cartaginesa|civiltà cartaginese|estado púnico|imperi cartaginès|kartagina|kartago kuno|karthagisches reich|oud-carthage|senovės kartagina|an chartaig ársa|antikens karthago|antična kartagina|civilisation carthaginoise|starověké kartágo
+andijan|andidjan|andidžona|andijon|andisjan|andizan|andizhan|andizjan|andižanas|endican
+andimeshk|andimeschk|andimesk|andimeszk
+andong|andona|andongas
+angers|anžė
+anjo|andzsó|andžijas|andžjo|andžo
+anju|andzsu|andžu|anju-si
+ankang|an khang|an-kchang|ankanga|ankangas
+ankara|ancara
+annaba|anaba|bune
+anqing|an khánh|an-čching|ancsing|ančing|ančinga|ančingas
+anseong|ansona|ansong|ansongas|anszong
+anshan|an sơn|anshan shi
+anshun|an thuận|an-šun|anšuna|anšunas
+antakya|antakija|antakja|antiochia|antiochië|antiohija|antiokia|antioquía|antáquia
+antalya|adalia|antalia|antalija|antalja
+antananarivo|antananarivu|antananaryvas|antananarywa
+antsirabe|ancirabė|antisrabe
+antwerp|amberes|anberes|antuairp|antuérpia|antverpenas|antverpene|antverpy|antwerpen|antwerpia|anveres|anvers|anversa
+aomori|aomoris
+aparecida de goiânia|aparesida de gojanja
+ar ramtha|ar-ramsa|er remse|ramsa
+aracaju|arakažu
+arak|arakas|arāka|erak
+arapiraca|arapiraka
+araraquara|ararakvara
+araucária|aracuaria|araukarija
+araçatuba|arasatuba
+arequipa|arekipa
+arica|arika
+arish|al-arisch|al-arish|al-arix|alarixe|arisz|arišas|aríš|el arish|el-arich|el-arís
+armavir|armavira|armaviras|armawir
+armenia|armenija
+arnhem|arnema|arnheim|arnhemas
+arrah|arra
+arusha|arusza|aruša
+asahikawa|asahikava|aszahikava|ašikava
+asansol|asansola|asansolas|ászánszol
+asan|asanas|aszan
+ashdod|aisdeod|aschdod|asdod|aszdod|axdod|ašdoda|ašdodas
+ashgabat|achgabat|achkhabad|aschgabat|asgabate|asjabad|asjchabad|asjkhabad|aszchabad|aşgabat|aşkabat|ašchabad|ašchabadas|ašgabata|ašhabad
+asmara|asmera|aszmara
+astana|asztana
+astrakhan|an astracáin|astracan|astrachan|astrachanė|astracã|astrahan|astrahaņa|astrakán|asztrahán
+asunción|assunção|asunsjona|asunsjonas|asúnsjón|gunung berapi asuncion
+aswan|assouan|assuan|assuão|asszuán|asuanas|asuán|asuāna|asvan
+asyut|asijút|asiut|asjut|asjutas|asjūta|assioet|assiout|assiut|asyuth|aszjút
+athens|ateena|aten|atena|atenas|atene|atenes|athen|athena|athene|athina|athènes|athény|atina|atény|atėnai|an aithin
+atibaia|atibaja
+atsugi|acugi|atsugis
+attock|atoka|atokas
+atyrau|atirau|atyraou|atõrau|atıraw
+auckland|okland
+augsburg|augsbourg|augsburga|augsburgas|augsburgo|augusta|ágsborg
+aurangábád|aurangabadas|evrengabad|šambhadžinagara
+austin|ostina|ostinas
+avellaneda|aveljaneda
+awka|avka
+ayacucho|aiacucho|ajakučas|ajakučo
+aydın|aidim|aidina|aidinas|ajdën
+az-zubayr|az zubaira|az zubairas|az-zubajr|ez-zubeyr|zubair
+babol|babolis|babul|bābola
+babruysk|babroejsk|babrouïsk|babruisk|babruiskas|babrujsk|babrujska|babrujszk|bobrujsk
+bacoor|bakuras|bakūra
+badajoz|badachosas|badahosa|badaxoz
+badalona|badalone
+bafoussam|bafusama|bafusamas|bafussam
+baghdad|bagdad|bagdadas|bagdadi|bagdá|bagdāde|bağdat
+bahawalpur|bahavalpūra|bahavalpūras|bahavelpur|bahávalpur
+bahir dar|bahar dar|baher dar|bahir daras|bahirdara|bahyr dar
+bahía blanca|bahija blanka|baijablanka
+baicheng|baičenga|baičengas|bạch thành|paj-čcheng|pajcseng
+bailundo|município bailundo
+baise|bose|bách sắc|paj-se|pajszö
+baishan|baišana|baišanas|bạch sơn|paj-šan
+baiyin|baijina|baijinas|bạch ngân|pajjin
+bakersfield|beikersfildas|beikersfīlda
+baku|bakoe|bakou|bakuu|bakı
+balakovo|balakova|balakovas|bałakowo
+balikpapan|balikpapana|balikpapanas
+ballari|belaris|belarisa|bellary
+bally|bālī
+baltimore|baltimora
+balıkesir|balikesira|balikesyras|baliquesir|ballëkesir
+bamako|bamaco|bamakas
+banda aceh|banda acheh|banda achém|banda atjeh|banda ačeha|banda ačehas
+bandar abbas|bandar abas|bandar-abbász|bandar-e abbas|bandarabāsa|bender abasas|benderabbas
+bandung|banduna|bandungas
+bandırma|bandërma
+bangkok|bancác|bangkoka|banguecoque|bankokas|băng cốc
+bangui|bangi|bangis|bangví
+banja luka|bania luka|baņa luka
+banjarbaru|badžarbaru|benjarbaru|kota banjarbaru
+banjarmasin|bancermasin|bandžarmasina|bandžarmasinas
+banjar|bandžara|bandžaras|kota banjar
+baoding|baodina|baodingas|bảo định|pao-ting
+baoji|baodzi|bảo kê|pao-ťi|paocsi
+baoshan|baoshan shi|baošan|baošana|baošanas|bảo sơn|pao-šan
+baotou|bao đầu|baoto|baotu|pao-tchou|paotou
+baqubah|baakúba|bakouba|bakuba|baquba
+baranagar|baranagaras
+baranavichy|baranavicsi|baranavitchy|baranavitjy|baranavitsjy|baranavitšy|baranaviči|baranavičy|baranawitschy|baranovichi|baranovičiai|baranowicze|barànavitxi|baránavichi
+bardhaman|barddhaman|bardhamana|bardhamanas|burdwan
+bareilly|bareli|barelija
+barinas|barina|barinasas
+barishal|barisal|barisala|barisalas
+barnaul|barnaoel|barnaoul|barnaula|barnaulas
+barquisimeto|barkisimetas|barkisimeto
+barra mansa|bara mansa
+barrackpore|barakpur|barrackpur
+barranquilla|barankilja|barrankilja
+barreiras|bareirasa|bareirasas
+barueri|barueris
+basel|basilea|basileia|basilej|bazel|bazelis|bazilej|bazylea|bâle|bāzele
+basra|al-başrah|basora|bassorah|baszra|baçorá|bàssora
+basyoun|basjun|basyūn
+batam|batama|batamas
+batangas city|bandar batangas|batangan|batangas|batangasa|batangasas|cidade de batangas
+bathinda|batinda|bhatinda
+batman|batmana|batmanas|batmane
+batna|batina|batnah
+baton rouge|baton ružas|batonrūža
+batumi|bathumi|batoemi|batoumi|batum|batumis
+bauchi|bauči|baučis
+bayamo|bajamas|bajamo
+bayan nur|bajannúr|bajanura|bajanuras|baynnur|pajannur
+bazhong|ba trung|bažonga|bažongas|pa-čung|pacsung
+beawar|bevara|bevaras
+bechar|basyar|baszszar|bexar|bešaras|bešāra
+beersheba|be'er-sheva|beer szewa|beer ševa|beer-xeva|beerseba|beerxeba|bersebá|beër sjeva|be’er scheva
+begusarai|begusarajus
+beihai|beihajus|bắc hải|pej-chaj|pejhaj
+beijing|bắc kinh|pechino|pekina|pekinas|peking|pekini|pequim|pequín|pékin
+beiliu|bắc lưu|pejliu
+beirut|beiroet|beirutas|beirute|beirūta|bejrút|beyrouth|beyrut|béiriút
+bekasi|bekasis
+belbis|bilbajs|bilbays|bilbeis|bilbeisa|bilbeisz|bilbeys
+belfast|belfastas|belfāsta|béal feirste
+belford roxo|belford rochas|belfordrokso
+belgaum|belagávi|belgaumas
+belgorod|belgoroda|belgorodas|biełgorod
+bellevue|belvju
+belo horizonte|beluorizonti
+belém|belena|belenas|belém do pará
+bengalúru|bangalore|bangalúr|bengalūras
+bengbu|bạng phụ|peng-pu
+benghazi|banghāzī|bengasi|bengazi|bengazis|bingazi
+bengkulu|benkulu
+benguela|bengela
+benha|banha
+beni suef|bani suwaif|bani suwajf|bani suwayf|bani szuvajf|beni sueifa|beni sueifas|beni süveyf
+benin city|benin|benin stadt|benina|beninas|benínborg|cathair bheinin|cidade do benim|ciudad de benín|thành phố benin
+beni|benis
+benxi|bensi|bản khê|pen-si|penhszi
+berazategui|berasategija|berasategis|berazategi
+bergen|bergena|bergenas|björgvin
+berhampore|baharampur
+berlin|beirlín|berliin|berliini|berlijn|berlim|berlino|berlynas|berlīne
+berrechid|berešida|berešidas
+bertoua|bertua|bertva
+betim|betima|betimas
+beykoz|bejkozas rajons
+beşiktaş|beshiktash|bešiktašas|bešiktašas rajons
+bhagalpur|bhagalpuras
+bharuch|bharuč
+bhawana|banava|bhanawa|bhavana
+bhilwara|bhilāra|bilvara
+bhilái|bhilai nagar|bhilaj nagar|bhilajus|bilaj
+bhiwandi|bhivandí|bivandis
+bhiwani|bhivani|bivanis
+bhopal|bhopalas|bhopāla|bópal
+bhubaneswar|bhubaneshwar|bhubanešbara|bhubanešvaras|bhuvanéšvar|bubanesvar
+białystok|balstogė|bjalistoka|bělostok
+bielefeld|bylefeldas|bīlefelde
+bielsko-biała|belsko-biala|belsko-bjala|bielitz-biala|bielsko-biela|bílsko-bělá
+bijie|bidžė|pi-ťie|picsie|tất tiết|préfecture de bijie
+bikaner|bikaneras|bīkānera
+bila tserkva|belaya tserkov|biała cerkiew|bila cerkva|bila zerkwa|bila țerkva
+bilaspur|bilaspura|bilaspuras
+bingerville|bingervilis
+bingöl|bingela|bingiolas
+binhai new area|binhai|binhai gune berria|nouveau district de binhai|tân hải
+binjai|bindžaja|bindžajas
+binzhou|bindžau|bindžou|pin-čou|pincsou|tân châu
+biratnagar|biratnagara|biratnagaras
+birjand|bircend|birdschand|birdžanda|birdžendas|biryand|bírdžand
+bishkek|bichkek|bischkek|bisjkek|biskek|bisqueque|biszkek|bixkek|biškeka|biškekas
+bishoftu|biscioftù|debre zeit|debre zeitas|debre zejit|debre zeyit|debre zeyt
+biskra|biskira|bsikra
+bissau|bisau|bisava
+bitung|bitunga|bitungas|kota bitung
+biysk|biejsk|bijsk|bijska|bijskas|bijszk|bisk|biïsk
+biên hòa|bjenhoa
+biñan|binjanas|biñan city|biņana
+blantyre|blantaira|blantairas|blantire
+blida|al-bulajda|buleyde
+bloemfontein|blumfonteina|blumfonteinas
+bnei brak|bein berak|bene berak|bene berakas|bene beraq|bené-berac|bnei berak|bnei braka|bnej brak|bney brak
+bobo-dioulasso|bobo diulasas|bobodjulaso
+bochum|bochumas|bohuma
+bogor|bogoras
+bogura|bogra
+boise|boisisitija|boizis
+bojnord|bodschnurd|bodżnurd|bodžnūrda|bodžnūrdas|bojnourd|bojnurd|bucnurd|budjnurd
+bolton|boltona|boltonas
+bonn|bona|boni|bonna
+bontang|bontanga|bontangas|kota bontang
+bordeaux métropole|bordeaux metropolisz|communauté urbaine de bordeaux|urban community of bordeaux|metropoli di bordeaux|metròpoli de bordeus
+bordeaux|bordele|bordeos|bordeus|bordo|burdeos
+bordj bou arreridj|bordž bu areridžas|bordž bū arrīrīdža|burdż bu urajridż
+borujerd|barudjird|boroudjerd|borudscherd|borudzserd|borudžerdas|boruyerd|borúdžerd|burucerd
+boston|bostona|bostonas|bostún
+botucatu|botukatu
+bouaflé|buaflė
+bouaké|buake|bvakė
+bozhou|bạc châu|po-čou|pocsou
+bragança paulista|bragansa paulista
+brahmanbaria|brahmabarija|brahmanbarija
+brampton|bramptonas|bremptona
+brasília|brazilija|brazilja|brazília|brazíliaváros
+bratislava|bratisllava|bratysława|pozsony|an bhratasláiv
+brazzaville|brazavila|brazavile|brazavilis
+brașov|brassó|braszów|brašova|brašovas
+brebes|kecamatan brebes
+brest|biérastse|brest-litovsk|bresta|brestas|breszt|brześć|byerastsye
+brighton and hove|braitona un hova|brighton & hove|brighton et hove|brighton eta hove|brighton og hove|brighton và hove
+brisbane|brisbejn|brisbena|brisbenas
+bristol|briostó|bristole|bristolis
+brno|brünn
+brownsville|braunsvila|braunsvilis
+brunswick|braunschweig|braunshvajgi|braunšveiga|braunšveigas|brunsvic|brunsvique|brunszwik|brúnsvík
+brussels|brisele|briuselis|bruksela|brukseli|brusel|brusela|bruselas|bruselj|brussel|brussel·les|bruxelas|bruxelles|bryssel|brüksel şehri|brüsszel|cathair na bruiséile|kota brussel
+bryansk|breansk|briansk|brianskas|brjansk|brjanska|brjanszk
+brăila|breila|i̇brail
+bucaramanga|bukaramanga
+bucharest|boekarest|bucarest|bucareste|bucurești|bukares|bukarest|bukareste|bukareszt|bukarešta|bukareštas|bukureshti|bukurešť|búcairist|bükreş
+bucheon|bučonas|puch'ŏn|pucshon|pučchon
+budapest|boedapest|budapeste|budapesti|budapeszt|budapešta|budapeštas|budimpešta|búdaipeist
+buffalo city metropolitan municipality|buffalo city|buffalo city linnaringkond|metropolitanska občina buffalo city|municipalidad metropolitana de buffalo city|municipalità di buffalo city
+buffalo|bafalas|búfalo
+bukan|bukanas|būkāna
+bukavu|bucavu
+bukhara|boukhara|bucara|buchara|buhara|bujará|buxoro|búkara
+bulawayo|bulavaio|bulavajas|bulavajo
+bunia|bunija
+burao|burco
+burayda|buraida|buraidah|burajda|burajdah|buraydah|burejde|bureyde
+burewala|burevala
+burgas|boergas|bourgas|burgasa|burgasas|burgasz|burgaz
+burgos city|burgos stadt|cathair burgos|ciudad de burgos|ville de burgos|cidade de burgos|ciutat de burgos
+burlington|berlingtonas|bērlingtona
+burnaby|barnabis|bērnabija
+bursa|brusë
+busan|busanas|pusan|pusana|puszan
+bushehr|bandar busehr|bouchehr|buixehr|buschehr|buszehr|buxehr|bušehras|bušer|búšehr|būšehra
+butembo|butembas
+butuan|butuana|butuanas
+buôn ma thuột|ban me thuot|banmetuota|metuotas
+bydgoszcz|bidgošča|bydgoščius|bydhošť
+bytom|bitoma|bytomas
+béjaïa|bedžaja|bicaye|bidžája|bugía
+bîdâr|kota bidar
+bújúmbúra|bujumbura-mairie|buyumbura|buzhumbura|bužumbūra
+bắc ninh|baknino provincija|bakniņas province|provinsi bac ninh|wilayah bac ninh|provincia di bac ninh
+ca mau|kamau
+cabanatuan|kabanatuanas|kabanutuana
+cabimas|kabimasa|kabimasas
+cabo de santo agostinho|kabo de santo agostinjo
+cabo frio|kabo frio|kabu frio
+cabo san lucas|kabo sanlukasa|kabo san lukas|mys svätého lukáša
+cabuyao|cabuyao city|kabujao
+cagayan de oro|cagayan de ouro|kagajan de oras|kagajana de oro|suwarnakagayan
+cajamarca|kachamarka|kahamarka
+calabar|kalabara|kalabaras
+calabozo|cabaozo|kalabosa|kalabosas
+calama|kalama|kalamata
+calbayog|calbayog city|kalbajoga|kalbajogas
+calgary|kalgari|kalgaris
+callao|el callao|kaljao
+caloocan|kalookana|kalukanas
+camagüey|kamagveja|kamagvėjus
+camaragibe|kamaradžibi|kamaradžibis
+camaçari|kamasari|kamasaris
+campina grande|kampina grandė
+campinas|kampinasa|kampinasas
+campo grande|kampo grandė|kampugrandi
+campos dos goytacazes|campos|campos dos goitacazes|kampos dos goitakazesas|kampusa dos goitakazesa
+canberra|camberra|kanbera
+cancun|kankuna|kankunas
+cangzhou|cangcsou|čangdžau|čangdžov
+canoas|kanoasa|kanoasas
+canton of basel-stadt|bandar basel|basel-kent|basel-stadt|basel-stadt kanton|baselstadas|basilea città|basilea hiria|basilea-cidade|basilea-ciudad|basilea-ciutat|basileia-cidade|basilej-město|bazilej-mesto|bazylea-miasto|bāzeles pilsētas kantons|cantonul basel-oraș|kanton basel-kota|kanton basel-stadt|kantoni basel-stadt|canton de bâle-ville|cantún basel-stadt
+cap-haïtien|cabo haitiano|cape haitian|kap haitjenas|kapaitjēna|okap
+cape coast|cabo corso|cape caost|keip kostas|keipkosta
+cape coral|cabo coral|keip koralas|keipkorala
+cape town|cidade do cabo|città del capo|ciutat del cap|kap şehri|kapkaupunki|kaplinn|kapské mesto|kapstaden|kapstadt|kapsztad|keiptauna|keiptaunas|kepi|lurmutur hiria
+caracas|karakas|karakasa|karakasas
+carapicuiba|karapikuiba
+cardiff|caerdydd|kardif|kardifas|kārdifa
+cariacica|kariakika|kariasika
+carlos manuel de céspedes|carlos m. de cespedes
+carrefour|kerfuras|kerfūra
+cartagena|cartagena das índias|cartagena de indias|cartaxena de indias|carthagène des indes|kartachena|kartahena
+caruaru|karuaru
+carúpano|karupana|karupanas
+casablanca|kasablanka|kazablanka
+cascavel|kaskavela|kaskavelas|ular derik
+castanhal|kastanalas|kastanjala
+castellón de la plana|castelló de la plana|kasteljon de la plana|kasteļo de la plana
+catania|catane|katania|katanija|katanya|katánie
+caucaia|kaukaja
+caxias do sul|kašijas do sulas|kašjasa du sula
+caxias|kašijasa|kašijasas
+cazenga|município cazenga
+caïro|caireo|el cairo|il cairo|kaherah|kahire|kair|kaira|kairas|kairo|kajro|káhira|le caire|o cairo|el caire
+cebu city|bandar cebu|cebú|cidade de cebu|kota cebu|sebu|thành phố cebu
+ceyhan|džeichanas
+chamdo|changdu|csamdo|prefettura di qamdo|qamdo|qamdo prefektura|čamdo prefektūra
+chandannagar|chandernagor|chandernagore|čandanagar|čandarnagar
+chandler|čandlera|čandleris
+changchun|csangcsun|trường xuân|čangčun|čangčunas|čančuņa|čchang-čchun
+changde|csangtö|thường đức|čande|čangdė|čchang-te
+changhua city|changhua|chương hóa|džanghua|txanghua|zhanghua|čang-chua|čanghua
+changsha|changsha shi|csangsa|trường sa|čangša|čanša|čchang-ša
+changwon|cshangvon|čangvon|čangvonas|čchangwon|čhanvona
+changzhi|csangcse|trường trị|čangdži|čchang-č'
+changzhou|čangžu
+chaoyang|csaojang|triều dương|čaojanga|čaojangas|čchao-jang
+chapecó|šapekas|šapeko
+charleston|čarlstonas|čārlstona
+charlotte|šarlota|šarlotė
+chattanooga|čatanuga
+cheboksary|cheboksari|csebokszári|czeboksary|tcheboksary|tjeboksary|tscheboksary|tsjeboksary|txeboksari|txeboksary|tšeboksary|tšeboksarõ|čeboksarai|čeboksari|čeboksary|şupaşkar
+chemnitz|chemnicas|kamenica|kemnica|saská kamenice
+chengde|csengtö|thừa đức|čcheng-te|čengdė
+chengdu|chengdu shi|csengtu|thành đô|čcheng-tu|čendu|čengdu
+chennai|csennai|madras|çenai|çennay|ćennaj|čenaj|čenajus|čennaí
+chenzhou|csencsou|sâm châu|čchen-čou|čendžou
+cheonan|ch'ŏnan|cshonan|čchonan|čeonan|čeonana|čeonanas
+cheongju|cshongdzsu|čchongdžu
+cherkasy|cserkaszi|czerkasy|tcherkassy|tcherkássi|tjerkassy|tjerkasy|tscherkassy|tsjerkasy|txerkassi|txerkasy|tšerkassõ|tšerkasy|çerkassi|čerkasai|čerkasi|čerkasy
+chernihiv|cernihiv|chernigov|csernyihiv|czernihów|tchernihiv|tjernihiv|tschernihiw|tsjernihív|txerníhiv|tšernihiv|černigiv|černigov|černihivas|čerņihiva
+chernivtsi|cernăuți|chernivetsi|csernyivci|czerniowce|czernowitz|tchernivtsi|tjernivtsi|tsjernivtsi|txernivtsí|tšernivtsi|çernivtsi|černivci|černivciai|černovice|črnovice
+chesapeake|chesapeake city konderria|česapikas|česapīka
+chetumal|četumala|četumalis
+chiang mai|csiangmaj|thành phố chiang mai|txiang mai|čhīanmai|čiang mai|čiang maj|čiangmajus
+chiayi city|chiayi|csiaji|dziaji|dzjaji|gia nghĩa|jiayi|kota chiayi|txiayi|ťia-i
+chiba|csiba|čiba
+chicago|čikāga|şikago
+chiclayo|chichlayo|čiklajas|čiklajo
+chifeng|csefeng|ulanhad|xích phong|čch’-feng|čifenga|čifengas
+chigasaki|csigaszaki|čigasaki|čigasakis
+chihuahua city|chihuahua|chihuahua-borg|čihuahua|čivava
+chillán|čiljana|čiljanas
+chilpancingo de los bravo|chilpancingo|čilpansinga|čilpansingas
+chimbote|čimbotė
+chimoio|šimoja|šimojas
+chingola|čingola
+chiniot|chiniotas|činiota
+chirchiq|tchirtchik|çirçig|čirčik|čirčika|čirčikas
+chittagong|chatigão|chitagón|csittagong|çitagong|ćottogram|čitagonga|čitagongas|čitágáon
+chittoor|čitora|čitoras|čitur
+chitá|csita|czyta|tchita|tjita|tschita|tsjíta|txita|tšita|čita
+chizhou|csecsou|trì châu|čch'-čou|čidžou
+chișinău|císineá|kischinau|kishinau|kishinev|kiszyniów|kişinev|kišiniovas|kišinjev|kišiņeva|kišiňov
+chlef|ech cheliff|szalif|šelifas|šelīfa
+chongjin|cshongdzsin|čchongdžin|čondžinas
+chongqing|chongqing shi|csungking|trùng khánh|çongqing|čchung-čching|čongčing|čongčingas|čuncjina
+chongzuo|csungco|sùng tả|čchung-cuo|čongdzuo|čuodzo
+christchurch|kraistčerčas|kraistčērča
+chula vista|čula vista
+chuncheon|ch'unch'ŏn|cshuncshon|çunçeon|čchunčchon|čhunčhona|čunčonas
+chungju|cshungdzsu|çungcu|čchungdžu|čungdžu
+chuzhou|trừ châu|čudžou
+chōfu|csófu|čiofu|čófu
+cianjur|siandžura|siandžuras
+cienfuegos|sjenfuegosa|sjenfuegosas
+cilegon|kilegona|kilegonas|kota cilegon
+cimahi|kimachis|kimači
+cincinnati|sinsinati|sinsinatis
+cirebon|kota cirebon|sirebona|sirebonas
+city of belgrade|belgradsdistrikt|ciutat de belgrad|grad beograd|mesto beograd|miasto belgrad|stadt belgrad|cidade de belgrado
+city of cape town|ajuntament de ciutat del cap|cape town by|kapstadens stad|kota cape town|mesto cape town|município metropolitano da cidade do cabo|město kapské město|stadt kapstadt|municipalità di città del capo|obszar metropolitalny kapsztad
+city of ekurhuleni metropolitan municipality|ekurhuleni|ekurhuleni linnaringkond|município metropolitano de ekurhuleni|oost-rand|municipalità metropolitana di ekurhuleni
+city of johannesburg metropolitan municipality|municipalité de johannesbourg|municipi metropolità de johannesburg|municipio metropolitano de la ciudad de johannesburgo|municipalità di johannesburg
+city of tshwane metropolitan municipality|tshwane|tshwane linnaringkond|municipalità di tshwane
+city of valencia|ciutat de valència|walencja|città di valencia|ville de valence
+city of westminster|cathair westminster|cidade de westminster|ciudad de westminster|ciutat de westminster|thành phố westminster|vestminstera|vestminsterio miestas|westminster|westminster hiria|westminsterborg|bandar raya westminster|cité de westminster
+ciudad acuña|acuña hiria|siudad akunja|sjudaakunja|thành phố acuña
+ciudad bolivar|siudad bolivaras|sjudadbolivara
+ciudad del carmen|carmen|ciıudad del carmen|siudad del karmena|sjudada del karmena
+ciudad del este|siudad del estė|siudada del este
+ciudad guayana|siudad guajana|sjudadgajana
+ciudad juárez|huaresa|juárez|juárezville|siudad chuaresas|thành phố juárez
+ciudad obregón|siudad obregonas|sjudadobregona
+clarksville|klarksvilis|klārksvila
+cleveland|klyvlendas|klīvlenda
+cluj-napoca|kaloşvar|kluzh-napoka|kluż-napoka|kluž|kluža-napoka|klužas-napoka|kolozsvár
+cochabamba|kočabamba
+coimbatore|kojambuttúr|kojamputūra|kojamputūras|kójambatúr
+cologne|colonia|kelnas|keulen|kolonia|kolín nad rýnem|kolín nad rýnom|këlni|köln|ķelne
+colorado springs|kolorado springsas|kolorādospringsa
+colón city|cathair colón|ciudad de colón|colón|kolona|kolonas
+comodoro rivadavia|komodoro rivadavija
+conakry|conacraí|conacri|conakri|konakris|konakry|kónakrí
+concepción|konsepsjona|konsepsjonas
+concordia|konkordija
+constantine|constantina|costantina|kaszentína|konstantina|konstantinus|konstantyna|kostantine
+constanța|constancia|constanza|constança|costanza|konstanca|konstantza|köstence
+contagem|kontadžemas|kontagema
+copenhagen|copenaghen|copenhaga|copenhague|copenhaguen|cóbanhávan|kaupmannahöfn|kodaň|kopenhaagen|kopenhag|kopenhaga|kopenhage|kopenhagen|kopenhāgena|koppenhága|köpenhamn|kööpenhamina|københavn
+copiapó|kopijapo|kopjapo
+coquimbo|kokimbas|kokimbo
+cork|corcaigh|kork|korka|korkas
+corona|korona
+coro|koro|santa ana de coro|santa ana de koras
+corpus christi|korpus kristi
+corrientes|korientesa|korientesas
+cotabato city|cidade do cotabato|città di cotabato|ciudad de cotabato|cotabato|cotabato város|kotabato miestas|kotabato pilsēta|mesto cotabato|miasto cotabato|thành phố cotabato|ville de cotabato
+cotia|kotija
+cotonou|cotonú|kotonu
+coventry|koventrija|koventris
+cox's bazar|basar de cox|koks bazaras
+craiova|krajova|krajowa|krayova
+criciúma|krisiuma
+ctesiphon|ctesifont|ctesifonte|ktesifon|ktesifonas|ktesiphon|ktezifon|ktezifont|ktezyfon|ktésziphón|ktēsifona|seleukia-ktesiphon|tisfun|tizpon
+cuauhtémoc|ciudad cuauhtémoc
+cuddalore|gondelour|kudalūras
+cuenca|kuenka|kvenka
+cuiabá|kujaba
+culiacán|culiacán rosales|kuljakana|kuljakanas
+cumaná|kumana
+cumilla|comilla|komila|kumilla
+curicó|kuriko
+curitiba|kuritiba|kurytyba
+cusco|cuzco|kuskas|kusko
+cuttack|katak|kataka|katakas|kattak
+częstochowa|čenstakava|čenstochová|čenstohova
+cádiz|kadiza|kadizas
+cần thơ|kantas|kontho
+cẩm phả|kamfa
+daegu|taegu|tegu|tägu
+daejeon|daedžeon|taejŏn|tedzson|tedžon|tedžona|tedžonas|tädžon
+dairūṭ|dayrūţ
+dakar|dacár|dakara|dakaras|dakari
+dakhla|ad-dachla|ad-dakhla|dachla|dahla|dakla|ed dâkhla|villa cisneros|al-dakhla
+dalat|dalata|dalatas
+dalian|dalianas|daliaņa|ta-lien|đại liên
+dallas|dalasa|dalasas
+damanhur|damanhūra|damanhūras|demenhur
+damascus|an damaisc|damas|damasc|damasco|damask|damaska|damaskas|damasko|damaskos|damasku|damaskus|damaszek|damaszkusz|damašek|damsyik
+damietta|damiat|damiata|damieta|damiette|dimyat|dumjatas|dumját|dumjāta|dumyat|tamiat
+dammam|ad dammam|ad-damman|damam|damamas|dammāma
+danao|danao city|danas
+dandong|dandong shi|dandonga|dandongas|tan-tung
+dangjin|dandžinga|dandžingas|tangdzsin|tangdžin
+danzhou|tan-čou|tancsou|đam châu
+daqing|dacinga|dacingas|ta-čching|tacsing|đại khánh
+dar el salam|dār as-salām
+dar es salaam|dar es salamas|daressalam|darüsselam|dárasalám|dāresalāma
+darmstadt|darmshtadi|darmštatas|darmštate
+dasmariñas|dasmarinjasas|dasmariņasa
+datong|datonga|datongas|ta-tchung|tatung|đại đồng
+davao city|cidade davau|dabau|davao|thành phố davao
+dazhou|dadžou|dadžov|ta-čou|tacsou|đạt châu
+daşoguz|daszoguz|dašoguza|dašoguzas
+debrecen|debrecena|debrecenas|debreczyn|debrecín|debrețin
+dehradun|dehradūnas|dehrādūna
+deir ez-zor|dajr az-zaur|dajr ez-zaur|dayr al-zor|dayr az-zawr|deir az zauras|deir el-zor|deir ez-zur|deira ez zora|deyrizor
+delhi|deilí|deli|delis|dillí
+delmas|delma|delmasas
+denizli|denizlis
+denpasar|dempasar|dempassar|denpasara|denpasaras
+denver|denvera|denveris
+deoghar|deogchara|deogcharas
+depok|depoka|depokas
+dera ghazi khan|dera gazi chanas|dera ghāzikhāna
+derby|derbis|dārbi
+des moines|de moinas|demoina
+dessie|desje|desė
+detroit|detroita|detroitas
+deyang|dejanga|dejangas|te-jang|töjang|đức dương
+dezful|dezfoul|dezfulis|dizful
+dezhou|dedžou|te-čou|töcsou|đức châu
+dhaka|daca|dacca|daka|dakka
+dhamar|damara|damaras|zamar
+dhule|dulė
+dibrugarh|dibrugara|dibrugaras
+digos|digos city|digosa|digosas
+dijon|digione|dižona|dižonas
+dili|dilis
+dinajpur|dinadźpur|dinadžpuras
+dindigul|dindigulas|tintukkal
+dingxi|dingsi|ting-si|tinghszi|định tây
+dire dawa|dire daua|diredava
+dispur|dispura|dispuras
+divinópolis|divinopolisa|divinpolis
+divo|divas
+diyarbakır|amed|dijarbakira|dijarbakyras|dijarbakër
+djelfa|dželfa|džilfa|el djelfa
+djibouti|cibuti|ciudad de yibuti|djibútí|dschibuti|dzsibuti|džibuti|džibutis|gibuti|kota djibouti|xhibuti|xibutí
+dnipro|dniepr|dnipras|dnjipro|dnyipro
+doha|dauhá
+donetsk|doneckas|donecki|donec’k|donezk|donețk|donieck|donjeck|doņecka
+dongguan|dongguan shi|donguana|donguanas|tung-kuan|đông hoản
+dongying|dongjingas|dunina|tungjing|đông dinh
+dortmund|dortmundas|dortmunde|dortmundi
+douala|duala
+douma|duma
+dourados|doradosa|doradosas
+dresden|dresda|dresde|dresdenas|drezda|drezno|drážďany|drēzdene
+dubai|dubaija|dubaj|dubajus
+dublin city|cathair átha cliath
+dublin|baile átha cliath|dublina|dublinas|dublini|dublino|dyflinn
+duhok|dahuka|dahúk|dihok|dochukas|dohuk|nohadra
+duisburg|duisbourg|duisburgas|duisburgo|dīsburga
+dumai|dumaus|kota dumai
+dundo|dundas|thitato
+duque de caxias|duke de kašijasas|duki di kašīasa
+durban|durbana|durbanas
+durgapur|durgapura|durgapuras
+durg|durga|durgas
+durham|darema|daremas
+durán|duranas|eloy alfaro
+dushanbe|doesjanbe|douchanbé|duchambe|duixanbé|dusambé|duschanbe|dusjanbe|duszanbe|duxanbe|dușanbe
+dutse|ducė
+duékoué|dvekvė
+düsseldorf|diseldorfa|diuseldorfas|dyzeldorfi
+düzce|diuzdžė|dizdže|dyzxhe
+east berlin|austrumberlīne|austur-berlín|beirlín thoir|berlim leste|berlin timur|berlin wschodni|berlino est|berlinul de est|berlín est|berlín este|berlín leste|doğu berlin|ekialdeko berlin|ida-berliin|istočni berlin|itä-berliini|kelet-berlin|oost-berlijn|ost-berlin|rytų berlynas|vzhodni berlin|východní berlín|východný berlín|đông berlin
+east london|oost-londen|yst londonas|đông london|īstlondona
+edinburgh|dún éideann|edimburg|edimburgo|edinborg|edinburg|edinburga|edinburgas|edinburgo|edynburg|édimbourg
+edirne|adrianopoja|odrin
+edmonton|edmontona|edmontonas
+edremit|edremita|edremitas
+eindhoven|ajntovën|eindhovena|eindhovenas
+ekibastuz|ekibastouz|ekibastus|ekibastuza|ekibastuzas|iekibastuz|jekibastuz|jekybastuz
+el alto|el altas
+el jadida|al-djadida|al-dżadida|džadída|el-yadida|mazagan
+el mahalla el kubra|al-mahalla al-kubra|al-maḩallah al-kubrá|el-mahalla el-koubra|mahala el kubra|mahalla al-kubra|mahalletülkübrâ
+el obeid|al-ubajid|al-ubayyid|el ubeyd|elobeida|obeidas
+el paso|el pasas
+el paso–juárez|zona metropolitana de juárez y el paso
+elazığ|elaze|elaziga|eliazihas|ellazë
+eldoret|eldoreta|eldoretas
+elk grove|elkgrova
+eluru|eluras
+embu das artes|embu
+engels|engeljs|engelsa|engelsas
+enschede|enshede
+erbil|arbela|arbil|erbili|erbilis|erbīla|hewlêr|irbil
+erfurt|erfurtas|erfurte|erfurti
+erode|irodu|írótu
+erzincan|erzincã|erzindžanas|erzinxhan|ezindžana
+erzurum|erzuruma|erzurumas
+escondido|eskondida|eskondidas
+escuintla|eskuintla
+eskişehir|eskishehir|eskišechiras|eskišehira|esquixequir
+eslamshahr|eslamchahr|eslamschahr|eslamxahr|islamshahr|islamšaher|islamšahras|iszlamsahr|i̇slamşehr
+esmeraldas|esmeraldasa|esmeraldasas
+esna|eszna
+espoo|esbo|espas|espo
+essen|esenas|esene
+ethekwini metropolitan municipality|concello metropolitano de ethekwini|municipio metropolitano de ethekwini|ethekwini|municipalità metropolitana di ethekwini
+ezeiza|eseisa
+ezhou|e-čou|edžou|ezhou shi|ngạc châu|ocsou
+faisalabad|faisalābāda|fajsalabad|fajszalábád|faysalabad|feisalabadas
+faiyum|al fayyum|el faium|el-fajoem|faium|fajjúm|fajum|fajuma|fajumas|fayyum|fayún|feyyum|médinet el-fayoum
+faizabad|faizabada|faizabadas|faizabade
+fallujah|al-falludża|al-fallūjah|falloujah|falludscha|falluja|fallúdzsa|fallúdža|faludža|faluxa|faluya|felluce|al-falluja
+fangchenggang|fang-čcheng-kang|fangcsengkang|phòng thành cảng
+faridpur|faridpuras
+faridábád|faridabada|faridabadas
+farrukhabad|farrukhabad-cum-fatehgarh|ferruhabad
+fayetteville|fajetvilis
+fergana|ferghana
+ferizaj|ferizaja|ferizaji|ferizovik|uroševac|uroševacas
+ferkessédougou|ferkesedugu|ferquessedugu
+ferraz de vasconcelos|feras de vaskonelosas
+florence|firenca|firence|firenze|florencie|florencija|florencja|florens|florentzia|florenz|florença|florența|flórans
+florianópolis|floriānopolisa
+fort collins|fort kolinsas|fortkolinsa
+fort wayne|fort veinas|fortveina
+fort worth|fortvorta|fortvortas
+foshan|fosan|foshan shi|fošana|fošanas|phật sơn
+foz do iguaçu|fosa du igvasū|foz do igacu|foz do iguasu
+franca|franka
+francisco morato|franciskas moratas|francisku moratu
+frankfurt|francfort-sur-le-main|francoforte sul meno|frankfurt am main|frankfurt del main|frankfurt na majni|frankfurt nad menem|frankfurt nad mohanem|frankfurt nad mohanom|frankfurt ob majni|frankfurt pe main|frankfurtas prie maino|frankfurte pie mainas|frankfurti mbi main|fráncfort del meno
+free territory of trieste|freies territorium triest|fria territoriet trieste|fristaten trieste|slobodni teritorij trsta|slobodné územie terst|svobodno tržaško ozemlje|svobodné území terst|teritori bebas trieste|teritoriul liber al triestului|territoire libre de trieste|territori lliure de trieste|territorio libero di trieste|territorio libre de trieste|território livre de trieste|trieste serbest bölgesi|trieste vaba territoorium|triesteko lurralde askea|triesten vapaa-alue|triestes brīvā teritorija|triesto laisvoji teritorija|trieszti szabadterület|vrije zone triëst|wilayah bebas trieste|wolne terytorium triestu
+freetown|fritaun|fritaunas|frītauna
+freiburg im breisgau|breisgau freiburgas|freiburg|freiburga|fribourg-en-brisgau|friburg de brisgòvia|friburgo|friburgo de brisgovia|friburgo in brisgovia|fryburg bryzgowijski
+fremont|fremontas|frīmonta
+fresno|fresnas|frezno
+frisco|friskas|frisko
+fuchū|fucsú|fučiū|fučú
+fujisawa|fudzsiszava|fudžisava|fudžisawa
+fuji|fudzsi|fudži|fudžis
+fukui|fukujus
+fukushima|fukušima
+fukuyama|fukujama
+funabashi|funabaši|funabašis
+fushun|fu-šun|fušuna|fušunas|phủ thuận
+fuxin|fu-sin|fuhszin|fusina|fusinas|phụ tân
+fuyang|fu-jang|fujanga|fujangas|phụ dương
+gaborone|gaboronas
+gagnoa|ganjoa|gaņoa
+galați|galac|galaca|galacis|gałacz|kalas
+gampaha|gampacha
+gandhinagar|gandhinagaras|gāndhīnagara
+gangneung|gangneungas|kangnung|kannina
+ganja|gandja|gandža|ganyá|gence|gendžė|gäncä
+ganzhou|gandžou|kan-čou|kancsou
+gaozhou|cao châu|kaocsou
+garden grove|garden grovas|gardengrova
+garland|garlandas|gārlenda
+garoua|garua|garva
+gatineau|gatino|gatinou
+gaya|gaja
+gaza city|cathair gaza|gaza|gazze
+gaziantep|gaziantepa|gaziantepas|gaziantepe
+gazipur|gazipuras
+gdańsk|danzica|danzig|gdanjsk|gdanskas|gdaņska
+gdynia|gdiņa|gdyně|gdyňa
+geelong|džīlonga
+gelsenkirchen|gelzenkirchenas|gelzenkirhene|gelzenkirheni
+general santos|general santos city|generolas santosas|ģeneral-santosa
+geneva|cenevre|genebra|genewa|genf|genève|ginebra|ginevra|gjeneva|jenewa|xenebra|an ghinéiv|ženeva
+genoa|cenova|dženova|genova|genua|genuja|gjenova|gênes|janov|xénova
+geoje|godžė|kodzse|kodže
+ghaziabad|gaziabadas|gáziábád|gāzijābāda
+ghent|gand|gandawa|gant|gante|gent|gentas|gente
+gifu|thành phố gifu
+gilgit|gilgit şehri|gilgita|gilgitas
+gimhae|gimdžajus|kimhe|kimhä
+gimpo|kimpcho|kimpho|kota gimpo
+girga|circa|dżirdża|jirja
+giza|al-džíza|gizeh|gizé|guiza
+glasgow|glaschú|glazgas|glāzgova
+gliwice|gleiwitz|glivice|glivicės
+godoy cruz|godoi krusas
+goiânia|gojanija
+gojra|godžra|goira|gorja
+gold coast|gold kostas|goldkosta
+golmud|golmuda|golmudas
+gomel|gomelis|gomeļa|homeľ|homieĺ|homyel
+gonaives|gonaiva|gonayiv|gonayvas|les gonaïves
+gonbad-e kavus|gonbad-e kabus|gonbad-e kavous|gonbad-e kawus|gonbad-e kávusz|gonbad-e qabus|günbedkavus
+gondar|gonder|gondera|gonderas
+gongyi|củng nghĩa|gondži|gongji|kung-i|kungji
+gongzhuling|công chủ lĩnh|gongdžulinga|gongdžulingas|kung-ču-ling
+gonzalez catan|gonsaleskatana|gonzales katanas
+gorakhpur|gorakhpuras
+gorgan|esterabad|gorgana|gorganas
+gorontalo|gorontalas|kota gorontalo
+gothenburg|gautaborg|geteborgas|gotemburgo|göteborg|gēteborga
+governador valadares|governador valadaresas|governador-valadaresa
+goyang|gojang|kojana|kojang|kojangas
+gqeberha|port elizabetas|port elizabeth|portelizabeta|porto elizabeth|puerto elizabeth
+grand prairie|grand preris
+grand rapids|grand rapidsas|grandrapidsa
+gravatai|gravataja|gravatajus
+graz|gracas|gradec|grāca|štýrský hradec
+greater buenos aires|buenos aires handia|büyük buenos aires|didžiosios buenos airės|gran buenos aires|grand buenos aires|grande buenos aires|groot-buenos aires|marele buenos aires|veliki buenos aires|vùng đô thị buenos aires|wielkie buenos aires|área metropolitana de buenos aires
+greater mexico city|agglomeratie mexico-stad|kota meksiko raya|meksiko metropolitan alanı|metropolitní oblast valle de méxico|mexico citys storstadsområde|região metropolitana da cidade do méxico|veľké mexiko|zona metropolitana del valle de méxico|zone métropolitaine de la vallée de mexico|zona metropolitana di città del messico|àrea metropolitana de la ciutat de mèxic|área metropolitana da cidade de méxico
+greater rio de janeiro|greater rio de janiero|metropolitný región rio de janeiro|metropolregion rio de janeiro|região metropolitana do rio de janeiro|regió metropolitana de rio de janeiro|región metropolitana de río de janeiro|région métropolitaine de rio de janeiro|vùng đô thị rio de janeiro|regione metropolitana di rio de janeiro
+greater sudbury|gran sudbury|grand sudbury|greitersadberija|sadberis|sudbury
+greensboro|grinsboras|grīnsboro
+gregorio de laferrère|ciudad de gregorio de laferrère|gregorio de lafe|gregorio de laferera|gregorio de laferere
+grenoble|grenoblis
+groningen|groninga|groningena|groningenas|groningue
+grozny|grosnij|grosny|grosní|groznas|grozni|groznij|groznija|groznyi|groznyj|groznîi|groznõi
+guacara|gvakara|gvakaras
+guadalajara|guadalaxara|gvadalachara|gvadalahara
+guadalupe|gvadalupe|villa de guadalupe
+guanajuato|cathair guanajuato|guanachuatas|gvanahvato
+guanare|gvanarė
+guang'an|guangana|guanganas|kuang-an|quảng an
+guangyuan|guangjuan|guangjuana|guangjuanas|kuang-jüan|quảng nguyên
+guangzhou|cantão|cantón|guandžou|guangdžou|guangdžov|kanton|quảng châu
+guantánamo|gvantanamas|gvantanamo
+guarapuava|garapuava
+guarenas|guarena
+guarujá|gvaruža
+guarulhos|guaruljosas|gvarūļusa
+guatemala city|bandar guatemala|cathair ghuatamala|cidade da guatemala|cidade de guatemala|città del guatemala|ciudad de guatemala|guatamala city|guatemala|guatemala-stad|guatemala-stadt|guatemalako hiria|guatemalaváros|gvatemala|gvatemalaborg|gwatemala|kota guatemala|thành phố guatemala
+guatire|gvatirė
+guigang|gaiganga|gaigangas|kuej-kang|kujkang|quý cảng
+guiglo|giljas
+guilin|guilin shi|guilinas|guiliņa|kuej-lin|kujlin|quế lâm
+guiping|kujping|quế bình
+guiyang|guijana|guijang|guijangas|kuej-jang|kujjang|quý dương
+gujranwala|gudzsranvála|gudźranwala|gudžranvala
+gujrat|gudžrata|gudžratas|gudžrát
+gulu city|gulu
+gumi|gumis|kumi
+gunpo|kunpcho|kunpho
+gunsan|kunsan|kunsana|kunsanas|kunszan
+guntúr|guntúru|guntūra|guntūras
+gurgaon|guragaona|gurgaonas|gurugram
+guri|guris|kuri
+guwahati|gauhātī|guvahati|guvahatis
+guyuan|cố nguyên|gujuana|gujuanas|ku-jüan
+guéckédougou|gekedugu|guéckédou
+gwalior|gevaliyar|gvalioras|gválijar|gvālijara|gwalijar
+gwangmyeong|kvangmjong|kwangmjong
+gwangyang|gvangdžangas|kvangjang|kvanjana|kwangjang
+gyeongju|gjongdžu|kjondžu|kjongdzsu|kjongdžu
+gyeongsan|gjongsanas|kjongsan|kjongszan|kjonsana
+gómez palacio|gomes palasijus|gomez-palasio
+gölcük|gočukas
+haarlem|harlemas|hārlema
+hachinohe|hacsinohe|hačinochė|hačinohe
+hachiōji-shi|hachiouji|hachiōji|hacsiódzsi|hačiodži|hačiodžis
+hadano|hadanas
+haeju|hedzsu|hedžu
+hafar al-batin|hafar el-batin|kafr al-bāṭin
+hagen|hagenas|hāgene
+haidong|chaj-tung|haidong prefektura|haidonga|haidongas|haidongi ringkond|hajtung|prefectuur haidong|prefettura di haidong|préfecture de haidong
+haifa|hajfa|hayfa
+haikou|chaj-kchou|hajkou|hải khẩu
+hail|hailas
+hamadan|hamadana|hamadanas|hamadã|hamedan|hemedan
+hamamatsu|hamamacu
+hamburg|amburgo|hamborg|hambourg|hamburga|hamburgas|hamburgo|hamburgu|hamburk|hampuri|hanburgo
+hamhung|hamhina|hamhungas
+hami|chami|hami city|hami ringkond|kumul|kumul prefecture|kumul prefektura|kumul i̇li|kumulo|kumulo prefektūra|prefettura di hami
+hamm|hamas|hamma
+hamá|hamat
+hanam|hanama|hanamas
+hancheng|chan-čcheng|hancseng|hančenga|hančengas|hàn thành
+handan|chan-tan|handan shi|handana|handanas|hantan|hàm đan
+hangzhou|chang-čou|handžou|hangcsou|hangdžou|hangdžov|hangzhou shi|hàng châu
+hanover|hannover|hannovere|hanoveri|hanoveris|hanovra|hanovre|hanower
+hanzhong|chan-čung|chandžungas|hancsung|handžunga|hán trung
+hanói|hanoj|hanoja|hanojus|hanáí
+harar|harar jugol|hararas|harer|harera|harrar jugol
+harbin|charbin|charbinas|cáp nhĩ tân|harbina
+hargeisa|hargejsa|hargeysa|hargheisa
+hasakah|al-hasaka|al-ḩasakah|hasaca|hasaka|hasekė|hasiçi|hassaké|haszaka
+hat yai|hatjaj|hatjaja|hatjajus
+havana|a habana|habana|havanna|hawana|l'avana|la habana|la havane|l'havana
+hawaasa|auasa|avasa|awasa|awasawa|awassa|hawassa
+hayward|heivordas|hejvorda
+hazaribagh|hazaribag
+hebi|che-pi|hebis|hopi|hạc bích
+hebron|halil|halīla|heabrón|hebrom|hebronas|hebroni
+hechi|che-čch'|hechis|heči|hocse|hà trì
+hefei|che-fej|hefej|hefėjus|hofej|hợp phì
+hegang|che-kang|heganga|hegangas|hokang|hạc cương
+heidelberg|haidelbergu|heidelberga|heidelbergas
+heihe|cheichė|chej-che|heihe shi|hejho|hắc hà
+helsinki|heilsincí|helsingfors|helsingi|helsinkis|helsinky|helsinqui|helsínquia
+helwan|heluan|heluanas|heluã|helvan
+henderson|hendersonas
+hengshui|cheng-šuej|hengsuj|hengšui|hengšuija|hành thủy
+hengyang|cheng-jang|hengjang|hengjanga|hengjangas|hành dương
+hermosillo|ermosiljo|hermosiljas
+heroica matamoros|matamoros|matamorosa|matamorosas
+heroica nogales|nogales|nogalesa|nogalesas
+herát|heratas|herāta|quận hirat
+heyuan|che-jüan|hejuana|hejuanas|hojüan|hà nguyên
+heze|che-ce|hocö|hà trạch
+hezhou|che-čou|hečžou|hežou|hocsou|hạ châu
+hialeah|haialī|hajalija
+higashihiroshima|chigašichirošima|higašihirošima
+higashimurayama|higašimurajama
+higashiōsaka-shi|higashiōsaka|higasiószaka|higašiósaka
+higüey|higvėjus|salvaleón de higüey|hüişlkç
+hillah|al-hilla|al-hillah|hila|hilla
+himeji|himedzsi|himedži|himedžis
+hino|hinas
+hiratsuka|hiracuka
+hirosaki|hirosakis|hiroszaki
+hiroshima|hiroszima|hirošima|thành phố hiroshima
+hisar|chisaras|hisara|hissar
+hitachinaka|hitacsinaka|hitačinaka
+hitachi|hitacsi|hitači|hitačis
+ho chi minh city|bandar raya ho chi minh|cathair ho chi minh|cidade ho chi minh|cidade de ho chi minh|ciudad ho chi minh|ciutat ho chi minh|ho chi minh hiria|ho chi minh kenti|ho chi minh-byen|ho chi minh-staden|ho chi minhstad|ho si minh-város|ho či minovo město|ho ši min|ho-chi-minh-qytet|ho-chi-minh-stadt|hošimina|hošiminas|hošiminh|hô chi minh-ville|hồ chí minh|hồ chí minh-borg|hồ chí minhin kaupunki|kota hồ chí minh|thành phố hồ chí minh
+hobart|hobartas|hobārta
+hoeryong|hoerjongas|hverjona|hörjŏng
+hohhot|chöch chot|hohot|hohotas|huhhot|huhhota
+holguín|holginas|olgina
+hollywood|holivuda
+holon|cholon|holona|holonas|jolón
+homs|hims|himsa|homsas|homsz|hómece
+hongkong|hong cong|honkonga|honkongas
+horlivka|gorlivka|gorłówka|horliwka|jórlivka
+hortolandia|hortolandija|ortolandija
+houston|hiustonas|hjūstona
+hpa-an|ba-an|hpaanas|hpāna|pa-an
+hrodna|gardinas|grodno|grodņa
+hsinchu city|hsinchu|hsinču|hszincsu|kota hsinchu|sin-ču|sindžu|sjiņdžu|tân trúc|xinzhu
+huai'an|chuaj-an|hoài an|huaijana|huaijanas|huajan
+huaibei|chuaj-pej|hoài bắc|huabeija|huaibėjus|huajpej
+huaihua|chuaj-chua|hoài hóa|huaichua|huajhua
+huainan|chuaj-nan|hoài nam|huainanas|huainaņa|huajnan
+huambo|haumbo|huambas|hvambo
+huancayo|huankajas|vankajo
+huanggang|chuang-kang|hoàng cương|huaganga|huangang|huangangas|huangkang
+huangshan|chuang-šan|hoàng sơn|huangsan|huangshan city|huanšano|huanšano miestas
+huangshi|chuang-š’|hoàng thạch|huangsi
+huddersfield|hadersfildas|hadersfīlda
+hugli-chuchura|hooghly-chinsurah|hugli|hugli-chinsurah|hugli-chunchura|hugli-čučura
+huichon|hicshon|huičchon|huičona|huičonas
+huizhou|chuej-čou|huidžov|huižou|hujcsou|huệ châu
+huludao|chu-lu-tao|hulutao|hồ lô đảo
+hulun buir|chölönbujr|huluna-buīra|hulunbuiras|hulunpuir
+hunchun|chun-čchun|huncsun|hunčun|hunčuna|hunčunas|hồn xuân
+huntington beach|hantington byčas|hantingtonbīča
+huntsville|hantsvila|hantsvilis
+hurghada|al-ghardaqah|gurdaka|hurgada
+huzhou|chu-čou|hucsou|hudžou|hồ châu
+huánuco|huanukas|vanuko
+hwaseong|hvaseonga|hvaseongas|hvaszong|hwasong
+hyesan|hesana|hesanas|hjesan|hjeszan
+hải phòng|haifona|haifongas|hajfong
+iași|jasai|jasi|jassy|jasy|jászvásár
+ibadan|ibadana|ibadanas|ibadã
+ibagué|ibagė
+ibaraki|ibarakis
+ibarra|ibara
+icheon|ichonas|icshon|ičchon|ičeon|ičhona
+ichihara|icsihara|ičihara
+ichikawa|icsikava|ičikava|ičikawa
+ichinomiya|icsinomija|ičinomija|owari-ichinomiya
+idlib|idleb|idliba|idlibas|i̇dlip
+iksan|iksana|iksanas|ikszan
+ilam|ilama|ilamas
+ilesa|ilesha
+ilhéus|iljeusa|iljeusas
+iligan|iiigan|iligana|iliganas
+iloilo city|bandar iloilo|cidade de iloilo|iloila|iloilas|iloilo
+ilorin|ilorina|ilorinas|llorin
+imperatriz|imperatrisa|imperatrisas
+imphal|imfal|imphalas|imphāla
+inage-ku|inage|inage ward
+incheon|inchon|incshon|inczon|inčchon|inčhona|inčon|inčonas
+indaiatuba|indaijatuba|indajatuba
+indianapolis|indianapolisa
+ipiales|ipjalesas
+ipoh|ipoha|ipohas
+ipswich|ipsviča|ipsvičas
+iquitos|ikitosa|ikitosas
+irapuato|irapuatas
+irbid|irbida|irbidas
+irkutsk|irkoetsk|irkoutsk|irkuck|irkutska|irkutskas|irkutszk|írkúsk
+irvine|irvinas|ērvaina
+irving|irvingas|ērvinga
+isabela|bandar isabela|izabela|thành phố isabela
+isesaki|iseaki|isezaki|isezakis|iszeszaki
+iseyin|isejinas
+isfahan|esfahan|isfahanas|isfahāna|ispahan|iszfahán|kota isfahan
+isidro casanova|isidro kazanova|isidrokasanova
+islamabad|islamabadas|islamabadi|islāmābāda|iszlámábád
+ismailia|al-ismā’īlīyah|ismailija|iszmáilija|i̇smailiye
+isparta|esparta
+istanbul|carigrad|estambul|iostanbúl|istambul|isztambul|stambolli|stambula|stambulas|stambuł
+itajaí|italia|itažai|itažajus
+itami|itamis
+itapecerica da serra|itakeperika|itapekerika se sera
+itapetininga|itapentininga
+itapevi|itapevis
+itaquaquecetuba|itakvakesetuba
+ivano-frankivsk|ivano frankivskas|ivano-frankivszk|ivanofrankivska|iwano-frankiwsk
+iwaki|ivaki|ivakis
+iwata|ivata
+izhevsk|ijevsk|ischewsk|isjevsk|izjevsk|izsevszk|iżewsk|iževsk|iževska|iževskas|ižkar
+izumi|izumis|izumisana
+izumo|izuma|izumas
+i̇negöl|inegiolis
+i̇skenderun|alejandreta|alessandretta|alexandrette|iskenderuna|iskenderunas
+i̇zmir|esmirna|izmira|izmiras|smirnë|smyrna
+i̇zmit|izmita|izmitas
+jabalpur|dzsabalpur|džabalpur|džabalpura|džabalpuras
+jaboatão dos guararapes|žaboatao dos guararapesas
+jacareí|džakareija|džakarėjus
+jackson|džeksona|džeksonas
+jacobabad|džeikobadada|džeikobadadas|jakobabad|yacobabad
+jaipur|dzsajpur|džaipur|džaipuras|džajpur|džajpura
+jakarta|cakarta|djakarta|džakarta|giacarta|iacárta|jacarta|xhakarta|yakarta
+jalalabad|celalabad|dschalalabad|dzsalálábád|džalalabadas|džalálábád|džalālābāda|yalalabad
+jalandhar|dzsálandhár|džalandhar|džalandhara|džalandharas
+jalgaon|džalgaona|džalgaonas|džalgáv
+jamalpur|dźamalpur|džamalpuras|džamālpura|jemalpur|țamalpur
+jambi|cambi|džambi|džambis|kota jambi
+jammu|cammu|dzsammu|džammú|džamu
+jamnagar|dzsámnagar|džamnagaras|džámnagar|džāmnagara
+jamshedpur|cemşidpur|dzsamsedpur|džamšedpura|džamšedpuras|džamšédpur
+jaraguá do sul|charagva do sul|žaragua du sul
+jaranwala|džaranvala|jaranvala
+jashore|dźoszohor|džašohar|džesoras|jessore
+jaunpur|džaunpur|jawnpur
+jayapura|džajapura
+jeddah|cidde|djeddah|dschidda|dzsidda|dżudda|džeda|džida|džidda|gedda|jedda|jidda|jiddah|jidá|xheda|yeda
+jeju|cheju|csedzsu|czedżu|jeju hiria|jeju-si|kota jeju|čedžu
+jeonju|csondzsu|džeondžu|džondžu
+jequié|žekijė
+jerúsalem|baitulmaqdis|gerusalemme|iarúsailéim|ierusalim|jerozolima|jerusalemi|jerusalén|jeruusalemm|jeruzalem|jeruzaleme|jeruzalė|jeruzsálem|kudüs|xerusalén|yerusalem
+jhang|džang|džhang|džhangas
+jhansi|dzshánszí|džhansis|džhánsí|džhāmsī
+jhelum|dźhelam|dželamas|džihlam|jhelam
+jiamusi|csiamusze|dziamusi|džjamusi|giai mộc tư|ťia-mu-s'
+jiangmen|csiangmen|dziangmena|dziangmenas|džiangmen|giang môn|ťiang-men
+jiaozuo|csiaoco|dziaozuo|dzjaozuo|tiêu tác|ťiao-cuo
+jiaxing|csiahszing|dziasingas|dziašinga|džiašing|gia hưng|ťia-sing
+jiayuguan city|cathair jiayuguan|csiajükuan|dzajujguaņa|džaiguano miestas|gia dục quan|jiayuguan|ťia-jü-kuan
+jieyang|bandar jieyang|csiejang|dzjejana|yết dương|ťie-jang
+jilin city|cathair jilin|ciudad de jilin|csilin|cát lâm|dzilinas|džilin|jilin|jilin hiria|jilin shi|kota jilin|ťi-lin
+jimma|cimma|dżimma|džima|gimma|jima
+jinan|csinan|dzinanas|dzjinaņa|džinan|jinan shi|tế nam|ťi-nan
+jinchang|csincsang|dzinčanga|dzinčangas|kim xương|ťin-čchang
+jincheng|csincseng|dzinčenga|dzinčengas|tấn thành|ťin-čcheng
+jingdezhen|csingtöcsen|cảnh đức trấn|dzingdedženas|dzingdežena|ťing-te-čen
+jingmen|csingmen|dzingmeno miestas|jingmen city|kinh môn|ťing-men
+jingzhou|csingcsou|dzingdžou|kinh châu|ťing-čou
+jinhua|csinhua|dzinchua|dzinčua|kim hoa|ťin-chua
+jining|ciningas|csining|dzininga|tế ninh|ťi-ning
+jinja|džindža
+jinju|csindzsu|džindžu|čindžu
+jinzhong|csincsung|dzindžonga|dzindžongas|tấn trung|ťin-čung
+jinzhou|ťin-čou
+jiujiang|ciuciang|ciudziangas|csiucsiang|cửu giang|dziudzianga|džjudžjang|ťiou-ťiang
+jiuquan|csiucsüan|džiukana|džiukanas|tửu tuyền|ťiou-čchüan
+jixi|csihszi|dzisi|kê tây|ťi-si
+jiyuan|csijüan|dzijuanas|džiuana|tế nguyên
+jizzakh|cizzak|djizak|dżyzak|džizak|džizaka|džizakas|jizak|jizaque|jizzax|yizaj
+jodhpur|dzsodhpur|dźodhpur|džodhpura|džodhpuras|džódpur
+johannesburg|joanesburgo|johanesburgas|johannesbourg|johannesburga|johannesburgo|jóhannesarborg|xohanesburgo
+johor bahru|džoharbarha|džohor baru|johor baharu
+joinville|žoinvile|žoinvilis
+joliet|džolieta|džolietas
+josé c. paz|chose k. pas|hosē k. pasa
+joão pessoa|žoan pesoa|žuāunpesoa
+juazeiro do norte|žuazeiro do nortė|žuazeiro du norte
+juazeiro|žuazeiras|žuazeiru
+juba|cuba|djoeba|djouba|džuba|giuba|xhuba|yuba
+juiz de fora|žuis de fora|žuīsa di fora
+juliaca|chuliaka|huliaka
+junagadh|dźunagadh|džunagada|junagarh
+jundiaí|žundiajus|žundjai
+jōetsu-shi|dzsóecu|džoetsu|džóecu|jōetsu
+kabankalan|cabancalán|kabankalan city|kabankalana|kabankalanas
+kabwe|kabvė
+kadapa|cuddapah
+kadıköy|kadikējas rajons
+kaech'ŏn|kaječonas|kecshon|kečchon|kečhona
+kagoshima|kagošima
+kahramanmaraş|cacramanemaraxe|kachramanmarašas|kahramanmaraša|marash
+kaifeng|kaifenga|kaifengas|kajfeng|kchaj-feng|khai phong
+kakogawa|kakogava
+kaliningrad|kaliningrado|kalinjingrad|kalinyingrád|karaliaučius|karaļauči|królewiec|königsberg
+kaluga|kaloega|kalouga
+kamarhati|kamarhatis
+kamensk-uralsky|kamensk-oeralski|kamensk-ouralski|kamensk-uralskij|kamenska-uraļska|kamenszk-uralszkij|kamieńsk uralski|kàmensk-uralski|uralo kamenskas
+kampala|campala
+kamsar|port kamsar
+kamyanske|kameanske|kamianskè|kamieńskie|kamjanske|kamjanszke
+kanazawa|kanadzava|kanazava
+kanchipuram|kancheepuram|kanchipurami|kančipuram|kančipuramas|káncsipuram
+kandahar|kandaharas|kandahāra|kandehar
+kanggye|kanggje|kangje|kangė
+kano|kanas
+kanpur|kanpuras|kānpura
+kaolack|kaolaka|kaolakas
+karachi|carachi|karacsi|karaczi|karatschi|karatxi|karačis|karāči
+karadeniz ereğli|ereğli|karadeniz ereglis
+karaganda|karagandi|karagandy|karagandõ|karaghandi|qaraghandy|qarağandı|qaraǵandy
+karaköprü|karakiopras
+karaman|caramânia|karamana|karamanas
+karamay|karamaj|karamaju|karamajus
+karbala|kerbala|kerbela|qerbelaja
+kariya|karija
+karlsruhe|karlsrūe|karlsrūjė
+kashan|kachan|kaixan|kaschan|kaszan|kašanas
+kashgar|cathair kashgar|kachgar|kaixgar|kash|kaszgar|kaxgar|kašgar|kašgara|kašgaras
+kashiwa|kasiva|kašiwa
+kassala|cassala|kasala|kaszala|kesela
+kassel|cassel|kasele|kaseli|kaselis
+kastamonu|castamonu
+kasugai|kasugajus|kaszugai
+kasukabe|kaszukabe
+kasur|kasuras
+kathmandu|catmandu|katmandou|katmandú
+katni|murwara
+katowice urban area|katovická konurbace|khu đô thị katowice|konurbacja górnośląska|région urbaine de katowice|área urbana de silesia superior
+katowice|katovicai|katovice
+katsina|kacina
+kaunas|kauņa|kowno
+kawagoe|kavagoe|kavagoja|kavagojė
+kawaguchi|kavagucsi|kavaguči|kavagučis|kawaguči
+kawanishi|kavanisi|kavanišis|kawaniši
+kawasaki|kavasaki|kavasakis|kavaszaki
+kayseri|caiseri|kaiseris|kajseri
+kazan|cazã|kaasan|kazani|kazany|kazanė|kazaņa
+kediri|kediris
+keelung|chilung|csilung|cơ long|kilung|kota keelung|kēlunga|ťi-lung
+kemerovo|kemerova|kemerovas|kemerowo
+kendari|kendaris|kota kendari
+kerch|kerci|kercs|kercz|kertch|kertj|kertsch|kertsj|kertx|kertš|kerč|kerča|kerčė
+kermanshah|kermanchah|kermanschah|kermanszah|kermanxah|kermanšahas|kermánšáh|kermānšāha|kirmanşah
+kerman|kermana|kermanas|kirman
+khabarovsk|chabarovsk|chabarovskas|chabarowsk|habarovsk|habarovska|habarovszk|jabárovsk|kabarovsk
+khamis mushait|chamis muschait|chamis muszajt|chamis mušaitas|hamis muşayt|khamis mushayt
+khan yunis|chan junisas|chan yunis|chán júnis|han junis|han yunus|hanjunisa|hán júnisz|jan yunis|khan younis|khan younès
+khanewal|chanevalis|hanevala
+kharagpur|kharagpuras
+kharkiv|carcóvia|charkiv|charkivas|charkiw|charkov|charków|harkiv|harkiva|harkov|harkova|járkov|karkiv
+khartoum north|al khartum bahrī|al-chartum bahri|bahri|cartum do norte|cartúm thuaidh|chartum północny|chartúm bahrí|ipar khartum|jartum norte|khartoem-noord|khartoum nord|khartum nord|kuzey hartum|norra khartoum|pohjois-khartum|põhja-hartum|észak-kartúm|šiaurės chartumas
+khartoum|cartum|chartumas|chartúm|hartum|hartūma|jartum|kartum|khartoem|khartum|khartún
+khasavyurt|chasaviurt|chasaviurtas|chasavjoert|chasavjurt|chasawiurt|chassawjurt|hasaviurt|hasavjurt|hasavjurta|hasavyurt|hassavjurt|haszavjurt|jasaviurt|khasaviurt|khasavjurt|khassaviourt|khassaviürt
+kherson|cherson|chersonas|herson|hersona|herszon|jersón
+khmelnytskyi|chmelnyckis|chmelnyckyj|chmelnytsky|chmelnytskyj|chmelnyzkyj|chmielnicki|hmeljnicki|hmelnicki|hmelnickij|hmelnitski|hmelnițkii|hmelnytskyi|hmelnõtskõi|hmeļnicka|jmelnitski|khmelnitski|khmelnytsky|khmelnytskyj
+khobar|al khobar|al-chubar|el huber|kobara|kobaras|al-khubar
+khomeyni shahr|chomeinischahr|chomejniszahr|chomejníšahr|homeini šahr|homejnisahr|humeynişehr|khomeini shahr
+khorramabad|choremabadas|chorramábád|corramabade|horamabad|horamabada|horramábád|hürremabad|jorramabad|khurramabad|koramabad
+khost|chost|chostas|host|hosta|jost|khowst
+khoy|choi|choj|chojus|choy|khvoy
+khujand|chodżent|choedzjand|chudschand|chudžand|chudžandas|hucend|hudjand|hudzjand|hudzsand|hudžand|hudžanda|huçand|juyand|khodjent|khudjand|kudžand
+khulna|culna|khulaná|kulna
+kidapawan|kidapavana|kidapavanas
+kielce|kelcai|kelce
+kiel|kilonia|kylis|ķīle
+kigali|kigalis|quigali
+kikwit|kikvita|kikvitas|quicuíte
+killeen|kilinas|kilīna
+kimch'aek|kim cshek-város|kimčchekas|kimčchäk|kimčheka
+kindu|quindu
+kingston upon hull|kingston na hullu|kingston trên sông hull|kingstona pie hallas|kingstonas prie halo
+kingston|kingstona|kingstonas
+kinshasa|kinsasha|kinszasa|kinšasa|quinxassa
+kira town|cidade de kira|kira
+kirkuk|karkúk|kerkük|kirkoek|kirkouk|kirkukas|kirkūka
+kirov|kirova|kirovas|kirow
+kisangani|kisanganis|quissangane
+kishiwada|kishiwada city|kisivada|kišivados miestas|kišiwada
+kismayo|chisimaio|kismaayo|kismaju|kismajus|kismajó
+kisumu|city of kisumu
+kitakyūshū|kitakiūšiū|kitakjusju|kitakjúšú
+kitchener|kičenera|kičeneris
+kitwe|kitvė
+klaipėda|klajpeda
+klang|kelang|klana|klangas
+knoxville|knoksvilis|noksvila
+kocaeli province|cocaeli|kocaeli|kocaeli provins|kocaeli probintzia|kocaeli provints|kocaelin maakunta|kocaeliská provincie|kodžaeli ils|kodžaelis|koxhaeli|provincia kocaeli|provinsi kocaeli|província de kocaeli|wilayah kocaeli|provincia di kocaeli
+kohat|kochatas|kohata
+kolkata|calcutta|calcutá|colcata|kalkata|kalkuta|kalkutta
+kollam|coulão|kolama|kolamas|quilon
+kolwezi|kolvezi|kolvezis
+kom ombo|kom ombas
+konya province|konjas ils|konjos provincija|konya probintzia|konya provints|konyan maakunta|provincia konya|provinsi konya|província de konya|wilayah konya|provincia di konya
+korhogo|korhoga|korhogas
+koronadal|koronadal city|koronadala|koronadalas
+koshigaya|košigaja
+kostanay|kostanaj|kostanaja|kostanajus|kostanaï|kosztanaj|kustanaj|qostanaj|qostanay|qostanaı
+kosti|kusti|kustis|kuszti
+kota bharu|kota baharu|kota baru
+kota|kotah
+koudougou|kudugu
+kozhikode|calecute|calicut|kozsíkóde|kožikodė|kóžikkót
+košice|kassa|koshice|koszyce
+kragujevac|kragujevaca|kragujevacas
+kraków|cracovia|cracovie|krakau|krakkó|krakov|krakova|krakovi|krakovia|kraká|krokuva
+krasnodar|crasnodar|krasnodara|krasnodaras|krasznodar
+krasnoyarsk|krasnoiarsk|krasnojarsk|krasnojarska|krasnojarskas|krasznojarszk
+krefeld|krēfelde|krėfeldas
+kremenchuk|kremenciuk|kremencsuk|krementchouk|krementjuk|krementschuk|krementsjoek|krementsjúk|krementxuk|krementšuk|kremençug|kremenčuk|kremenčuka|kremenčukas|krzemieńczuk
+krishnanagar|krishnagiri
+kropyvnytskyi|kirovograd|kirovohrad|kropivnicka|kropivnicki|kropivnickij|kropivnitski|kropivnitskiy|kropyvnyckis|kropyvnyckyj|kropyvnytsky|kropyvnytskyj|kropywnycki|kropywnyzkyj|kropîvnîțkîi|kropõvnõtskõi
+kryvyi rih|krivi rog|krivij rih|krivojroga|kriví rih|krivói rog|kryvy rih|kryvyj rih|kryvyj rihas|krywyj rih|krzywy róg|krívíj rjig|krõvõi rig
+kuala lumpur|kualalumpura|kvala lumpūras
+kuala terengganu|kuala terenganu|kuala terenggan|kvala terenganu
+kuantan|kuantana|kuantanas
+kuching|kuçing|kučinga|kučingas
+kufa|al-kufa|al-kūfah|cufa|koefa|koufa|kufah|kufe
+kuki|kukis
+kulim|kulima|kulimas
+kumagaya|kumagaja
+kumamoto|kumamotas
+kumasi|kumasis
+kunduz|kondoza|kondôz|kondūz|kundus|kundūzas|qunduz
+kunming|côn minh|kchun-ming|kunming shi|kunmingas|kuņmina
+kurashiki|kuaršiki|kurašiki|kurašikis
+kurgan|koergan|kourgan|kurganas|kurgāna
+kurnool|karnulu|karnūlis|kurnul
+kushiro|kushiro-shi|kušira|kuširas|kuširo
+kushtia|kuštija
+kusong|kusona|kusongas|kuszong|kusŏng-si
+kutaisi|khuthaisi|koetaisi|koutaïssi|kutaisis|kutaissi|kutaiszi
+kuwait city|al kuwait|al-kuwayt|bandar kuwait|cathair chuáit|cidade de kuwait|ciudad de kuwait|koeweit|kota kuwait|koweït|kuvaitváros|kuvajt|kuvajti|kuveita|kuveitas|kuveyt|kuwait|kuweit-stadt|kuwejt|kúveitborg|orașul kuweit|thành phố kuwait
+kyiv|kiev|kievi|kiew|kiiev|kijev|kijevas|kijiva|kijów|kiova|kyjev|kíiv
+kyoto|kiotas|kioto|kjóto|quioto|thành phố kyōto
+kyzylorda|kizilorda|kõzõlorda|qysylorda|qyzylorda|qızılorda
+kábul|cabúl|kabil|kaboel|kaboul|kabula|kabulas|kabuli
+körfez|kiorfezas
+kúrsk|koersk|koursk|kurska|kurskas|kurszk
+kütahya|cutáquia|kitahja|kiutachija|kytahia
+kırıkkale|kirikalė|querecale
+kırşehir|kiršehira|kyršechiras|querxequir
+kızıltepe|kyzyltepė
+kōchi-shi|kócsi
+kōriyama|kórijama
+l'hospitalet de llobregat|hospitalet de llobregat|ljobregato l'hospitaletas|lospitaleta de ļobregata
+la guaira|la gvaira
+la rioja|a rioxa|la riocha|larjoha|rioja
+la vega|concepción de la vega
+la victoria|la viktorija
+laayoune|aaiun|ajūna|al ajunas|al-'ajún|al-aaiun|al-ujun|el aaiún|el ayun|layun|o aaiún|al-ajoen
+lafia|lafija
+lages|lažesa|lažesas
+lagos|lagosa|lagosas
+lahore|lahaur|lahor|lahora|lahoras|laore
+laibin|lai tân|laibina|laibinas|laj-pin
+laiyang|lai dương|laijanga|laijangas|laj-jang
+lakewood|leikvuda
+lalitpur|latilpur|latipura|patan|patan lalitpur|patanas
+lancaster|lankastera|lankasteris
+lang-fang|lang phường|langfanga|langfangas
+langsa|kota langsa
+lanzhou|lan châu|lan-čou|lancsou|landžou|landžov
+lanús|lanusas
+lapu-lapu|cidade do lapu-lapu|lapu-lapu city
+laredo|laredas|lareido
+larkana|larkano
+las piñas|las pinjasas|laspinjasa
+las tunas|las tunasas|lastunasa|victoria de las tunas
+las vegas|las vegasas|lasvegasa
+lashkar gah|büst|laschkar gah|laszkargah|laškar gahas|laškargáh|laškargāha
+latakia|laodicea|latakija|lataquia|lattakia|lattaquié|latákie|lazkiye|lādikīja
+latur|latura|laturas
+lauro de freitas|lauro de freitasas
+laval|lavala|lavalis
+le havre|el havre|havra|havras|hawr
+leeds|lidsas|līdsa
+leganés|leganesa|leganesas
+legazpi|legaspi|legaspis|legazpi city
+leicester|lestera|lesteris
+leipzig|lajpcigu|leipciga|leipcigas|lipcse|lipsia|lipsk|lipsko
+leiyang|leijanga|leijangas|lejjang|lỗi dương
+les cayes|le kajus|lekaja|los cayos
+leshan|le-šan|lešana|lešanas|lösan|lạc sơn
+letopolis|khem
+leverkusen|leverkūzene|lėverkuzenas
+lexington|leksingtona|leksingtonas
+león de los aldama|leona|leonas|león
+lhasa|lasa|lassa|lhassa|lhásza
+lhoka|lhokha|lokos prefektūra|prefettura di shannan|sannan|shannan|shannan prefektura|sơn nam|préfecture de shannan|šanan
+lhokseumawe|kota lhokseumawe|lhokseumavė
+lianyungang|lianjuanga|lianjuangas|lienjünkang|liên vân cảng|ljanjungang
+lianzhou|lianžou|liencsou|liên châu
+liaocheng|liao-čcheng|liaocseng|liaočenga|liaočengas|liêu thành
+liaoyang|liaodžanga|liaojang|liaojangas|liêu dương|ljaojang
+liaoyuan|liao-jüan|liaojuana|liaojuanas|liêu nguyên|ljaojuan
+libreville|librevila|librevilis
+lijiang|cidade antiga de lijiang|li-ťiang|licsiang|lidziangas|lidžjang|lệ giang
+likasi|likasis
+lille|lilis|lilla|rijsel
+lilongwe|lilongvė|lilongüe
+lima|líoma
+lincang|lin-cchang|lincanga|lincangas|lâm thương
+lincoln|linkolna|linkolnas
+linfen|linfenas|lâm phần
+linhares|linaresa|linaresas
+linjiang|lincsiang|lindzijanga|lindzijangas|lâm giang
+linyi|kota linyi|lin-i|linji|linjis|lâm nghi
+linz|linca|lincas|linec
+lipa|lipa city
+lisbon|liospóin|lisabon|lisabona|lisboa|lisbona|lisbonne|lissabon|lisszabon|lizbon|lizbona
+lishui|li-šuej|lishui shi|lisuj|lệ thủy
+little rock|litl rokas|litlroka
+liupanshui|liou-pchan-šuej|liupansuj|liupašui|lục bàn thủy
+liuzhou|liou-čou|liucsou|liužou|liễu châu|ljudžou|ļudžou
+liverpool|learpholl|liverpulis|liverpūle
+livingstone|livingstona|livingstonas
+livorno|liorna|livornas|livourne
+liège|liegi|lieja|liexa|lježas|ljēža|luik|lutych|lüttich
+ljubljana|liubliana|liúibleána|lubiana|lubjana|lublana|lublaň
+lobito|lobita|lobitas
+loja|locha|loha|lova
+lokoja|lokodža
+long beach|long byčas|longbīča
+longnan|longnana|longnanas|lung-nan|lũng nam
+longyan|long nham|longdžana|longjan|longjanas|lung-jen
+los teques|los tekesas
+loudi|lou-ti|loudis|lâu để
+louisville|luisvilis|lūivila
+lu-feng|lufenga|lufengas|lục phong
+luan|lujana|lujanas|lục an
+lubango|lubangas
+lubbock|labokas|luboka
+lublin|liublinas|lublino|ļubļina
+lubuklinggau|lubiklinggau
+lubumbashi|lubumbaši|lubumbašis
+lucknow|lakhnaú|laknau|laknava|leknev
+ludhiana|ludhijána
+ludwigshafen|liudvigshafenas prie reino|ludvigshāfene|ludwigshafen am rhein|ludwigshafen-sur-le-rhin
+luhansk|loehansk|louhansk|lugansk|luhanska|luhanskas|luhanszk
+luoding|la định|loting
+luohe|loho|luo-che|tháp hà
+luoyang|lojang|luojana|luojang|luojangas|lạc dương
+lusaka|lusaca
+lutsk|loetsk|loutsk|lucka|luckas|luzk|luțk|łuck
+luxor|louxor|lucsar|luksor|luksora|luksoras|uksur
+luzhou|lu-čou|lucsou|lužou|lô châu
+luziania|luizianija|luzijania
+lviv|lavov|leopoli|leópolis|liov|lvivas|lvivi|lwiw|lwów|ļviva|ľvov
+lyon|liona|lionas|lione|lión
+lévis|levisa|levisas
+lübeck|liubekas|lubecca|lubeka|lybeku|lyypekki|lībeka
+lüliang|liuliangas|lulianga|lyuliang|lữ lương
+m'bour|mburas
+ma'anshan|ma-an-šan|maanšanas|mã an sơn|mānšana
+mabalacat|mabalakata|mabalakatas
+macapá|makapa
+macau|macao|makao|makau|makav
+macaé|makaė
+machala|mačala
+machida|macsida|mačida
+machilipatnam|masulipatam|masulipatnam|masulipatão|mačilipatnama|mačilipatnamas|mačilípatnam
+macon|makonas|meikona
+mactan|maktan|maktanas|île de mactan
+madison|madisonas|medisona
+madrid city|ciudad de madrid|madrid|madrid stad|madrilgo hiria|maidrid|stadt madrid|vila de madrid|ville de madrid|cidade de madrid
+madurai|maduraja|madurajus|maduráj
+maebashi|maebaši|maebašis
+magdeburg|maagdenburg|magdebourg|magdeburga|magdeburgas|magdeburgo|magdeburgu|magdeburk
+magnitogorsk|magnitogorskas|magnyitogorszk|magņitogorska
+magé|maže|megė
+mahabúb nagar|mahbubnagar
+mahilyow|mahiliou|mahiliow|mahiljou|mahiljov|mahiljow|mahiloŭ|mahilyov|mahilëŭ|mahiľov|moghilău|mogilev|mogiliavas|mogiljov|mogiļeva|mohylev|mohylew
+maiduguri|maiduguris
+mainz|magonza|maguncia|mainca|maincas|majnci|mayence|moguncja|mohuč
+makassar|macasar|macáçar|makasar|makasara|makasaras
+makhachkala|machaczkała|machatjkala|machatschkala|machatsjkala|machačkala|mahacikala|mahacskala|mahatškala|mahaçkale|mahačkala|mahhatškala|majachkalá|makhatchkala|makhatjkala|makhatxkalà
+makurdi|makurdis
+makíïvka|makeevka|makejevka|makiejewka|makijivka|makijiwka|makjíjívka|makéyevka
+malabon|malabona|malabonas
+malabo|malabas
+malacca|bandaraya melaka|kota melaka|malaca|malacka|malaka|malakka|melaka
+malang|malanga|malangas
+malanje|malandže|malanžė
+malanville|malanvilis
+malatya|malatija|malatja|malátia
+malaybalay|malaibalajus|malajbalaja|malaybay
+malayer|malájer|melayer
+malda|anglų bazaras|english bazar|iglish-bazara
+malegaon|malegaona|malegaonas
+mallawī|malavis|mallávi|mellevi
+malmö|malmė
+malolos|malolosa|malolosas
+mamuju|kota mamuju|mamudžu
+manado|kota manado|manadas
+manama|al-manama|al-manāmah|menama|mename
+manaus|manaos|manausa|manausas
+mandalay|mandalaj|mandalaja|mandalajus
+mandaluyong|manadalujonga|manadalujongas
+mandaue|mandaue city|mandavė
+mandi bahauddin|mandi bachaudinas|mandi bahaudina
+mangalúru|mangalor|mangalore|mangalúr|mangalūras
+mangaung metropolitan municipality|mangaung|mangaungi linnaringkond|municipalitat metropolitana de mangaung|municipio metropolitano de mangaung|municipalità metropolitana di mangaung
+manila|manilla|manille
+manisa|magnesia
+manizales|manisalesa|manisalesas
+mannheim|manhajmi|manheima|manheimas
+mansoura|al-manşūrah|almançora|el mansoura|el mansurá|el-mansoera|mansourah|mansura|mansure|manszúra|al-mansura
+manzhouli|manchouli|mancsouli|mandžuli|manjur|mãn châu lý
+maoming|maomina|mậu danh
+maputo|maputu
+mar del plata|mara del plata
+maracaibo|marakaibas|marakaibo
+maracanaú|marakanau
+maracay|marakaja|marakajus
+maradi|maradis
+marawi|marahui|maravi|maravis|marawi city|merawi
+mardan|mardana|mardanas
+margilan|marghilona|margilanas|marguilan|marguilã|marg‘ilon
+marikina|mariquina
+marilia|marilija
+mariupol|marioepol|marioupol|mariupole|mariupolis|mariupolj
+markham|markama|marklamas
+maroua|marua|marva
+marrakech|marakeš|marakešas|marrakesch|marrakesh|marrakess|marrakesz|marrakex|marraquexe|marràqueix|marrákeš|marrākeša|merakeş|murrákuš
+mary|mari
+masan|masana|maszan
+massarah|al-ma'ṣarah|el masara|masara
+masvingo|masvingas
+matadi|matadis
+matanzas|matansasa|matansasas
+mataram|kota mataram|matarama|mataramas
+matarieh|al-matarijja|al-matariyya|el matareya|matariyya|matarée
+matsudo|macudo|matsudas
+matsue|macue|macujė|matsuje
+matsumoto|macumoto|matsumotas
+matsusaka|macusaka|macuszaka
+matsuyama|macujama|matsujama
+maturín|maturina|maturinas
+mauá|mauva
+mawlamyine|mawlamyaing|molamjaina|molamjainas|molamjajn|moulmein|mulmejn
+maxixe|mašišė
+mazar-i-sharif|masar-e scharif|mazar-e sharif|mazar-e sjarif|mazar-e xarif|mazar-i szarif|mazari šarifas|mazár-e šaríf|mazâr-e charîf|mazārešarīfa|mezarışerif
+mazatlán|masatlana|masatlanas
+mbale city|mbale
+mbandaka|mebandaca
+mbarara city|mbarara
+mbeya|beia|mbeja
+mbuji-mayi|buchimaie|mbudžimaji|mbuži majis
+mckinney|makini|makinis
+medan|medana|medanas
+medellín|medeljina|medeljinas
+medina|madinah|madinah al-munawwarah|mediina|medyna|médine
+medinipur|midnapore
+meerut|meratha|miratas|mirát|mérath
+mehsana|mahesana
+meihekou|mai hà khẩu|meicheku|mejhokou
+meishan|meišana|meišanas|mej-šan|mi sơn
+meizhou|mai châu|meidžou|mej-čou|mejcsou|mejdžov
+mek'ele|macallè|makale|makalle|mekelie
+meknes|meknesas|meknesz|mequinez|miknas|miknēsa
+melbourne|melburna|melburnas|melburni
+memphis|memfis|memfisa
+menemen|distretto di menemen|menemenas
+menouf|minuf
+merca|marka|merka
+merlo|merlas
+mersin|mersim|mersina|mersinas
+mesquita|meskita
+mesquite|meskitas|meskvita
+messina|mesina|messine|mesyna
+metro manila|ceantar uirbeach mhainile|gran manila|grand manille|grande manila|manila handia|manila metro|manila raya|manilos metropolija|national capital region|region stołeczny|stormanila|valsts galvaspilsētas reģions|vùng đô thị manila
+metropolis of lyon|lionas metropole|lyon metropolü|lyongo metropolia|metropola lyon|metropoli di lione|metropolis lyon|metrópoli de lyon|métropole de lyon|metròpoli de lió|metrópole de lión
+metro|kota metro
+mexicali|meksikali|meksikalis
+mexico city|bandar raya mexico|cathair mheicsiceo|cidade de méxico|cidade do méxico|città del messico|ciudad de méxico|ciutat de mèxic|kota meksiko|mehiko|meksikas|meksiko|meksyk|mexico|mexico-stad|mexiko|mexiko hiria|mexiko-stadt|mexikóváros|mexíkóborg|thành phố méxico
+meycauayan|mecabayan|meikavajana|meikavajanas|meycauayan city
+mianyang|mianjanga|mianjangas|mianyang shi|mien-jang|miên dương|mjanjang
+milagro|milagras
+milton keynes|milton keinsas|miltonkeinsa
+milwaukee|milvoki|milvokis
+milán|mailand|mediolan|milaan|milanas|milano|milà|milão|milāna
+minneapolis|mineapolis|mineapolisa
+minsk|minska|minskas|minszk|mionsc
+minya|al minya|al-minja|el minye|menia|minja
+mira-bhayandar|mira-bajandar|mira-bajandaras|mira-bhajandar|mira-bhajandara
+misrata|al misratah|misratah|misurata|miszráta|mısrate
+mississauga|misisoga
+mito|mita|mitas
+mixco|misko|miškas
+miyakonojō|mijakonodzsó|mijakonodžas|mijakonodžó
+miyazaki|mijadzaki|mijadzakis|mijazaki
+mobile|mobila|mobilas
+modena|modène
+modesto|modestas
+mogadishu|mogadischu|mogadiscio|mogadiszu|mogadixo|mogadişu|mogadiš|mogadišas|mogadīšo|mogaidisiú|muqdisho|mógadisjú
+mogi das cruzes|moji das cruzes|moži das kruzesa|moži das kruzesas
+mogi guaçu|mogi guačiu|moži-guasu
+mohammedia|al-muhammadijja|mohamedija|muhammediye
+mokpo|mokpcho|mokpho
+mombasa|mombassa|mombaça
+monrovia|monrovija
+monterrey|monterrei|monterreja|monterėjus
+montería|monterija
+montes claros|montes klarosas|montisklarusa
+montevideo|montevidéu|montevidėjas
+montgomery|montgomeri|montgomeris
+montpellier|monpeljė|montpeller
+montréal|monrealis|monreāla|montreali
+monywa|moniva|munywa
+moradabad|muradabad|muradabada|muradabadas
+moreno valley|moreno slėnis|morenoveli
+moreno|morenas
+morogoro|morogoras
+moscow|maskava|maskva|mosca|moscou|moscova|moscovo|moscó|moscú|moska|moskau|moskou|moskova|moskow|mosku|moskva|moskwa|moszkva
+mossoró|mosoras|mosoro
+mosul|mosoel|mossoul|mossul|mosula|mosulas|moszul|musul
+moçâmedes|mosamedesas|namibe
+muar|bandar maharani|muara
+mudanjiang|mu-tan-ťiang|mudandziangas|mudandžianga|mutancsiang|mẫu đơn giang
+muhanga|gitarama
+multán|multanas|multāna
+mumbai|bombai|bombaim|bombaj|bombay|mumbaj|mumbaja|mumbajus
+munger|mangeris|monghyr|mungera
+munich|minhene|miunchenas|mnichov|monachium|monaco di baviera|munique|mynihu|múnic|münchen|münih
+murcia city|cathair murcia|ciudad de murcia|ciutat de múrcia|murcia
+murfreesboro|murfrisboras|murfrīsboro
+muridke|muridike
+muscat|mascate|maskat|maskata|maskatas|masqat|maszkat|muškat
+muttrah|matara|matra|matrah|mutrah
+muzaffargarh|distretto di muzaffargarh|muzafargaras|muzafarrgarha
+muzaffarnagar|muzafarnagara|muzafarnagaras
+muzaffarpur|muzafarpur|muzafarpura|muzafarpuras
+mwanza|mvanza
+myeik|mergui|merguj|mjeika|mjeikas
+myitkyina|mjičina
+mykolaïv|micolaíve|mikolaiv|mikolajiv|mikołajów|mykolajiv|mykolajivas|mykolajiw|mõkolajiv|mıkolayiv|nicolaiev|nikolajeva
+mymensingh|maimansingh|maimansinghas|maimanxim|majmansing|mojmonszinho
+mysore|maisoras|maiszúr|maisúr|maisūru|mysuru
+mytishchi|mitischi|mitisxi|mitišči|mityiscsi|mytichtchi|mytischtschi|mytisjtji|mytisjtsji|mytistxi|mytiszczi|mytištši|mytišči|mytiščiai|mõtištši|mıytişçi
+málaga city|cathair málaga|málaga stadt|ville de málaga|ciudad de málaga|ciutat de málaga
+móstoles|mostolesa|mostolesas
+mönchengladbach|menchengladbachas|menhengladbaha
+mülheim an der ruhr|miulheimas prie rūro|mülheim|mülheim del ruhr|mīlheima
+münster|minstere|miunsteris
+mīrpur khās|mirpur kasas|mirpur-hasa
+n'dalatando|n'dalantando|ndalatandas
+n'djamena|encemine|jamena|ndžamena|nxhamena|xamena|yamena
+naberezhnye chelny|naberejnye chelny|naberejnye tchelny|naberejnîe celnî|nabereschnyje tschelny|naberesjnyje tjelny|naberezhnye txelny|naberezjnye tsjelny|naberezjnyje tjelny|naberezsnije cselni|naberežnije čelni|naberežnye čelny|naberežnyje tšelny|naberežnyje čelnai|naberežnyje čelny|naberežnõje tšelnõ|nabierieżnyje czełny|nàberejnie txelní|yarçallı
+nablus|nablusas|naplouse|náblusz|nāblusa
+nacala|nacala porto|nakala
+nadiad|nadijadas
+nador|nadoras|nādora
+nagano|naganas|thành phố nagano
+nagareyama|nagarejama
+nagoya|nagoia|nagoja
+nagpur|nagpuras|nāgpura
+nagqu|nagqu prefektura|nagčhu|nagču prefektūra|nakchu|prefettura di nagqu|préfecture de nagchu
+nairobi|nairobis
+najafabad|nadjafabad|nadzsafábád|nadżafabad|nadžafabadas|necefabad
+najaf|an-nadżaf|an-najaf|nadjaf|nadschaf|nadžaf|nadžafas|necef|nedzsef|nedžefa|nexhef|náyaf
+najran|nadschran|nadżran|nadžranas|najrã|naŷrán|necran|nexhren
+nam định|namdinis|namdiņa
+namangan|namangana|namanganas
+namp'o|nampcho|nampho
+namyangju|namjangdzsu|namjangdžu
+nanchang|nam xương|nan-čchang|nancsang|nančang|nančangas|naņčana
+nanchong|nam sung|nan-čchung|nancsung|nančonga|nančongas
+nanjing|nam kinh|nanchino|nanjing shi|nankin|nankinas|nanking|nanquim|nanquín|nanxhing|naņdzjina
+nanning|nam ninh|naning|naningas|naņnina
+nanping|nam bình|nan-pching|nanpinga|nanpingas
+nantong|nam thông|nan-tchung|nantonga|nantongas|nantung
+nanyang|nam dương|nanjang|nanjanga|nanjangas
+naogaon|noaganw
+naples|napels|napoli|napulj|neapel|neapelj|neapol|neapole|neapolis|nàpols|nápoles|nápoly
+narashino|narasino|narašinas
+narayanganj|narajangandžas|narajangondźo
+nara|thành phố nara
+narsingdi|narsingdis|norszinhdi
+nashik|nasik|našikas|nāšika
+nashville|našvila|nešvilis
+nasiriyah|an-nashiriyah|an-nāşirīyah|nasirijja|nasiriya|nasiriye|nasiriyya|nassiriya|nassíria|násiríja|nászirijja|an-nasiriyya
+nassau|naso|nassá|nasáu
+natal|natala|natalis
+navi mumbai|navi mumbajus|navimumbaja|nová bombaj
+navotas|navotasa|navotasas
+nawabshah|navabşah
+nawa|neva
+naypyidaw|naipyidó|neipidas|neipyijto|nepidò|nepjida|nepjido|nepxhidou|néipíadá
+nazilli|nazilis
+neijiang|neidzianga|neidziangas|nej-ťiang|nejcsiang|nội giang
+nellore|nellur|nellúru|nelorė
+nelson mandela bay metropolitan municipality|municipalidad metropolitana nelson mandela|nelson mandela bay|nelson mandela bay metro municipality|nelson mandela bay linnaringkond|nelson mandelabaai|municipalità metropolitana di nelson mandela bay
+netanya|natanya|netania|netanija|netanja
+neuquén|neukena|neukenas
+neuss|neisa|noisas
+nevşehir|nevexequir|nevšechiras|nevšehira
+new borg el arab|borg el arab|burdż al-arab al-dżadida|burj al-arab al-jadida|nuova borg el arab|yeni borg el arab
+new cairo|naujasis kairas|neu-kairo|nouveau caire|novi kairo|novo cairo|nová káhira|nowy kair|nuovo cairo|nya kairo|la nova capital|új-kairó|ņukairo
+new delhi|deilí nua|naujasis delis|naí dillí|neu-delhi|nova delhi|nova deli|nové dillí|nowe delhi|nueva delhi|nuova delhi|nýja delí|yeni delhi|újdelhi|ņūdeli
+new orleans|la nouvelle-orléans|naujasis orleanas|nova orleans|nova orleães|nowy orlean|nueva orleans|ņūorleāna
+new taipei city|hszinpej|neu-taipeh|new taipei|nieuw taipei|noul taipei|nouveau taipei|nova taipei|novi tajpej|novo taipé|nová tchaj-pej|nowe tajpej|nuevo taipéi|nuova taipei|ny taipei|sinbėjus|sjiņbei|taipei baru|taipei konderria|tân bắc|uus taipei linn|uusi-taipei
+new york city|bandar raya new york|kota new york|new york-borg|niujorkas|nju jork siti|nova iorque|nova york|nowy jork|nua-eabhrac|nueva york|thành phố new york|ņujorka
+new york metropolitan area|grand new york|kawasan metropolitan new york|metropolitná oblasť new york|metropolregion new york|mórcheantar nua-eabhrac|new yorgi suurlinnapiirkond|new york metropolitan alanı|new yorkeko metropolitar eremua|new yorkin metropolialue|new yorks storbyområde|new yorks storstadsregion|newyorská metropolitní oblast|região metropolitana de nova iorque|vùng đô thị new york|wilayah metropolitan new york|area metropolitana di new york|metropolitansko območje new york|obszar metropolitalny nowego jorku|zona metropolitană new york|área metropolitana de nueva york|àrea metropolitana de nova york
+newark|niuarkas|ņuarka
+newcastle upon tyne|newcastle trên sông tyne|niukaslas prie taino|ņūkāsla pie tainas
+newcastle|niukaslas|ņūkāsla
+newport news|niuport niusas|ņūportņūza
+newport|casnewydd|niuportas|ņūporta
+neyagawa|nejagava|nejagawa
+ngamprah|kecamatan ngamprah
+ngaoundéré|ngaundere
+nha trang|niačangas|ņačana
+niamey|niamei|niameja|niamėjus
+nice|nica|nicea|nizza
+nigdė|nide
+niigata|nigata|nijigata
+ningbo|ning-po|ningbas|ningbo shi|ninh ba
+ningde|ning-te|ningtö|ninh đức
+nishapur|naisaburi|neisápur|neišābūra|neyshabur|nešabur|nischapur|nisjapoer|niszapur|nixapur|nişabur|nišapūras|níšápúr
+nishinomiya|nišinomija
+nishio|nišijo|nišijus|nišio
+nishitōkyō-shi|nishitōkyō|nišitokija|nišitokijas|nišitókjó
+niterói|niteroja|niterojus
+nizamabad|nidžámábádu
+nizhnekamsk|nijnekamsk|nischnekamsk|nizjnekamsk|niżniekamsk|nižnekamskas|nižněkamsk|nyizsnyekamszk|tübenkama|ņižņekamska
+nizhnevartovsk|nijnevàrtovsk|nischnewartowsk|nizjnevartovsk|niżniewartowsk|nižnevartovskas|nižněvartovsk|nyizsnyevartovszk|ņižņevartovska
+nizhny novgorod|nijni nóvgorod|nischni nowgorod|nisjnij novgorod|nizhni nóvgorod|nizhnii novgorod|nizjni novgorod|nizjnij novgorod|niżny nowogród|nižni novgorod|nižnij novgorod|nižnji novgorod|nižný novgorod|nyizsnyij novgorod|nízhníj novgorod|ņižņijnovgoroda|žemutinis naugardas
+nizhny tagil|nijni taghil|nijni taguil|nijniy tagil|nischni tagil|nisjnij tagil|nizhni tagil|nizjni tagil|nizjnij tagil|niżny tagił|nižni tagil|nižnij tagil|nižnji tagil|nyizsnyij tagil|ņižņijtagila|žemutinis tagilas
+noda|noda-shi
+nonthaburi|nontaburi|nontaburis
+norfolk|norfolka|norfolkas
+north dum dum|dum dum thuaidh
+north east state of somalia|administración ssc-khatumo de somalia|chatumas|estat de khaatumo|hatumo|khatumo|negara bagian khatumo|ssc-khatumo|waqooyi bari|waqooyi bari state
+north las vegas|bắc las vegas|las vegas thuaidh|nort las vegasas|ziemeļlasvegasa
+norwich|noridža|noridžas
+nossa senhora do socorro|nosa senchora do sorokas|nosa senčora du sokoro
+nottingham|notingema|notingemas
+nouadhibou|nawazibu|nuadhibú|nuadibú
+nouakchott|nawakszut|nuacsat|nuakchot|nuakxot|nuakşot|nuakšota|nuakšotas|nuakšott|núaksjott
+nova friburgo|nova friburgas
+nova iguaçu|nova igaçu|nova iguasu
+novi sad|novi sadas|novisada|nový sad|nowy sad|újvidék
+novo hamburgo|novo hamburgas|novu amburgu
+novocherkassk|novocherkask|novocserkasszk|novotcherkassk|novotjerkassk|novotsjerkassk|novotxerkassk|novotšerkassk|novočerkask|novočerkaska|novočerkaskas|novočerkassk|nowoczerkask|nowotscherkassk
+novorossiysk|novorosijsk|novorosijska|novorosijskas|novorossiejsk|novorossiisk|novorossijsk|novorossisk|novorosszijszk|novorosíisk|novorusisk|noworossijsk|noworosyjsk
+novosibirsk|novosibirska|novosibirskas|novossibirsk|novoszibirszk|nowosibirsk|nowosybirsk
+nuevo laredo|novo laredo|nuevo laredas
+nukus|noukous|nukusa|nukusas|nókis
+nyala|chabahar|niala|nijala|njala
+nyingchi|ningči|ningčis|nyingchi prefektura|nyingcsi|nyingtri|prefettura di nyingchi|préfecture de nyingchi|ňingthri
+nîmes|nimas|nīma
+núremberg|neurenberg|nirnberga|niurnbergas|norimberg|norimberga|norimberk|norymberga|nuremberga|nurenberg|nyrëmberg|nürnberg
+oberhausen|oberhauzenas|oberhauzene
+obihiro|obichiras
+obuasi|obuasis|obuassi
+oceanside|oušensaida|oušensaidas
+odawara|odavara
+odesa|odessa|odessza
+ogbomosho|ogbomoso|ogbomošas
+okayama|okajama
+okazaki|okazakis
+oklahoma city|cathair oklahoma|kota oklahoma|oklahoma sitis|oklahomasitija|thành phố oklahoma
+oldenburg|aldinborg|oldemburgo|oldenbourg|oldenburga|oldenburgas
+olongapo|olongapa|olongapo city
+olsztyn|olština|olštynas|olštýn
+omdurman|omdourman|omdurmanas|omdurmāna|umm durmān
+omsk|omska|omskas|omszk
+ondo|ciudad ondo|ciutat d'ondo|ondas|ondo city
+onitsha|oniča
+oral|orala|oralas|oural|uralsk
+oran|oranas|orano|orāna|vehran|wahran
+ordos city|cathair ordos|ciudad de ordos|ordos|ordos hiria|ordosas|ordoso miestas|ordosz
+ordu|altınordu
+orenburg|oremburgo|orenbourg|orenburga|orenburgas
+orlando|orlandas
+ormoc|ormoka|ormokas
+orsk|orska|orskas|orszk
+oruro|oruras
+osaka|oszaka|ósaca
+osan|osana|osanas|oszan
+oshawa|ošava
+oskemen|oskemenas|ust-kamienogorsk|ustjkamenogorska|öszkemen
+oslo|oslas
+osmaniye|osmanie|osmanijė
+osnabrück|osnabrika|osnabriukas
+osogbo|oshogbo|ošogbas
+ostrava|ostrawa
+ottawa|otava
+ouagadougou|uagadugu|vagadugu|wagadugu
+ouidah|uida
+oujda|ucda|uchda|udžda|ujda|wadżda
+oulu|oulu linn|uleåborg
+overland park|overlando parkas|overlendpārka
+oviedo city|ciudad de oviedo|oviedas|oviedo
+owerri|overi|overis
+oxnard|oksnarda|oksnardas
+oyama|ojama
+p'aju|padžu|pchadžu|phadzsu
+padangsidimpuan|kota padang sidempuan|padang sidempuan|padang sidempuanas|padangsidempuana
+padang|padanga|padangas
+paderborn|paderbornas|pāderborna
+pagadian|pagadian city|pagadijana|pagadijanas
+pakpattan|pakpatana|pakpatanas
+palangkaraya|palankaraja
+palembang|palembana|palembangas|palimbão
+palermo|palerm|palermas|palerme
+palhoça|paljosa|palosa
+pali|palis
+palmas|palmasa|palmasas
+palma|maljorkos palma|palma mallorcakoa|palma de maiorca|palma de mallorca|palma di maiorca
+palmdale|palmdeila|palmdeilas
+panabo|panabas|panabo city
+panama city|cidade de panamá|cidade do panamá|ciudad de panamá|ciutat de panamà|kota panama|panama|panama hiria|panama-stad|panama-stadt|panamaborg|panamaváros|qyteti i panamasë|thành phố panama
+pangkal pinang|pankalinanga|pankalpinangas
+panjin|bàn cẩm|panchinas|pancsin|pandžina|pchan-ťin
+panzhihua|pancsehua|pandžichua|pandžihua|panzhihua shi|pchan-č'-chua|phàn chi hoa
+parachinar|paraçınar|paračinara|paračinaras
+paramaribo|paramaribas
+paranaguá|paranagva
+parauapebas|parauapeba|paravuapebasas
+paris|parigi|pariis|pariisi|parijs|parisi|paryż|paryžius|parīze|paříž|páras|párizs
+parma|parme
+parnamirim|parnamirima|parnarmiriamas
+pasay|pasaja|pasėjus
+pasig|pasiga|pasigas|passiga
+passo fundo|paso fundas|paso fundo
+pasto|pastas|san juan de pasto
+pasuruan|pasuruanas
+pathein|basejn|patein|patheina|patheinas
+patos de minas|patos de minasas|patus di minas
+patras|patra|patrai|patrasso|patres
+pavlodar|pavlodara|pavlodaras|pawlodar
+pelotas|pelotasa|pelotasas
+pematangsiantar|pematangsiantara|pematangsiantaras
+pembroke pines|pembroukpainsa|pembruk painsas
+penza|pensa
+peoria|peorija|periora
+perm|perma|permė
+perth|pertas|pērta
+perugia|perudža|perusa|peruxhia|pérouse
+peshawar|peschawar|pesjawar|peszawar|peşaver|pešavaras|pešāvara|péšávar
+petah tikva|petach tikva|petach tikwa|petah tiqwa|petaj tikva|pétah tiqvà
+petaling jaya|petaling džaja
+peterborough|piterboras|pīterboro
+petropavl|petropavla|petropavlas|petropavlovsk|petropawl|pietropawłowsk
+petrozavodsk|petrosavodsk|petrosawodsk|petroskoi|petrozavodska|petrozavodskas|petrozavodszk|petrozavódseque|pietrozawodsk
+petrópolis|petropolisa
+phan thiết|fanthjeta|fanthjetas
+phnom penh|nom pen|phnompen|pnompen|pnompenis|pnompeņa
+phoenix|finiksas|fīniksa
+phrae|changwat phrae|phrē|provincia phrae|provincia de phrae|provinsi phrae|prowincja phrae|prė provincija|provincia di phrae
+piedras negras|pjedras negrasas
+pikine|pikinis
+pinar del río|pinar del rijas|pinara del rio
+pindamonhangaba|pindamonangaba
+pingdingshan|bình đỉnh sơn|pching-ting-šan|pingdingšana|pingdingšanas|pingtingsan
+pingliang|bình lương|pching-liang|pinglianga|pingliangas
+pingtung city|bình đông|pching-tung|pingdong|pingdongas|pingtung
+pingxiang|bình hương|pching-siang|pinghsziang|pingšjang|pinsianga|pinsiangas
+piracicaba|piraciacaba|pirasikaba
+piraeus|el pireo|el pireu|il pireo|le pirée|o pireo|pire|pirej|pireja|pireo|pireu|pireus|pireusz|piräus|piréas|pirėjas
+pittsburgh|pitsburga|pitsburgas
+piura|pjura
+plano|planas|pleino
+ploiești|ploeszti|ploješti|ploještis|ploješť
+plovdiv|filibe|plovdiva|plovdivas|plowdiw
+plymouth|plimuta|plimutas
+plzeň|pilsen|pilzenas|pilzno|plzeņa
+pocheon|pchočchon|phocshon|pocheonas|počeona
+podgorica|podgairítse
+pohang|pchohang|phohana|phohang|pochangas
+pointe-noire|puent nuaras|puentnara
+pokhara|pokara
+poltava|poltawa|pultava
+ponta grossa|ponta grosa
+pontianak|kota pontianak|pontianaka|pontianakas
+popayán|popajana|popajanas
+port harcourt|port harkortas|porthārkorta
+port moresby|port moresbi|port morsbis|portmorsbi|puerto moresby
+port said|bur said|port saidas|port szaíd|porto saíd|portsaīda|puerto saíd
+port st. lucie|port saint liusi|port saint lucie|port sainte-lucie|portsentlusija
+port sudan|bur sudan|port sudanas|port szudán|port-soudan|porto sudan|porto sudão|portsudāna|puerto sudán
+port-au-prince|port o prensas|porto príncipe|portoprensa|puerto príncipe
+port-gentil|mandji|port žantilis|porto gentil|portžantilisa
+portland|portlandas|portlenda
+portmore|portmora|portmoras
+porto alegre|portualegri
+porto novo|porto novas
+porto seguro|portuseguru
+porto velho|porto veljas|portuvelju
+portoviejo|portovjechas|portovjeho
+porto|oporto|portas|portu
+portsmouth|portsmuta|portsmutas
+posadas|posadasa|posadasas
+potsdam|poczdam|postupim|potsdama|potsdamas|potsdami
+pouso alegre|puoso alegrė|puozu alegri
+poznaň|posen|poznanj|poznanė|poznaņa
+poços de caldas|posus di kaldasa|počos de kaldasas
+prague|praag|prag|praga|praha
+praia grande|praja grandi|praja grandė
+praia|praja
+prato|pratas
+prayagraj|alahabad|alahabadas|allahabad|prajágrádž|prajāgrādža
+presidente prudente|prezidente prudentė|prezidenti prudenti
+pretoria|pretorie|pretorija
+prizren|prizrena|prizrenas|prizreni
+priština|prishtina|prisztina|priştine
+probolinggo|probolingas|probolingo
+providence|providensa|providensas
+pskov|pihkova|pihkva|pleskava|pskovas|pskow|pszkov
+pu'er city|cathair pu'er|pchu-er|phổ nhĩ|pu'er|puer miestas|pueras
+pucallpa|pukaljpa|pukalpa
+pudong|pchu-tung|phố đông|pudong barrutia|pudongas|putung|district de pudong
+puente alto|puente altas
+puerto cabello|puerto kabeljas|puertokabelja|purto cabello
+puerto la cruz|puerto la krusas|puertolakrusa
+puerto montt|puerto montas|puertomonta
+puerto princesa|puerto prinsesa
+puerto vallarta|puerto valjarta|puertovalarta
+pune|puna
+puning|pchu-ning|phổ ninh|puninga|puningas
+punto fijo|punto fidžo
+puri|puris
+purnia|purnija
+purwokerto|poerwokerto|purokertas|purvokerto
+putian|pchu-tchien|phủ điền|putian shi|putiana|putianas|putien|putjan
+puyang|bộc dương|pchu-jang|pujang|pujanga|pujangas
+pyeongtaek|pchjongtchek|pchjongtchäk|phjongthek|pjeongtaeka|pjeongtaekas
+pyongsong|pchensanas|pchjongsong|phjongszong|phjonsona
+pyongyang|bình nhưỡng|pchenjanas|pchjongjang|phenjan|phenjana|piongiang|pionyang|pjongian|pjöngjang
+pàdua|padoue|padova|paduja|padwa
+pétion-ville|petionvile|petyon-vil|pešionvilis
+qaem shahr|gaimşehr|ghaemshahr|gha’emszahr|gāemšahra|kaemshehr|kajem šahras|káemsahr|qaem-schahr
+qalyub|kaljub|kaljubas|kalyoub|kalyub
+qamishli|al-kamiszli|al-qamishli|kamishli|kamišlis|kamışlı|qamichli|qamischli
+qarshi|karchi|karshi|karszy|karšis|kárší|qarši
+qazvin|kazvinas|kazvín|kazvīna|kazwin
+qena|kena|kina|qinā|quena
+qift|copto|coptos|koptos
+qingdao|cjindao|csingtao|qingdao shi|thanh đảo|tsingtao|čching-tao|čingdao
+qingyang|csingjang|khánh dương|čching-jang|čingjanga|čingjangas
+qingyuan|csingjüan|thanh viễn|čching-jüan|čingjuana|čingjuanas
+qinhuangdao|cjiņhuandao|csinhuangtao|tần hoàng đảo|čchin-chuang-tao|činghuangdao|činhuangdao
+qinzhou|cinddžou|cjindžou|khâm châu|čchin-čou
+qiqihar|cicikar|csicsihar|tề tề cáp nhĩ|čičihar|čičihara|čičiharas
+qitaihe|csitajho|thất đài hà|čchi-tchaj-che|čitaiche|čitaiče
+quanzhou|csüancsou|tuyền châu|čchüan-čou|čiuandžou|čuandžou
+quebec city|bandar raya quebec|cathair québec|ciutat de quebec|kebeku|kota quebec|kvebeka|kvebekas|quebec hiria|québec|québecborg|thành phố québec
+quelimane|kelimanė
+quetta|ketta|kvetta|kvéta|kweta
+quetzaltenango|kecaltenangas|kecaltenango
+quevedo|keveda|kevedas
+quezon city|bandar quezon|cidade quezon|ciudad quezon|keson sitis|kesonsitija|kota quezon|quezon|quezon hiria|quezon-stadt|thành phố quezon
+quilmes|kilmesa|kilmesas
+quito|kitas|kito|kuito
+qujing|csücsing|khúc tĩnh|kudžinga|kudžingas|qujing hiria|čchü-ťing
+quzhou|cù châu|čužou
+quảng ninh|kuang nino provincija|kuangniņa|provinsi quang ninh|quảng ninhi provints|provincia di quang ninh
+rabat|rabatas|rabati|rabāta
+radom|radoma|radomas
+rafah|rafa|refah
+rahim yar khan|rahim jar chanas|rahim yar han|rahimjar khan|rahīmjārkhāna
+raipur|raipura|raipuras|rájpur
+rajahmundry|radžamundri|radžamundris|rajamandri|rasahmundry|rádzsamundri|rádžamandri
+rajkot|radžkotas|rádzskot|rádžkot|rādžkota
+rajshahi|radźszahi|radžšahis|rajexai|rádžšahi
+raleigh|roli|rolis
+ramadi|al-rumadi|ar-ramādī|ramadis|al-ramadi
+ramat gan|ramat ganas|ramatgana
+rancagua|rankagva
+rancho cucamonga|rančo kukamanga|rančo kukamonga
+randburg|randburga|randburgas|rendburg
+rangpur|rangpuras
+raqqa|al raqa|al-raqqa|al-raqqah|ar-rakka|ar-raqqah|raka|rakka|ar-raqqa
+rasht|racht|raixt|rashjt|rast|raszt|raxt|resht|reşt|rešta|reštas
+rason|rasona|rasonas|raszon
+ravenna|ravena|ravenne|rawenna
+rawalpindi|ravalpindi|ravalpindis
+recife|resifi|resifė
+regensburg|ratisbona|ratisbonne|ratyzbona|rēgensburga|rėgensburgas|řezno
+reggio calabria|kalabrijos redžas|redžo di kalabrija|reggio de calabre|reggio de calàbria|reggio di calabria|regio de calabria
+reggio emilia|emilijos redžas|redžo nell'emīlija|reggio d'émilie|reggio de l’emília|reggio nell'emilia
+regina|redžaina|ridžaina
+reims|reimsa|reimsas|remeš
+reno|rynas|rīno
+resistencia|resistancia|resistensija
+reynosa|reinosa
+ribeirão das neves|ribeiraun das nevesas
+ribeirão preto|ribeiran pretas|ribeiraunpretu
+richmond hill|ričmond hilas|ričmondhila|đồi richmond
+rio branco|rio brankas|riubranku
+rio claro|rio klaras|riuklaru
+rio cuarto|rio kuartas|riokvarto
+rio das ostras|rio das ostrasas|riu das ostras
+rio de janeiro|rio de zhaneiro|rio de žaneiras|riodežaneiro|río de xaneiro
+rio grande|riugrandi
+rio verde|riuverdi
+riohacha|rioača|riohača
+rishon lezion|rischon lezion|rishon letzion|rishon le-tziyyon|riszon le-cijjon|rixon le-tsiyyon|rişon lezion|rišon lezionas|rišon le-cijon|rišonlecijona
+riverside|riversaida|rivesaidas
+rivne|riwne|rovno|równe
+riyadh|ar-riyāḑ|riad|riade|riadi|rijad|rijadas|rijāda|riyad
+rizhao|nhật chiếu|rižao|zsicsao|ž’-čao
+rochester|ročestera|ročesteris
+rohtak|rohtaka|rotakas
+rome|erroma|roma|rooma|rzym|an róimh
+rondonópolis|rondonopolisa|rondonopolisas
+roodepoort|rodeportas|rūdeporta
+rosario|rosarijas
+rostock|rostoka|rostokas
+rostov-on-don|donin rostov|rostov don|rostov doni ääres|rostov aan de don|rostov del don|rostov do don|rostov na donu|rostov nad donom|rostov sul don|rostov trên sông đông|rostov ved don|rostov-pe-don|rostov-sur-le-don|rostova pie donas|rostovas prie dono|rostow am don|rostów nad donem|rosztov-na-donu
+rotterdam|roterdama|roterdamas|roterdami|roterdão|róterdam
+rourkela|raurkela|rurkela
+roxas city|bandar roxas|cuidad de roxas|kota roxas|rochasas|rohasa|roxas|thành phố roxas
+rufisque|riufiska|riufiskas
+ruhengeri|musanze|ruhengeris
+rui'an|thụy an|zsujan
+ruili|thụy lệ|zsujli
+russeifa|ar-rusajfa|rusaifa|rusajfa|rusayfa|ruseifa|ruseyfa
+ruzhou|nhữ châu|rucsou|rudžou
+ryazan|riazan|riazanė|rjasan|rjazan|rjazanj|rjazany|rjazaņa
+rybinsk|ribinska|ribinszk|rybinskas|rîbinsk|rõbinsk
+rzeszów|resovia|řešov|žešova|žešuvas
+ríga|riia|riika|ryga|ríge
+rānchi|rančis|ráncsi|rānčī
+sa đéc|cathair sa đéc|sa dei|ville de sa đéc|šadeka
+saarbrücken|sarbriukenas|sarrebruck|sarëbryken|zārbrikene
+sabadell|sabadelis|sabadeļa
+sabzevar|sabsevar|sabzevaras|sabzevāra|sabzewar|sebzevar|szabzavár
+sacaba|sakaba
+sacramento|sakramentas|sakramento
+sagamihara|szagamihara
+sagay|sagah|sagaja|sagajus|sagay city
+saga|szaga
+saharanpur|sacharanpuras|saharanpura
+sahiwal|sahivalas|sāhīvāla
+saint paul|sent polas|sentpola|st. paul
+saint-denis|saint-denis de la réunion|sankti denis|sen deni|shën denis
+saint-marc|saint markas|san marcos|senmarka
+saint-étienne|sent etjenas|sentetjēna
+saitama|szaitama
+sakai|sakai siti|sakajus|szakai
+sakakah|al jawf|sacaca|sakaka|sekake|skaka
+sakura|szakura
+salalah|salála|szalála
+saltillo|saltilas|saltilo
+salvador|salvador da bahia|salvadora|salvadoras
+salzburg|salcburgu|salcburk|salisburgo|salzbourg|salzburgo|zalcburga|zalcburgas
+salé|sala|szale
+samannud|cebneceret|djebnetjer|sebenit|sebenitos|sebennitos|sebennytos
+samara|szamara
+samarinda|kota samarinda
+samarkand|samarcanda|samarcande|samarkanda|samarkandas|samarqand|samerkandi|semerkant|szamarkand
+samawah|al-samawa|as-samāwah|samava|samawa|semave|semāva|szamáva
+sambhal|szambal
+samsun|samessum|samsuna|samsunas|samsuni
+samundri|sammundri
+san bernardino|san bernardinas|sanbernandīno
+san bernardo|san bernardas
+san cristóbal de la laguna|san kristobal de la lagūna|sankristovala de la laguna
+san cristóbal|san kristobalis|sankristobala
+san fernando del valle de catamarca|catamarca|katamarka
+san francisco de campeche|campeche|kampečė
+san francisco de macorís|san fransisko de makorisas|sanfransisko de makorisa
+san francisco|san fransiskas|san frantzisko|sanfrancisko|são francisco
+san luis potosí|sanluisa potosi
+san luis río colorado|san luis rio koloradas|san luis roo colorado|sanluisa rio kolorado
+san miguel de tucumán|são miguel de tucumã|tucumán|tukumana|tukumanas
+san miguelito district|san migelitas|san miguelito|distretto di san miguelito
+san nicolás de los arroyos|san nikolas de los arojosas|sannikolasa de los arojos
+san pablo|san pablas
+san pedro de macorís|san pedro de makorisas|sanpedro de makorisa
+san rafael|san rafaelis|sanrafaela
+san salvador de jujuy|san salvador de chuchujus|sansalvadora de huhuja
+san salvador|san salvadoras|san salvadori|sansalvadora
+sanandaj|sanandadsch|sanandadž|sanandadža|senendec|senendedžas|sine|szanandadzs
+sanaá|saná|szanaa
+sandakan|sandakana|sandakanas
+sangli|sanglis
+sanmenxia|san-men-sia|sanmensija|szanmenhszia|tam môn hiệp
+sanming|sanminga|sanmingas|szanming|tam minh
+santa clara|santa klara
+santa clarita|santa klarita
+santa cruz de la sierra|santa cruz|santa krus de la siera|santakrusa
+santa maria|santa marija
+santarém|santarema|santarenas
+santiago de cuba|kubos santjagas|santiago di cuba|santjago de kuba
+santiago de querétaro|keretaro|querétaro|santjago de keretaras
+santiago del estero|ciudad de santiago del estero|santjago del esteras|santjago del estero
+santipur|shantipur
+santos|santosas|santusa
+sanya|sanja|szanja|tam á
+sao jose de ribamar|san chose de ribamaras|sanžoze de ribamara
+sapporo|saporas|saporo|szapporo
+saqqez|saggız|saghghez|sakkiz|szakkez
+sarajevo|sairéavó|sarajeva|sarajevas|sarajewo|saraxevo|saraybosna|szarajevó
+saransk|saranoš|saranska|saranskas|szaranszk
+saratov|saratova|saratovas|saratow|szaratov
+sargodha|sargoda
+sariwon|sarivonas|szarivon
+sari|saris|szári
+sarıyer|sarijeras rajons
+sasebo|saseba|sasebas|szaszebo
+saskatoon|saskatūna|saskatūnas
+scottsdale|skotsdeila|skotsdeilas
+seattle|sietla|sietlas
+seeb|al-seeb|as sib|sybas|szíb|sība
+sejong|cathair sejong|kota sejong|sedžona|sedžong|sedžongas|sejong city|sejong-si|szedzsong
+sekondi-takoradi|sekondis-takoradis|sékondi
+semarang|semarana|semarangas
+semey|semei|semej|semeja|semejus|semipalatinsk|szemej
+semnan|semnana|semnanas|simnan|szemnán
+sendai|sendaj|sendajus|szendai
+seogwipo|seogvipo|sogvipas|sogüpcho|szogüpho
+seongnam|songnam|songnamas|sonnama|szongnam
+seosan|sosan|sosana|sosanas|szoszan
+seoul|seoel|seula|seulas|seül|soul|szöul
+serang|kota serang|seranga|serangas
+seremban|serembana|serembanas
+serra|sera
+sete lagoas|sete lagoasa|setė lagoasas
+settat|sattat|setata|setatas
+sevastopol|sebastopol|sebastopoli|sevastopole|sevastopoli|sevastopolis|sevastopolj|sewastopol|sivastopol|szevasztopol
+seville city|cathair sevilla|ciudad de sevilla|sevilla|ciutat de sevilla
+shah alam|šach alamas|šahalama
+shahin shahr|schahinschahr|szahinszahr|sáhinsahr|şahinşehr
+shahrekord|schahr-e kord|shar-e kord|szahr-e kord|xahrekord|şehrikürd|šahr-e kord|šahrekorda|šarekord|šarekordas
+shakhty|chakhty|sahti|schachty|shajty|sjachty|sjakhty|szachty|xakhti|šachtos|šachty|šahty|šahtõ
+shanghái|shangai|sjanghæ|szanghaj|thượng hải|xangai|şanghay|šanchajus|šangaj|šanghaj|šanhaja
+shangluo|sanglo|thương lạc|šang-luo
+shangqiu|sangcsiu|thương khâu|šang-čchiou|šangčiu|šangčju
+shangrao|sangzsao|thượng nhiêu|šang-žao|šangrao
+shantou|santou|shantou shi|sán đầu|šan-tchou
+shanwei|sanvej|sán vĩ|šan-wej|šanveija|šanvėjus
+shaoguan|saokuan|thiều quan|šaoguana|šaoguanas
+shaoxing|saohszing|thiệu hưng|šao-sing|šaosina|šaosinas
+shaoyang|thiệu dương|šao-jang|šaojanga|šaojangas
+sharjah|charjah|sardzsa|sarja|schardscha|sharja|sharxha|szardża|xarja|xarjah|şarika|šardžá
+sheberghan|chéberghân|scheberghan|sjeberghan|szeberghan|xibarghan|şibirgan|šeberghán|šibargana|šibarganas|šibarġan
+sheffield|šefildas|šefīlda
+sheikhupura|shekhupura|śekhupura|šeikhupura|šeikupura|šejchupura
+shenyang|cheniangue|senjang|sheniang|thẩm dương|šenjangas|šeņjana
+shenzhen|sencsen|thâm quyến|šen-čen|šendžen|šendženas|šenžen|šeņdžeņa
+sherbrooke|šerbrukas|šērbruka
+shibin al kawm|schibin al-kaum|shibin el kom|szibin al-kaum|xibin el kom|šibin al komas|šibin el-kom
+shibin el-qanater|shibīn al qanāţir|szibin al-kanatir
+shigatse|prefettura di shigatse|schigatse|sigace|ville-préfecture de shigatsé|xigazê|xigazê prefektura|šigadzės prefektūra|šigatse|šigaze|žikace
+shihezi|sihoce|thạch hà tử|šichezi|šihezi|š’-che-c’
+shijiazhuang|sicsiacsuang|thạch gia trang|šidziadžuangas|šidzjadžuana|šidžjadžuang|š’-ťia-čuang
+shimla|šimla
+shimonoseki|simonosekis|simonoszeki|šimonoseki
+shiyan|sijen|thập yển|š'-jen|šijana|šijanas
+shizuishan|sicujsan|thạch chủy sơn|šizuišana|šizuišanas|š’-cuej-šan
+shizuoka|šidzuoka|šizuoka
+shobra elkhema|schubra al-chaima|shubra el-kheima|shubra el-khema|shubra al-khayma|shubrā al-khaymah|szubra al-chajma|xubra el-khaima|şübre el-heyma|šubra el cheima|šubrá al-chejma
+shorouk city|al shorouk city|ash-shurūq|asz-szuruk|el shorouk|asch-schuruq
+shreveport|šrivporta|šrivportas
+shuangyashan|song áp sơn|šuang-ja-šan|šuangjašana|šuangjašanas
+shuozhou|suocsou|sóc châu|šuo-čou|šuodžuo
+shymkent|chimkent|schymkent|shimkent|simkent|sjimkent|sjymkent|szymkent|çimkent|šimkenta|šymkent|šymkentas|šõmkent
+sialkot|sialkota|sialkotas|sijalkot|sjálkót
+sidi-bel-abbès|sidi belabbas|sidi bil'abbas|sidi bu-l-abbas|sidi bel abesas|sīdī bil abāsa
+sidoarjo|kecamatan sidoarjo
+sidon|saida|sayda|sidonas|sidone|sidó|siidon|siodón|sydon|szidón
+siguiri|sigiri|sigiris
+siheung|sichungas|sihung|sihunga
+siirt|siirta|sirtas|sirte
+sikasso|sikasas|sikaso
+siliguri|shiliguri|siliguris|sziliguri
+simferopol|akmescit|simferopole|simferopolis|simferopolj|sinferopoli|symferopol|szimferopol
+sincelejo|sinselechas|sinseleho
+singapore|singapori|singapour|singapúr|singapūra|singapūras|singeapór|szingapúr
+singaraja|singaradža
+singkawang|kota singkawang|sinkavanga|sinkavangas
+sinop|sinopa|sinopas
+sinpo|sinpas|sinpcho|sinpho
+sinuiju|sineidžu|sinidzsu|sinijdžu|sinuidžu
+sioux falls|sūfolsa|sūfolsas
+siping|s'-pching|sipinga|sipingas|szeping|tứ bình
+sirajganj|siradžgandžas
+sirjan|sircan|sirdjan|sirdschan|sirdżan|sirdžana|sirdženas|szirdzsán
+sivas|sivasa|sivasas|sivasi
+siverek|siverekas
+skikda|skīkida|sukajkida
+skopje|scóipé|shkupi|skopie|skoplje|szkopje|üsküp
+smolensk|smolenskas|smoļenska|szmolenszk
+sobral|sobrala|sobralas
+sohag|sauhadż|sevhac|sohaga|sohagas|suhaj|szohág|súhág
+sohar|soar|sohara|soharas|suhar
+sokoto|sokotas
+solapur|sholapur|solapura|solapuras|szolápur
+solihull|solihala|solihalas
+solingen|zolingenas|zolingene
+songyuan|sung-jüan|szungjüan|tùng nguyên
+sorocaba|sorokaba
+sorong|kota sorong|soronga|sorongas
+sorsogon city|bandar sorsogon|cidade de sorsogon|sorsogon|sorsogona|sorsogonas|thành phố sorsogon
+sosnowiec|sosnovec|sosnoveca|sosnovecas
+soubré|subrė
+south dum dum|dum dum theas
+south tangerang|dienvidtangeranga|güney tangerang|južni tangerang|kota tangerang selatan|süd-tangerang|tangerang selatan|tangerang selatanas|tangerang theas|tangerang de sud|tangerang del sur|tangerang do sul|tangerang do sur|tangerang du sud|zuid-tangerang
+southampton|sautamptonas|sauthemptona
+southend-on-sea|pajūrio sautendas|sautendonsī
+soweto|soueto|sovetas
+split|spalato|splita|splitas|i̇spelet
+spokane|spokana
+sri ganganagar|daerah ganganagar|ganganagar|šri ganganagara|šri ganganagaras
+srinagar|szrinagar|šrinagaras|šrīnagara
+st helens|saint helens|sent helensas|senthelensa
+st. louis|sent luisas|sentluisa
+st. petersburg|sent pitersbergas|sentpītersbērga
+stary oskol|senasis oskolas|stari oskol|starijoskola|staryi oskol|staryj oskol|starîi oskol|starõi oskol|starıy oskol|sztarij oszkol
+stavropol|stavropole|stavropolis|stawropol|sztavropol
+sterlitamak|sterlitamakas|sterļitamaka|sztyerlitamak
+stockholm|estocolm|estocolmo|stoccolma|stokholma|stokholmas|stokholmi|stokkhólmur|stócólm|sztokholm|tukholma|štokholm
+stockton|stoktona|stoktonas
+stoke-on-trent|stoka pie trentas|stokas prie trento
+strasbourg|estrasburg|estrasburgo|straatsburg|strasburgo|strasbūra|strasbūras|strassborg|strazburg|straßburg|štrasburg|štrasburk
+stuttgart|estugarda|shtutgarti|stoccarda|štutgartas|štutgarte
+subang jaya|subandžaja|subang džaja
+sucre|sukrė
+suez|suais|suecas|sues|suess|suezi|suvaisa|szuez|süveyş
+suihua|suej-chua|suichua|szujhua
+suining|suej-ning|suininga|suiningas|szujning|toại ninh
+suita|szuita
+suizhou|suej-čou|suižou|szujcsou|tùy châu
+sukabumi|kota sukabumi|sukabumis
+sukkur|sukur|sukura|sukuras|szukkúr
+sulaymaniyah|as-sulaimaniyah|as-sulajmanijja|as-sulaymānīyah|solimania|souleimaniye|sulaimaniya|sulaimaniyya|sulajmanija|sulaymaniyya|suleimanija|sulejmanija|sulejmanije|sulejmánie|szulejmánijja|süleymaniye
+sullana|sulana
+sumgait|sumgajita|sumgajitas|sumgayıt|sumqayit
+sumy|soemy|soumy|sumai|sumi|sumõ|szumi
+suncheon|sundžonas|sunčeon
+sunchon|sunčonas
+sunderland|sanderlandas|sanderlenda
+sunnyvale|sanveilas|sanīveila
+suqian|su-čchien|sučiana|sučianas|szucsien|tú thiên
+surabaya|kota surabaya|surabaia|surabaja
+surakarta|kota surakarta
+surat|suratas|surate|szúrat|sūrata
+surgut|soergoet|sourgout|surguta|surgutas|szurgut
+surigao city|bandar surigao|cidade de surigao|surigao|surigao miestas|surigao pilsēta|surigau|thành phố surigao
+surrey|sureja|surėjus
+suwon|suvona|suvonas|szuvon
+suzano|suzanas|suzanu
+suzuka|sudzuka|szuzuka
+swansea|abertawe|svonsis|svonzi
+swindon|svindona|svindonas
+sydney|sidneja|sidnėjus|sídney
+syktyvkar|siktivkar|siktivkara|syktyvkaras|syktywkar|sziktivkar|sõktõvkar
+sylhet|silete|silhatas|silhet|silota|silét|srihotto|szilet
+szczecin|estetino|stettin|stettino|štětín|ščecina|ščecinas
+szeged|segeda|segedas|segedin|segedyn|seghedin|seghedino
+são bernardo do campo|san bernardo do kampas|sanbernardu du kampu
+são caetano do sul|san kaetano do sulas|sanketanu du sul
+são gonçalo|san gonsalas|sangonsalu
+são josé do rio preto|san žozė do rio pretas|sanžozē du riopreto
+são josé dos campos|san žozė dos kamposas|sanžozė dus kampusa
+são josé dos pinhais|san chose dos pinjaisas|sanžoze dos pinjaisa
+são joão de meriti|san žuan de meritis|sanžuana de meriti
+são leopoldo|san leopoldas|sanleopolda
+são luís|são luís do maranhão
+são paulo|san paolo|sanpaulu
+são vicente|san visentė
+sétif|sathif|satif|setifa|setifas|szétif
+sófía|sofie|sofija|sofja|sofya|szófia|sóifia
+süleymanpaşa|distretto di süleymanpaşa
+sōka-shi|soka|souka|szóka|sōka city
+tabou|tabu
+taboão da serra|taboan da serra|tabojan de sera
+tabuk|tabuka|tabukas|tebük
+tacheng|chöchek|tacseng|tarbagatai|tháp thành|çöçek|čugučaka|čugučakas
+tachikawa|tacsikava|tačikava|tačikawa
+tacloban|takloban|taklobana|taklobanas
+tacna|takna
+taganrog|taganroga|taganrogas
+taguig|tagigas|taguiga
+tagum|tagum city|taguma|tagumas
+tai'an|taiana|taianas|tajan|tchaj-an|thái an
+taichung|kota taichung|taidžuna|taizhong|taičungas|tajcshung|tajčung|tchaj-čung|đài trung
+taif|at-ta’if|taifas|taëf|tāifa
+tainan|kota tainan|tainana|tainanas|tajnan|tchaj-nan|đài nam
+taipei|taibei|taipeh|taipé|taipėjus|tajpej|tchaj-pej|đài bắc
+taiyuan|taijuan|taijuaņa|tajjüan|tajuanas|tchaj-jüan|thái nguyên
+takamatsu|takamacu
+takarazuka|takaradzuka
+takasaki|takasakis|takaszaki
+takatsuki|takacuki|takatsukis
+talcahuano|talkahuanas|talkavano
+talca|talka
+taldyqorğan|taldikorgan|taldikorgana|taldykorgan|taldykorganas|taldykourgan|taldyqorghan|taldõkorgan|taldıqorğan
+talisay|taliseja|talisėjus|talíssai
+talkha|talcha
+tallahassee|talahasis|talahasī
+tallinn|taillinn|talinas|talini|tallin|tallina|tallinna|talín
+taloqan|talokan|talukan|talukana|talukanas
+tambov|tambova|tambovas|tambow
+tampere|tammerfors
+tanauan|tanavana|tanavanas
+tanchon|tancshon|tančchon|tančhona|tančonas
+tandil|tandilis|tāndīla
+tangerang|kota tangerang|tangeranga|tangerangas
+tangier|tanca|tangeri|tanjah|tanžera|tanžeras|tánger|tánxer
+tangshan|tangsan|tangšana|tangšanas|tchang-šan|đường sơn
+tanjung pinang|tandžung pinangas|tandžunga pinanga
+tanjungbalai|kota tanjung balai|tandžung balajus|tandžungbalaja
+taoyuan county|contea di taoyuan|county taoyuan|xian de taoyuan|đào nguyên
+taoyuan district|ceantar taoyuan|quận đào viên|taojuanas|taojüan kerület|tchao-jüan|distretto di taoyuan|district de taoyuan
+tapachula de córdova y ordóñez|tapachula|tapačula
+tarakan|kota tarakan|tarakana|tarakanas
+taranto|tarantas|tarente|tarenti|tarento|tàrent
+tarapoto|tarapotas
+taraz|taras|taraza|tarazas
+tarija|taricha
+tarlac city|bandar tarlac|tarlac|tarlak|tarlak sitis|tarlaka
+tarsus|tars|tarsas|tarse|tarso|tarsos|tarsusa|tarsusi|tarz
+tashkent|tachkent|taixkent|taschkent|tashkenti|tasjkent|tasquente|taszkent|taxkent|taškenta|taškentas|tașkent
+tasikmalaya|tasikmalaja
+taunggyi|taundžis
+ta‘izz|taiz|taiza|taizas
+tbilisi|tbilisis|tbilissi|tbiliszi|thbilisi|tiblíssi|tiflis|tíblisi
+tebing tinggi|tebing tingi|tebing tingis|tebinga tingi
+tegal|kota tegal|tegala|tegalas
+tegucigalpa|tegusigalpa
+tehran|tahran|teerão|teheran|teheranas|teherani|teherāna
+teixeira de freitas|teichera de freitasas|teišeira de freitasa
+tekirdağ|rodostó|tekirdaga|tekirdagu|tekirdahas|tequirda
+tel aviv|tel aviv - jafo|tel aviv-jaffa|tel avivas|tel awiw-jafa|telaviva
+temirtau|temirtaw|temyrtau|témirtaou
+temuco|temukas|temuko
+tenochtitlan|mexico-tenochtitlan|tenočtitlanas|tenočtitlāna
+tepic|tepika|tepikas
+teresina|terezina
+teresópolis|terezopolis
+ternate|kota ternate
+ternòpil|tarnopol|ternopilis|ternopilj|ternopiļa
+terrassa|tarrasa|terasa|terrasa
+thane|taná|thana
+thanjavur|tandzsávúr|tandžavura|tandžavuras|tanjavûr|tańdźawur|taňčávúr|thandžavur
+thatta|fresnillo|tata|tatta
+the hague|a haia|den haag|haag|haga|haia|l'aia|la haia|la haya|la haye|lahey|an háig
+thessaloniki|salonic|salonicco|salonikai|saloniki|salónica|selanik|selaniku|soluň|szaloniki|teasaloinicé|tesalonika|tesalónica|tessalònica|thessalonique
+thies|tiesas|tijesa
+thiruvananthapuram|thiruvananthapurama|tiruvanantapuram|tiruvanantapuramas|trivandrum
+thrissur|trisura|trisuras|trisúr|triššúr
+tianchang|thiên trường|tiancsang|tiančangas|tjaņčanga
+tianjin|tchien-ťin|thiên tân|tiandzinas|tianjin shi|tianxhin|tiencin|tiencsin|tientsin|tjandžin|tjaņdziņa
+tianshui|tchien-šuej|thiên thủy|tianšui|tiensuj
+tiaret|tahert|tiareta|tiaretas|tijarat
+tieli|thiết lực|tielis
+tigaraksa|kecamatan tigaraksa
+tijuana|tichuana|tihuana
+tilburg|tilbourg|tilburga|tilburgas|tilburgo
+timișoara|temešvár|temišvar|timishoara
+timon|timona|timonas
+tirana|tiorána|tiran
+tiruchirappalli|tiruccsirápalli|tiruchchirāppalli|tiruchirapalli|tiručirapali|tiručirapalis|tiručirāpalli|tiruččiráppalli|trichy
+tirunelveli|tirunelvelis|tirunelweli
+tirupati|tirumala|tirumala tirupati|tirupatis
+tlaquepaque|san pedro tlaquepaque|tlakepakė
+tlemcen|tilimsan|tilimsen|tlemsena|tlemsenas|tremecén
+toamasina|tamatave
+tochigi|thành phố tochigi|tocsigi|točigi|točigis
+tocuyito|tosujita|tosujitas
+tokat|tocate|tokad|tokata|tokatas
+tokorozawa|tokorozava
+tokushima|thành phố tokushima|tokušima
+toluca de lerdo|toluca|toluka
+tolyatti|togliatti|toliatti|toljati|toljatis|toljatti
+tomakomai|tomakomaj|tomakomaja|tomakomajus
+tomsk|tomska|tomskas|tomszk
+tongchuan|tchung-čchuan|tongchuanas|tongčuan|tongčuana|tungcsuan|đồng xuyên
+tonghua|tchung-chua|thông hóa|tongchua|tongčua|tunghua
+tongi|tungis
+tongliao|tchung-liao|thông liêu|tungliao
+tongling|tchung-ling|tonglinga|tonglingas|tungling|đồng lăng
+tongren|tchung-žen|tongrena|tongrenas|tungzsen|préfecture de tongren|đồng nhân
+toronto|torontas
+torreón|toreona|toreonas
+toruń|torunj|torunė|toruņa
+tottori|totori|totoris|toturi
+touba|tuba
+toulouse|tolosa|tolosa okzitania|tolosa de llenguadoc|tuluza
+townsville|taunsvila|taunsvilis
+toyama|tojama
+toyohashi|tojohaši|tojohašis
+toyokawa|tojokava|tojokawa
+toyonaka|tojonaka
+toyota|tojota
+trabzon|trabzona|trabzonas|trabzoni|trebisonda|trebizonda
+trece martires|treces martires|tres martiresa|tres martiresas
+trieste|terst|triest|triestas|trieszt|trst
+trondheim|trondheimas|tronheima
+trujillo|truchiljas|truhiljo
+tshikapa|chicapa|čikapa
+tsukuba|cukuba
+tucson|tuksonas|tūsona
+tuguegarao|tugvegarao|tugvegaravas
+tula|toela|toula
+tulsa|talsa
+tumxuk|tomşuk|tumhszuk|tumshuke|tumshuq|tumushuke|tumšuka|tumšukas
+tunis|tunes|tunisa|tunisas|tunisi|tunisz|tunus|túinis|túnez
+tunja|tuncha|tunha
+turbat|turbata|turbatas
+turku|turu|túrcú
+turmero|turmeras
+turpan|prefektur turfan|tourfan|turfan|turfano|turfano prefektūra|turpan prefektura|turpani ringkond
+turín|torino|torí|turijn|turim|turinas|turyn|turīna
+tuxtla gutiérrez|tustla gutjeresas|tustla gutjerresa
+tver|tvera|tverė|twer
+tyre|an tuír|sūra|tiro|tirus|tyras|tyros|tyrus|türosz|tüüros
+tébessa|dz-12|tebesa|theveste|tibissa
+tétouan|tetuanas|tetuán|tetuão|tetuāna|tıtvan
+türkmenabat|turkmenabata|turkmenabatas
+türkıstan|turkestán|turkiestan|turkistanas|turkistāna|türkisztán
+tŏkch'ŏn|takona|takonas|tokcshon|tokčchon|tŏkch'ŏn-si
+uberlândia|uberlandija
+udaipur|udaipura|udaipuras|udajpur
+udupi|udupis|udupisa
+uijeongbu|idzsongbu|ijdžonbu|uidžombu|uidžongbu
+uiwang|ijvana|ivang|uivangas
+ujjain|uddzsaín|udžaina|udžainas|udždžain|ujjaini
+ulaanbaatar|oulan-bator|ulan batoras|ulan batur|ulanbatora|ulán bator|ulánbátar|ulã bator
+ulan-ude|oelan-oede|oulan-oudé
+ulanhot|ulan hotas|ulanhota|ulán chot
+ulanqab|ulaan chab|ulancsab|ulankab|ulančaba|ulančabas|uláncav
+ulhāsnagar|ulasnagara|ulasnagaras|ulhasznagar
+ulsan|ulsana|ulsanas|ulszan
+uluberia|ulubaria
+ulyanovsk|oeljanovsk|oulianovsk|ulianovsk|uljanovsk|uljanovskas|uljanovszk|uljanowsk|uļjanovska
+umuahia|umahija|umuahija
+unaizah|anajza|unaiza|unajza|unayza|unayzah|uneyze
+uppsala|uppsalir|upsala
+urayasu|urajasu|urajaszu
+urgench|ourguentch|urganch|urganča|urgench - urganch|urgencz|urgentj|urgenç|urgenčas|urghenci
+urmia|orumíje|ourmia|urmija|urmiye|urumieh
+utsunomiya|ucunomija
+uttarpara kotrung|uttarpara
+uşak|uxaque|ušaka|ušakas
+vadodara|baroda
+valdivia|valdivija
+valladolid city|cathair valladolid|cidade de valladolid|ciudad de valladolid|ciutat de valladolid|valladolid
+valledupar|valjedupara|valjeduparas
+valparaíso de goiás|valparaiso de goiasas
+vantaa|vanda|vanta
+varanasi|benares|varanasis|váránaszi|waranasi
+varna|warna
+vasai-virar|vasai-virar city|vasai-virara|vasajus-viraras
+vaughan|vona|vonas
+veliký novgorod|naugardas|novgorod|nowogród wielki|veliki novgorod|velikij novgorod|velikiy novgorod|veļikijnovgoroda|weliki nowgorod
+vellore|velor|veluru|velūra|vélúr
+venice|an veinéis|benetke|benátky|feneyjar|velence|venecia|venecija|venedig|venedik|veneetsia|venesia|venetië|venetsia|veneza|venezia|veneția|venise|wenecja
+veracruz|verakrusas|verakrūza
+verona|vérone|werona
+viamão|viamajas|viamana
+viana|município viana
+victoria de durango|durangas|durango
+vidisha|vidisa
+vienna|bécs|dunaj|viedeň|viena|vienne|viin|viyana|viên|vjena|vídeň|vīne|wenen|wiedeń|wien|wina
+vientiane|viangchan|vienciana|vientianas|vientián|viêng chăn|vjenčana|wientian
+vijayapura|bicapur|bidžapura|bidžapuras|bijapur|bídzsápur|bídžápur
+vijayawada|vidzsajavádá|vidžajaváda|widźajawada
+vila velha|vila velja
+villa canales|vilja kanalesas
+villa nueva|ciutat de villa nueva|vilja nueva
+villahermosa|viljahermosa
+villavicencio|viljavisensijas|viljavisensio
+villeurbanne|vilerbanas|vilērbāna
+vilnius|vilna|vilnias|wilno
+vina del mar|vinja del mara|vinja del maras
+vinh|vinis|viņa
+vinnytsia|vinica|vinița|vinnica|vinnicja|vinnitsya|vinnycia|vinnycja|vinnytsja|vinnõtsja|vinycia|vínnitsa|vínnitsia|winnica|winnyzja
+viransehir|viranšehiras
+virginia beach|virdžinija byčas|virdžīnijabīča
+virrey del pino|virei del pinas|vireja del pino
+visakhapatnam|visakhapatnamas|vishakhapatnam|višākhapatnama
+vitebsk|vicebsk|vicebszk|viciebsk|vitebska|vitebskas|vitsebsk|vítsiebsk|witebsk
+vitoria|vitorija
+vitória da conquista|vitorija da konkista
+vizianagaram|vidžajanagaram
+vladimír|vladimira|vladimiras|vlagyimir|wladimir|włodzimierz
+vladivostok|vladivostoka|vladivostokas|vlagyivosztok|wladiwostok|władywostok
+volgograd|volgograda|volgogradas|volgogrado|wolgograd
+volta redonda|volto redonda
+volzhsky|voljski|voljskiy|volsjskij|volzhski|volzjski|volzjskij|volzsszkij|volški|volžska|volžski|volžskij|volžskis|wolschski|wołżski
+vorónezh|voronej|voronesj|voronezj|voronež|voronežas|voronjež|voronyezs|voroņeža|woronesch|woroneż
+várzea grande|varze grande
+vũng tàu|cap saint jacques|vuntau
+wadi al-seer|vadi's-sir|wadi as-ser|wadi as-sir
+wakayama|vakajama|wakajama
+warangal|varangal|varangalas
+warrington|voringtona|voringtonas
+warri|varis|varri
+warsaw|varsavia|varshava|varsjá|varsova|varsovia|varsovie|varssavi|varsó|varšava|varšuva|vársá|warsawa|warschau|warszawa
+wazirabad|vazirabadas|vezirabad
+weifang|duy phường|veifana|veifang|veifangas|vejfang|wej-fang
+weihai|uy hải|veichai|veičai|vejhaj|wej-chaj
+weinan|veinana|veinanas|vejnan|vị nam|wej-nan
+wellington|velingtona|velingtonas
+wenling|venling|venlinga|venlingas|ôn lĩnh
+wenzhou|vencsou|vendžou|vendžov|wen-čou|ôn châu
+wichita|vičita
+wiesbaden|vysbadenas|vīsbādene
+windhoek|uindhuk|vindhuka|vindhukas|windhuk
+windsor|vindzoras
+winnipeg|vinipega|vinipegas
+winston-salem|vinstona-seilema|vinstonas-seilemas
+wolaita sodo|sodas|soddo|sodo|wolayta sodo
+wollongong|vollonona|vulongongas
+wolverhampton|vulverhamptonas|vulverhemptona
+wonju|vondzsu|vondžu|wondžu
+wonsan|vonsana|vonsanas|vonszan
+worcester|vorčestra|vusteris
+wrocław|breslau|breslavia|vratislav|vroclav|vroclava|vroclavas|vrocuav
+wuhai|uhaja|uhajus|vuhaj|wu-chaj|ô hải
+wuhan|uhanas|uhaņa|vuhan|vuhani|wu-chan
+wuhu|vu hồ|vuchu|vuhu|vuču|wu-chu
+wuppertal|vupertalis|vupertāle
+wuwei|vuvej|vuveja|vuvėjus|vũ uy|wu-wej
+wuxi|usis|vuhszi|vuši|vô tích|wu-si
+wuzhou|ngô châu|vucsou|vučžou|vužou|wu-čou
+xalapa|halapa|jalapa enriques|xalapa-enríquez
+xi'an|hszian|si-an|sianas|siaņa|tây an|xi'an shi
+xiamen|hsziamen|hạ môn|sia-men|siamena|siamenas|šjamen
+xiangtan|hsziangtan|siang-tchan|siangtanas|siantana|tương đàm|šjangtan
+xiangyang|hsziangjang|siang-jang|siangjangas|tương dương|xiangfan
+xianning|hszienning|hàm ninh|sianinga|sianingas|sien-ning
+xianyang|hszienjang|hàm dương|sianjangas|sien-jang|šjanjang
+xiaogan|cidade de xiaogan|hiếu cảm|hsziaokan|siao-kan|siaoganas|xiaogan city|xiaogan city. hubei
+xingning|hszingning|hưng ninh|singninga|singningas|xinging
+xingtai|hszingtaj|hình đài|sing-tchaj|singtajus|šingtaj
+xining|hszining|si-ning|siningas|sjinina|tây ninh
+xinji|hszincsi|sindži|sindžis|tân tập
+xinxiang|hszinhsziang|sin-siang|sinsianga|sinsiangas|tân hương
+xinyang|hszinjang|sin-jang|sinjanga|sinjangas|tín dương
+xinyu|hszinjü|sin-jü|tân dư
+xinzhou|hszincsou|hãn châu|sin-čou|sindžou|sindžov
+xixón city|cathair xixón|gijón|xixón
+xuancheng|hszüancseng|suančenga|suančengas|süan-čcheng|tuyên thành
+xuchang|hszücsang|hứa xương|sučanga|sučangas|sü-čchang|xuchang shi|šučang
+xuzhou|siudžou|từ châu
+ya'an|ja-an|jaanas|jāna|nhã an
+yachiyo|jacsijo|jačijas|jačijo
+yamagata|jamagata
+yamaguchi|jamagucsi|jamaguči|jamagučis
+yamato|jamatas|jamato
+yamoussoukro|jamusukras|jamusukro|yamusukro
+yan'an|diên an|janana|jananas|jen-an
+yanbu|iambo|janbú|yanbo|yanbu’ al-bahr|yenbu
+yancheng|diêm thành|jangčenga|jančeng|jančengas|jen-čcheng|jencseng|yanxeng
+yangchun|dương xuân|jangcsun|jangčuna|jangčunas
+yangjiang|dương giang|jang-ťiang|jangcsiang|jangdzianga|jangdziangas
+yangju|jangdzsu|jangdžu
+yangon|jangon|jangona|jangún|rangoon|rangoun|rangum|rangún|rangūnas
+yangquan|dương tuyền|jang-čchüan|jangcsüan|jangčuana|jangčuanas
+yangsan|jangsan|jangsanas|jangszan|jansana
+yangzhou|dương châu|jang-čou|jangcsou|jangdžou|jangdžov
+yantai|jantai|jantaj|jen-tchaj|jentaj|yên đài
+yaoundé|iaundé|jaunde|jánde|yaundé
+yaroslavl|iaroslavl|jaroslavelj|jaroslavl|jaroslavlis|jaroslavlj|jaroslavļa|jaroslawl|jaroszlavl|jarosław
+yazd|jazd|jezda|jezdas|yezd
+yekaterinburg|ecaterimburgo|ekaterimburgo|ekaterinburg|iekaterinbourg|iekaterinburg|jekaterinburg|jekaterinburga|jekaterinburgas|jekaterinenburg|jekaterynburg|jekatyerinburg|katrínarborg
+yenegoa|jenagoa|yenagoa
+yeosu|joisu|josu|joszu
+yerevan|eireaván|ereván|erevã|erevāna|erivan|erywań|iereván|jerevan|jerevanas|jerevani|jerewan
+yewa north|egbado north|yewa nord|yewa-norte
+yibin|i-pin|ibina|ibinas|jipin|nghi tân
+yichang|i-čchang|ičanga|ičangas|jicsang|jičang|nghi xương
+yidu|jitu|nghi đô
+yinchuan|inčuanas|iņčuaņa|jin-čchuan|jincsuan|jinčuan|ngân xuyên
+yingde|anh đức|ingdė|jingtö
+yingkou|dinh khẩu|ingkou|jing-kchou|jingkou
+yingtan|ingtana|ingtanas|jing-tchan|jingtan|ưng đàm
+yiyang|i-jang|ijanga|ijangas|jijang|ích dương
+yogyakarta|džogjakarta|jogjakarta|joguejacarta|kota yogyakarta
+yokkaichi|jokaiči|jokkaicsi|jokkaiči|jokkaičis
+yokohama|iocoama|jokohama
+yokosuka|jokosuka|jokoszuka
+yola|jola
+yongcheng|jongčenga|jongčengas|jungcseng|vĩnh thành
+yongin|jongin|jongina|jonginas
+yongzhou|jondžou|jung-čou|jungcsou|vĩnh châu
+york|eabhrac|iorque|jorka|jorkas
+yoshkar-ola|iochkar-ola|ioixkar-olà|ioșkar-ola|joschkar-ola|josjkar-ola|joszkar-oła|joxkar-ola|joškar-ola|yoşkar-ola
+yueqing|jučinga|jučingas|jüecsing|nhạc thanh
+yueyang|juejana|jujengas|jüe-jang|nhạc dương
+yuncheng|junčeng|jučenga|jučengas|jün-čcheng|jüncseng|vận thành
+yunfu|jün-fu|vân phù
+yuxi|jusi|jühszi|ngọc khê
+yuyao city|cathair yuyao|dư diêu|jü-jao|yuyao
+yuzhno-sakhalinsk|ioujno-sakhalinsk|iujno-sahalinsk|iujno-sakhalinsk|joezjno-sachalinsk|juschno-sachalinsk|juzhno-sakalinsk|juzhno-sakhalinsk|juzjno-sachalinsk|juzjno-sakhalinsk|juzsno-szahalinszk|južno sachalinskas|južno-sachalinsk|južno-sahalinsk|južno-sahhalinsk|južnosahaļinska|yujno-sahalinsk|yuzhno-sajalinsk
+zabrze|zabžas|zabže
+zagazig|az-zakazik|az-zaqāzīq|zakazikas|zakázík|zaqaziq
+zagreb|ságrab|zagabria|zagreba|zagrebas|zagrebi|zagrzeb|zágráb|záhreb
+zahedan|zahedana|zahedanas|zahidan
+zakho|zachu|zaho|zaxo|zākhū
+zamboanga|bandar sembuangan|cidade de zamboanga|kota zamboanga|thành phố zamboanga|zamboanga city
+zamora de hidalgo|zamora
+zanjan|zandjan|zandschan|zandzsán|zandżan|zandženas|zandžāna|zencan
+zanzibar city|cathair zanzibar|cidade de zanzíbar|ciutat de zanzíbar|kota zanzibar|sansibar|sansibar stadt|thành phố zanzibar|zanzibar|zanzibar by|zanzibāra
+zaozhuang|cao-čuang|caocsuang|tảo trang|zaodžuanga|zaodžuangas|zaoshuang
+zapopan|sapopana|sapopanas
+zaporizhzhia|saporischschja|saporoísia|saporízja|zaporijjia|zaporijya|zaporiyia|zaporizhia|zaporizhzhya|zaporizja|zaporizjzja|zaporizzsja|zaporižžja|zaporojia|zaporoże|zaporožje|zaporíjia|záporožie|záporoží
+zaragoza|cathair zaragoza|saragossa|saragozza|saragoça|stad van zaragoza|ville de saragosse
+zaria|zarija
+zarqa|az-zarka|zarka|zerka|az-zarqa
+zemun|zimony
+zhangjiajie|csangcsiacsie|džangdziadzie|trương gia giới|čang-ťia-ťie
+zhangjiakou|csangcsiakou|džangdžjakov|trương gia khẩu|čang-ťia-kchou|žamgdziakou
+zhangye|csangje|trương dịch|čang-jie|žangje
+zhangzhou|chương châu|čang-čou|žangdžou
+zhanjiang|csancsiang|trạm giang|čan-ťiang|žandzianga|žandziangas
+zhaoqing|csaocsing|džaocjina|džaočing|triệu khánh|čao-čching|žaočingas
+zhaotong|chiêu thông|csaotung|čao-tchung|čžaotuna|žaotongas
+zhengzhou|csengcsou|džendžou|džengdžou|trịnh châu|zhengzhou shi|čeng-čou|žengžou
+zhenjiang|csencsiang|džendžjang|trấn giang|čen-ťiang|žendzianga|žendziangas
+zhongshan|csungsan|džongšanas|džunšaņa|trung sơn|čung-šan|žongšan
+zhongwei|csungvej|džongvėjus|trung vệ|čung-wej|žongveija
+zhoukou|chu khẩu|csoukou|džoukou|čou-kchou|žoukou
+zhoushan|chu san|csousan|džoušanas|čou-šan|žoušana|žušan
+zhubei city|džubėjus|trúc bắc|zhubei|ču-pej|žubej
+zhuhai|châu hải|csuhaj|džuchai|ču-chaj|žuhaj|žučai
+zhumadian|csumatien|džumadianas|trú mã điếm|ču-ma-tien|žumadiana
+zhuzhou|chu châu|džudžou|ču-čou
+zhytomyr|jitomir|jytomyr|schytomyr|zhitómir|zjytómýr|zsitomir|żytomierz|žitomir|žitomira|žytomyr|žytomyras|žõtomõr
+zibo|cepo|truy bác
+zigong|cekung|c’-kung|dzigonga|dzigongas|tự cống
+ziguinchor|ziginšoras
+zinder|zindera|zinderis
+ziyang|cejang|c’-jang|tư dương|zijanga|zijangas
+zlatoust|slatoust|zlato-oest|zlatooust|zlatousta|zlatoustas|zlatouszt
+zunyi|cun-i|cunji|dzuni|tuân nghĩa
+zürich|ciurichas|curych|cyrih|cīrihe|zurigo|zurique|zurych|zúric|zürih
+águas lindas de goiás|akvas lindas de gojasa|akvas lindas de gojasas
+ámsterdam|amesterdão|amstardam|amsterdama|amsterdamas|amsterdami|amszterdam
+çerkezköy|čerkezkėjus
+çhandigarh|chandigar|csandígarh|czandigarh|čandigar|čandigarchas|čandígarh|čandīgarha
+çorum|chorum|čoruma|čorumas
+ürümqi|urumczi|urumči|urumčis|ürümchi|ürümcsi
+đà nẵng|dananga|danangas
+đồng hới|donghojus|donhoja
+đồng nai|città di dong nai|kota dong nai|miasto đồng nai
+łódź|lodza|lodzh|lodzė
+ōgaki-shi|ogakis|ōgaki
+ōita-shi|oita|ooita
+şanlıurfa|shanllëurfa|urfa|xanleurfa
+šalinas|salinasa

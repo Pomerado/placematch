@@ -11,11 +11,13 @@
 pub mod data;
 pub mod fold;
 pub mod parse;
+pub mod reading;
 pub mod token;
 
 use fold::Script;
 pub use parse::Components;
 use parse::{Ctx, Text};
+
 
 /// Dictionaries and country data, pre-folded by build.rs.
 pub const EMBEDDED: &str = include_str!(concat!(env!("OUT_DIR"), "/placematch-data.txt"));
@@ -95,11 +97,11 @@ fn dl_le1_raw(a: &str, b: &str) -> bool {
 /// Street type words that translate one another across scripts, as OpenStreetMap's English names
 /// and local signs write them ("Zamkova Street" / "Замкова вулиця", "Al Zaghl Street" / "شارع الزغل").
 const TYPE_GROUPS: &[&[&str]] = &[
-    &["street", "st", "str", "شارع", "ش", "רחוב", "רח", "улица", "ул", "вулиця", "вул", "οδός", "οδ", "ถนน", "ถ", "улица", "ulitsa", "vulytsia", "odos", "shari", "thanon"],
-    &["road", "rd", "طريق", "דרך", "шоссе", "шосе", "ถนน", "tariq", "derekh", "thanon"],
-    &["avenue", "ave", "av", "проспект", "просп", "пр", "λεωφόρος", "λεωφ", "שדרות", "שד", "prospekt", "prospekt", "leoforos", "sderot"],
-    &["boulevard", "blvd", "бульвар", "бул", "бульв", "bulvar", "bulevard"],
-    &["lane", "ln", "alley", "soi", "ซอย", "переулок", "пер", "провулок", "пров", "סמטה", "زقاق", "pereulok", "provulok"],
+    &["street", "st", "str", "شارع", "ش", "רחוב", "רח", "улица", "ул", "вулиця", "вул", "οδός", "οδ", "ถนน", "ถ", "улица", "ulitsa", "vulytsia", "odos", "shari", "thanon", "街", "jie", "gai"],
+    &["road", "rd", "طريق", "דרך", "шоссе", "шосе", "ถนน", "tariq", "derekh", "thanon", "路", "lu", "通", "tori", "dori", "로", "ro", "lo"],
+    &["avenue", "ave", "av", "проспект", "просп", "пр", "λεωφόρος", "λεωφ", "שדרות", "שד", "prospekt", "prospekt", "leoforos", "sderot", "大道", "dadao", "대로", "daero", "daelo"],
+    &["boulevard", "blvd", "бульвар", "бул", "бульв", "bulvar", "bulevard", "大道", "dadao"],
+    &["lane", "ln", "alley", "soi", "ซอย", "переулок", "пер", "провулок", "пров", "סמטה", "زقاق", "pereulok", "provulok", "巷", "xiang", "hang", "弄", "nong", "long", "길", "gil"],
     &["square", "sq", "plaza", "площадь", "пл", "площа", "כיכר", "ميدان", "πλατεία", "ploshchad", "ploshcha", "kikar", "midan", "plateia"],
 ];
 
@@ -135,11 +137,36 @@ fn is_latinish(s: Option<Script>) -> bool {
     matches!(s, None | Some(Script::Latin) | Some(Script::Digit) | Some(Script::Other))
 }
 
+/// Compass words of a name, as one sorted list of canonical keys ("N", "North", "Nord" alike).
+fn directions(t: &Text) -> Vec<&'static str> {
+    let mut v: Vec<&'static str> = t
+        .toks
+        .iter()
+        .filter_map(|(k, _)| {
+            Some(match k.as_str() {
+                "n" | "north" | "nord" | "norte" | "noord" => "n",
+                "s" | "south" | "sud" | "sur" | "zuid" | "sued" => "s",
+                "e" | "east" | "est" | "este" | "oost" | "ost" => "e",
+                "w" | "west" | "ouest" | "oeste" => "w",
+                "ne" | "northeast" => "ne",
+                "nw" | "northwest" => "nw",
+                "se" | "southeast" => "se",
+                "sw" | "southwest" => "sw",
+                _ => return None,
+            })
+        })
+        .collect();
+    v.sort();
+    v
+}
+
 /// Compare two names (street or locality). `typo`: allow one edit for names of 6+ letters.
 fn text_eq(m: &Matcher, q: &Text, c: &Text, typo: bool) -> Tri {
     if q.key == c.key {
         return Tri::Yes;
     }
+    // a different compass word is a different street, never a typo ("S Example" / "N Example")
+    let typo = typo && directions(q) == directions(c);
     // a numbered district of the same town ("Paris" vs "Paris 20e Arrondissement")
     for (a, b) in [(&q.key, &c.key), (&c.key, &q.key)] {
         if a.len() >= 3 && b.len() > a.len() && b.starts_with(a.as_str()) && b[a.len()..].starts_with(|ch: char| ch.is_ascii_digit()) {
@@ -221,13 +248,74 @@ fn text_eq(m: &Matcher, q: &Text, c: &Text, typo: bool) -> Tri {
                 return Tri::Yes;
             }
         }
-        // Han/Kana readings cannot be recovered from a romanization
+        // Han and Kana names read with their per-character readings ("台中市" / "Taichung")
+        if reading_eq(q, c) {
+            return Tri::Yes;
+        }
+        // other Han/Kana readings cannot be recovered from a romanization
         let hard = |s: Option<Script>| matches!(s, Some(Script::Han) | Some(Script::Kana) | Some(Script::Thai) | Some(Script::Arabic) | Some(Script::Hebrew) | Some(Script::Devanagari));
         if hard(qs) || hard(cs) {
             return Tri::Unknown;
         }
     }
     Tri::No
+}
+
+/// Han administrative suffixes a romanization may translate or leave out ("台中市" / "Taichung").
+const HAN_ADMIN: &[char] = &['市', '区', '區', '県', '縣', '县', '府', '都', '省', '郡', '鎮', '镇', '鄉', '乡', '村', '町', '道'];
+/// Their romanized and English forms.
+const LATIN_ADMIN: &[&str] = &["shi", "ku", "ken", "fu", "to", "do", "gun", "son", "mura", "machi", "cho", "city", "district", "ward", "county", "prefecture", "province", "qu", "xian", "sheng", "zhen", "xiang", "town", "township", "village", "hsien", "hsiang", "chen", "shih", "chu", "cun"];
+
+/// One side is Han or Kana and the other a romanization that reads as it.
+fn reading_eq(q: &Text, c: &Text) -> bool {
+    let ok = |t: &Text| reading::readable(&t.native) || reading::thai(&t.native);
+    let (nat, lat) = if ok(q) && is_latinish(c.script) {
+        (q, c)
+    } else if ok(c) && is_latinish(q.script) {
+        (c, q)
+    } else {
+        return false;
+    };
+    if reading::thai(&nat.native) {
+        let full: String = if lat.native.is_empty() { lat.key.clone() } else { lat.native.chars().filter(|ch| ch.is_ascii_alphabetic()).collect() };
+        return full.len() >= 4 && reading::thai_reads_as(&nat.native, &full);
+    }
+    // the romanization as written: the ASCII key folds "ae" as an umlaut ("Kitaen" is not "Kitan")
+    let letters = |t: &Text| -> String { if t.native.is_empty() { t.key.clone() } else { t.native.chars().filter(|ch| ch.is_ascii_alphabetic()).collect() } };
+    let full = letters(lat);
+    if full.is_empty() || !full.bytes().all(|b| b.is_ascii_lowercase()) {
+        return false;
+    }
+    let mut natives = vec![nat.native.clone()];
+    if nat.native.chars().count() >= 2 && nat.native.ends_with(HAN_ADMIN) {
+        let mut s = nat.native.clone();
+        s.pop();
+        natives.push(s);
+    }
+    let mut lats = vec![full.clone()];
+    // a direction translated in the romanization ("南京西" / "Nanjing West")
+    let mut natives = natives;
+    for (w, h) in [("north", '北'), ("south", '南'), ("east", '東'), ("east", '东'), ("west", '西')] {
+        if full.len() > w.len() + 1 && full.ends_with(w) && nat.native.ends_with(h) && nat.native.chars().count() >= 2 {
+            let mut n = nat.native.clone();
+            n.pop();
+            natives.push(n);
+            lats.push(full[..full.len() - w.len()].to_string());
+        }
+    }
+    if let Some(last) = lat.toks.last() {
+        if lat.toks.len() >= 2 && LATIN_ADMIN.contains(&last.0.as_str()) && full.ends_with(last.0.as_str()) {
+            lats.push(full[..full.len() - last.0.len()].to_string());
+        }
+    }
+    for n in &natives {
+        for l in &lats {
+            if l.len() >= 2 && [reading::Lang::Chinese, reading::Lang::Japanese].iter().any(|&lang| reading::reads_as(n, l, lang)) {
+                return true;
+            }
+        }
+    }
+    false
 }
 
 #[derive(Clone, Copy)]
@@ -258,8 +346,76 @@ impl Matcher {
     pub fn compare(&self, query: &str, candidate: &str, country: Option<&str>) -> (Verdict, Vec<&'static str>) {
         let ctx = self.ctx(country);
         let q = parse::parse(&ctx, query);
+        if let Some(name) = self.place_name(query, &q) {
+            return match self.named_pick(&ctx, query, &name, &[candidate]) {
+                Pick::Match(_) => (Verdict::Same, vec![]),
+                Pick::Ambiguous(_) => (Verdict::Unknown, vec!["place_name_variant"]),
+                Pick::None => (Verdict::Different, vec!["place_name"]),
+            };
+        }
         let c = parse::parse(&ctx, candidate);
-        self.compare_parsed(&q, &c, Mode::Query)
+        let alts: Vec<Components> = Self::comma_free_readings(query).iter().map(|a| parse::parse(&ctx, a)).collect();
+        let calt = Self::without_leading_name(candidate).map(|t| parse::parse(&ctx, &t));
+        self.compare_any(&q, &alts, &c, calt.as_ref())
+    }
+
+    /// A listing that starts with a business or building name holding digits ("Grand 2009 Ltd,
+    /// Main St 6, Town"): the listing without that first part, so its digits are not read as the
+    /// house number.
+    fn without_leading_name(candidate: &str) -> Option<String> {
+        let parts: Vec<&str> = candidate.split(',').collect();
+        if parts.len() < 3 || !parts[0].chars().any(|ch| ch.is_numeric()) || !parts[1].chars().any(|ch| ch.is_numeric()) {
+            return None;
+        }
+        Some(parts[1..].join(","))
+    }
+
+    /// The query as read, or as one of its comma-free readings if that reading is the candidate's
+    /// place.
+    fn compare_any(&self, q: &Components, alts: &[Components], c: &Components, calt: Option<&Components>) -> (Verdict, Vec<&'static str>) {
+        let first = self.compare_parsed(q, c, Mode::Query);
+        if first.0 == Verdict::Same {
+            return first;
+        }
+        if let Some(c2) = calt {
+            if c2.house != c.house && q.house.is_some() && c2.house == q.house {
+                let r = self.compare_parsed(q, c2, Mode::Query);
+                if r.0 == Verdict::Same {
+                    return r;
+                }
+            }
+        }
+        for a in alts {
+            // a reading counts only when it takes another number as the house number, keeps a
+            // street and loses no postcode
+            if a.house == q.house || a.street.is_empty() || a.postcode != q.postcode {
+                continue;
+            }
+            let r = self.compare_parsed(a, c, Mode::Query);
+            if r.0 == Verdict::Same {
+                return r;
+            }
+        }
+        first
+    }
+
+    /// An address written without commas may end its street part after any number in it
+    /// ("1244. Sokak 6 Karşıyaka" is street "1244. Sokak", number 6, town "Karşıyaka"): the readings
+    /// with a comma after each number but the last word.
+    fn comma_free_readings(query: &str) -> Vec<String> {
+        if query.contains([',', ';', '\n', '،', '、', '|']) {
+            return Vec::new();
+        }
+        let words: Vec<&str> = query.split_whitespace().collect();
+        let nums: Vec<usize> = (0..words.len()).filter(|&i| words[i].chars().any(|ch| ch.is_numeric())).collect();
+        if nums.len() < 2 {
+            return Vec::new();
+        }
+        nums.iter()
+            .filter(|&&i| i >= 1 && i + 1 < words.len())
+            .take(4)
+            .map(|&i| format!("{}, {}", words[..=i].join(" "), words[i + 1..].join(" ")))
+            .collect()
     }
 
     fn compare_parsed(&self, q: &Components, c: &Components, mode: Mode) -> (Verdict, Vec<&'static str>) {
@@ -477,7 +633,7 @@ impl Matcher {
                         }
                         let toks = qc.toks[keep.clone()].to_vec();
                         let key: String = toks.iter().map(|t| t.0.as_str()).collect();
-                        let t = Text { skel: fold::skeleton(&key), key, script: qc.script, abbr: qc.abbr.get(keep.clone()).map_or(vec![false; toks.len()], |a| a.to_vec()), toks };
+                        let t = Text { skel: fold::skeleton(&key), key, script: qc.script, abbr: qc.abbr.get(keep.clone()).map_or(vec![false; toks.len()], |a| a.to_vec()), toks, native: String::new() };
                         if c.localities.iter().any(|l| text_eq(self, &t, l, false) == Tri::Yes) {
                             any_yes = true;
                         }
@@ -512,6 +668,195 @@ impl Matcher {
             return (Verdict::Unknown, reasons);
         }
         (Verdict::Same, reasons)
+    }
+
+    /// Words of a name, folded, each with its dictionary meanings ("St" and "Street" share one).
+    fn name_words(&self, text: &str) -> Vec<(String, Vec<u32>)> {
+        fold::fold(text)
+            .split(|ch: char| !ch.is_alphanumeric())
+            .filter(|w| !w.is_empty())
+            .map(|w| {
+                let mut cs: Vec<u32> = self.data.lookup(w).iter().filter(|e| matches!(e.class, data::Class::StreetType | data::Class::Synonym | data::Class::Building | data::Class::Directional | data::Class::Title)).map(|e| e.canon).collect();
+                cs.sort();
+                cs.dedup();
+                (fold::ascii_key(w), cs)
+            })
+            .filter(|w| !w.0.is_empty())
+            .collect()
+    }
+
+    /// The caller named a place rather than a street address: no house number or PO box, and the
+    /// first part is words (an ordinal such as "5th" may start it). Returns the name's words.
+    fn place_name(&self, query: &str, q: &Components) -> Option<Vec<(String, Vec<u32>)>> {
+        if q.po_box.is_some() || !q.units.is_empty() {
+            return None;
+        }
+        let first = query.split(',').next().unwrap_or("");
+        let words = self.name_words(first);
+        if words.is_empty() || !words.iter().any(|w| w.0.chars().any(|ch| ch.is_ascii_alphabetic())) {
+            return None;
+        }
+        // digits in the first part are a house number, unless an ordinal leads the name ("5th")
+        let ordinal = |w: &str| {
+            let d = w.trim_end_matches(|ch: char| ch.is_ascii_alphabetic());
+            !d.is_empty() && d.chars().all(|ch| ch.is_ascii_digit()) && matches!(&w[d.len()..], "st" | "nd" | "rd" | "th")
+        };
+        if words.iter().enumerate().any(|(i, w)| w.0.chars().any(|ch| ch.is_ascii_digit()) && !(i == 0 && ordinal(&w.0))) {
+            return None;
+        }
+        match &q.house {
+            None => Some(words),
+            // "5th Street Market": the ordinal was read as a house number
+            Some(h) if words[0].0.starts_with(h.as_str()) && words[0].0.len() > h.len() && !query.split(',').skip(1).any(|p| p.chars().any(|ch| ch.is_ascii_digit()) && p.split_whitespace().any(|w| w.chars().all(|ch| ch.is_ascii_digit()) && w.len() < 4)) => Some(words),
+            _ => None,
+        }
+    }
+
+    /// How a row's first part relates to the caller's place name: 2 the same name, 1 a variant
+    /// (the caller's words in order with words added before or between them: "The Example Park",
+    /// "Jacob K. Javits Convention Center" for "Javits Center"), 0 another place (another name, or
+    /// the name followed by more words: "Example Park Ferry Terminal").
+    fn name_relation(&self, name: &[(String, Vec<u32>)], row: &[(String, Vec<u32>)]) -> u8 {
+        let eq = |a: &(String, Vec<u32>), b: &(String, Vec<u32>)| a.0 == b.0 || intersects(&a.1, &b.1);
+        // a number the caller did not write makes the row an address, not the place's name
+        if row.iter().any(|w| w.0.chars().all(|ch| ch.is_ascii_digit()) && !name.iter().any(|n| n.0 == w.0)) {
+            return 0;
+        }
+        if row.len() == name.len() && name.iter().zip(row).all(|(a, b)| eq(a, b)) {
+            return 2;
+        }
+        if row.len() <= name.len() {
+            return 0;
+        }
+        if name.iter().zip(row).all(|(a, b)| eq(a, b)) {
+            return 0;
+        }
+        let mut j = 0;
+        for w in row {
+            if j < name.len() && eq(&name[j], w) {
+                j += 1;
+            }
+        }
+        if j == name.len() {
+            1
+        } else {
+            0
+        }
+    }
+
+    /// A site's control rather than a place: a row whose first part shows the caller's whole text,
+    /// of two parts or more, after two or more words of its own ("See more results for <text>",
+    /// "Search for <text>"), ending with the text or the text and a count.
+    pub fn is_control(&self, query: &str, row: &str) -> bool {
+        self.shows_typed_text(query, row, 2)
+    }
+
+    /// The row shows the caller's whole text, of two parts or more, starting inside its own first
+    /// part after at least `min_words` words of it ("Search "<text>"", "The <text>").
+    pub fn shows_typed_text(&self, query: &str, row: &str, min_words: usize) -> bool {
+        if !query.contains(',') {
+            return false;
+        }
+        let q: Vec<String> = self.name_words(query).into_iter().map(|w| w.0).collect();
+        let r: Vec<String> = self.name_words(row).into_iter().map(|w| w.0).collect();
+        let first_len = self.name_words(row.split(',').next().unwrap_or("")).len();
+        if q.is_empty() || r.len() < q.len() + min_words.max(1) || r[0].chars().any(|ch| ch.is_ascii_digit()) {
+            return false;
+        }
+        (min_words.max(1)..=r.len() - q.len()).any(|at| {
+            at < first_len && r[at..at + q.len()] == q[..] && (at + q.len() == r.len() || (at + q.len() + 1 == r.len() && r[r.len() - 1].chars().all(|ch| ch.is_ascii_digit())) || min_words < 2)
+        })
+    }
+
+    /// The caller's house number, street and town, with only the postcode different: the same
+    /// building under another postcode, or a postcode typed wrong. A picker reading a site may
+    /// accept it; a write asks.
+    pub fn same_but_postcode(&self, query: &str, row: &str, country: Option<&str>) -> bool {
+        let ctx = self.ctx(country);
+        let (mut q, mut c) = (parse::parse(&ctx, query), parse::parse(&ctx, row));
+        if q.house.is_none() || q.postcode.is_none() || c.postcode.is_none() || q.postcode == c.postcode || (q.city.is_none() && q.regions.is_empty()) {
+            return false;
+        }
+        q.postcode = None;
+        c.postcode = None;
+        self.compare_parsed(&q, &c, Mode::Query).0 == Verdict::Same
+    }
+
+    /// Does the row's area fit the caller's? Returns (fits, holds every area part the caller gave).
+    fn area_fits(&self, qa: &Components, ca: &Components) -> (bool, bool) {
+        if let (Some(a), Some(b)) = (&qa.postcode, &ca.postcode) {
+            if a != b {
+                return (false, false);
+            }
+        }
+        let mut full = qa.postcode.is_none() || ca.postcode.is_some();
+        let towns = |x: &Components| -> Vec<Text> { x.localities.iter().filter(|t| !x.regions.contains(&t.key) && !self.data.is_country_name(&t.key)).cloned().collect() };
+        let (qt, ct) = (towns(qa), towns(ca));
+        for t in &qt {
+            let named = ct.iter().any(|u| text_eq(self, t, u, false) == Tri::Yes) || ca.regions.contains(&t.key);
+            if !named {
+                if !ct.is_empty() {
+                    return (false, false);
+                }
+                full = false;
+            }
+        }
+        for r in &qa.regions {
+            if ca.regions.contains(r) {
+                continue;
+            }
+            // a region given in the same form (two codes, two names) and different is another region
+            if ca.regions.iter().any(|x| (x.len() <= 3) == (r.len() <= 3)) {
+                return (false, false);
+            }
+            full = false;
+        }
+        (true, full)
+    }
+
+    /// Choose among rows for a caller who named a place. The same name in the caller's area is the
+    /// place; a variant of the name asks; a row that names the place and then another street is still
+    /// the place ("Example Park, 12 Sample Plaza"). A same-name row next to a variant asks too: the
+    /// variant may be the place under its full name.
+    fn named_pick<S: AsRef<str>>(&self, ctx: &Ctx, query: &str, name: &[(String, Vec<u32>)], candidates: &[S]) -> Pick {
+        let rest = |s: &str| -> String { s.splitn(2, ',').nth(1).unwrap_or("").to_string() };
+        let qa = parse::parse(ctx, &rest(query));
+        let mut exact: Vec<(usize, bool, Components)> = Vec::new();
+        let mut variant: Vec<usize> = Vec::new();
+        for (i, c) in candidates.iter().enumerate() {
+            let c = c.as_ref();
+            if self.is_control(query, c) {
+                continue;
+            }
+            let first = c.split(',').next().unwrap_or("");
+            let rel = self.name_relation(name, &self.name_words(first));
+            if rel == 0 {
+                continue;
+            }
+            let ca = parse::parse(ctx, &rest(c));
+            let (fits, full) = self.area_fits(&qa, &ca);
+            if !fits {
+                continue;
+            }
+            if rel == 2 {
+                exact.push((i, full, ca));
+            } else {
+                variant.push(i);
+            }
+        }
+        if exact.is_empty() {
+            return if variant.is_empty() { Pick::None } else { Pick::Ambiguous(variant) };
+        }
+        // same-name rows in two towns are two places
+        let towns_apart = exact.iter().any(|a| exact.iter().any(|b| !self.area_fits(&a.2, &b.2).0 || !self.area_fits(&b.2, &a.2).0));
+        if towns_apart || !variant.is_empty() {
+            let mut ids: Vec<usize> = exact.iter().map(|e| e.0).chain(variant).collect();
+            ids.sort();
+            return Pick::Ambiguous(ids);
+        }
+        // the site's first row that holds every area part the caller gave, else its first
+        let best = exact.iter().find(|e| e.1).unwrap_or(&exact[0]).0;
+        Pick::Match(best)
     }
 
     /// A rejected candidate that may be the same street and number in another place, rejected for a
@@ -613,7 +958,7 @@ impl Matcher {
         }
         let mk = |toks: &[(String, Vec<u32>)], abbr: &[bool], sc: Option<Script>| -> Text {
             let key: String = toks.iter().map(|t| t.0.as_str()).collect();
-            Text { skel: fold::skeleton(&key), key, script: sc, toks: toks.to_vec(), abbr: abbr.to_vec() }
+            Text { skel: fold::skeleton(&key), key, script: sc, toks: toks.to_vec(), abbr: abbr.to_vec(), native: String::new() }
         };
         let head = mk(&x.street.toks[..k], &x.street.abbr[..k.min(x.street.abbr.len())], x.street.script);
         // the other side may carry its type inside the name ("reunalan" + "tie")
@@ -827,12 +1172,48 @@ impl Matcher {
         false
     }
 
+    /// Is the row in the caller's area, whatever place it is? The caller gave a town, region or
+    /// postcode after the first part, and the row, after its own first part, shows no other postcode
+    /// and either the caller's postcode or each town and region the caller gave. A picker that must
+    /// read something can take such a row when no row is the caller's place.
+    pub fn in_area(&self, query: &str, row: &str, country: Option<&str>) -> bool {
+        let ctx = self.ctx(country);
+        let rest = |s: &str| -> String { s.splitn(2, ',').nth(1).unwrap_or("").to_string() };
+        let (qr, rr) = (rest(query), rest(row));
+        if qr.trim().is_empty() || rr.trim().is_empty() {
+            return false;
+        }
+        let qa = parse::parse(&ctx, &qr);
+        let ra = parse::parse(&ctx, &rr);
+        if qa.postcode.is_some() && qa.postcode == ra.postcode && ra.postcode.is_some() {
+            return true;
+        }
+        if qa.localities.is_empty() && qa.regions.is_empty() {
+            return false;
+        }
+        // with no town given, the caller's first part (the place, or a town) must be in the row
+        if qa.localities.iter().all(|t| qa.regions.contains(&t.key) || self.data.is_country_name(&t.key)) {
+            let name: Vec<String> = self.name_words(query.split(',').next().unwrap_or("")).into_iter().map(|w| w.0).collect();
+            let r: Vec<String> = self.name_words(&rr).into_iter().map(|w| w.0).collect();
+            if name.is_empty() || !r.windows(name.len()).any(|w| w == &name[..]) {
+                return false;
+            }
+        }
+        let (fits, full) = self.area_fits(&qa, &ra);
+        fits && full
+    }
+
     /// Choose the candidate that is the same place as the query.
     pub fn pick<S: AsRef<str>>(&self, query: &str, candidates: &[S], country: Option<&str>) -> Pick {
         let ctx = self.ctx(country);
         let q = parse::parse(&ctx, query);
+        if let Some(name) = self.place_name(query, &q) {
+            return self.named_pick(&ctx, query, &name, candidates);
+        }
         let cs: Vec<Components> = candidates.iter().map(|c| parse::parse(&ctx, c.as_ref())).collect();
-        let verdicts: Vec<(Verdict, Vec<&'static str>)> = cs.iter().map(|c| self.compare_parsed(&q, c, Mode::Query)).collect();
+        let alts: Vec<Components> = Self::comma_free_readings(query).iter().map(|a| parse::parse(&ctx, a)).collect();
+        let calts: Vec<Option<Components>> = candidates.iter().map(|c| Self::without_leading_name(c.as_ref()).map(|t| parse::parse(&ctx, &t))).collect();
+        let verdicts: Vec<(Verdict, Vec<&'static str>)> = cs.iter().zip(&calts).map(|(c, ca)| self.compare_any(&q, &alts, c, ca.as_ref())).collect();
         let same: Vec<usize> = (0..cs.len()).filter(|&i| verdicts[i].0 == Verdict::Same).collect();
         if same.is_empty() {
             // the caller gave no unit and the site lists the place only with units: ask which one
