@@ -1353,7 +1353,7 @@ impl Matcher {
         let c = parse::parse(&ctx, candidate);
         let alts: Vec<Components> = Self::comma_free_readings(query).iter().map(|a| parse::parse(&ctx, a)).collect();
         let calt = self.without_leading_name(candidate).map(|(t, name)| (parse::parse(&ctx, &t), name));
-        self.compare_any(&q, &alts, &c, calt.as_ref())
+        self.compare_any(query, &q, &alts, &c, calt.as_ref())
     }
 
     /// A listing that starts with a business or building name holding digits ("Grand 2009 Ltd,
@@ -1372,7 +1372,10 @@ impl Matcher {
         if parts.len() < 3 || !parts[0].chars().any(|ch| ch.is_numeric()) || !parts[1].chars().any(|ch| ch.is_numeric()) || Self::unit_part(parts[0]) {
             return None;
         }
-        Some((parts[1..].join(","), Some(parts[0].to_string())))
+        let rest = parts[1..].join(",");
+        // a listing that repeats its address ("Example Rd 16C, Example Rd 16C, …") drops no name
+        let name = (!Self::holds_part(&rest, parts[0])).then(|| parts[0].to_string());
+        Some((rest, name))
     }
 
     /// A part that names a unit, floor or building within an address rather than a place: "#7",
@@ -1389,8 +1392,57 @@ impl Matcher {
         let w: Vec<&str> = key.split(' ').filter(|w| !w.is_empty()).collect();
         let num = |i: usize| w.get(i).map_or(false, |x| x.chars().any(|ch| ch.is_ascii_digit()));
         let word = |i: usize| w.get(i).map_or(false, |x| WORDS.contains(x) || *x == "#");
-        // a unit word and its number ("Unit 7", "Apt # 7"), or a number and its unit word ("7th Floor")
-        (word(0) && (num(1) || (w.get(1) == Some(&"#") && num(2)))) || (num(0) && word(1))
+        // a unit word and its number ("Unit 7", "Apt # 7"), or a number standing alone and its unit
+        // word ("7th Floor", not "Sample9 Room")
+        let raw: Vec<&str> = t.split_whitespace().collect();
+        let number_then_word = raw.len() == 2 && Self::unit_number(raw[0]).is_some() && word(w.len().saturating_sub(1));
+        (word(0) && (num(1) || (matches!(w.get(1), Some(&"#") | Some(&"no")) && num(2)))) || number_then_word
+    }
+
+    /// A number as a unit may be written: digits, then at most two letters or "/F" ("7", "12B",
+    /// "7F", "7th", "7/F"). Lowercased.
+    fn unit_number(token: &str) -> Option<String> {
+        let t = token.trim_end_matches(['.', ':', ')']);
+        let digits = t.len() - t.trim_start_matches(|ch: char| ch.is_numeric()).len();
+        if digits == 0 {
+            return None;
+        }
+        let rest = &t[digits..];
+        let rest = rest.strip_prefix('/').unwrap_or(rest);
+        (rest.chars().count() <= 2 && rest.chars().all(|ch| ch.is_alphabetic())).then(|| t.to_lowercase())
+    }
+
+    /// The text holds the part's words in a row.
+    fn holds_part(text: &str, part: &str) -> bool {
+        let p = data::phrase_key(part);
+        !p.is_empty() && format!(" {} ", data::phrase_key(text)).contains(&format!(" {} ", p))
+    }
+
+    /// A short part that may name a unit whatever its word ("№7", "No. 7", "Studio 12", "U7",
+    /// "7F", "12B"): a number with a letter, a symbol and a number, one word and a number, or one
+    /// or two letters glued to a number. It returns the number. A longer name ("12 Hour Sample",
+    /// "Studio 12 Hair") is not one.
+    fn maybe_unit(part: &str) -> Option<String> {
+        let part = fold::fold(part);
+        let raw: Vec<&str> = part.split_whitespace().collect();
+        let symbol = |s: &str| !s.is_empty() && s.chars().all(|ch| !ch.is_alphanumeric());
+        let word = |s: &str| {
+            let s = s.trim_end_matches('.');
+            !s.is_empty() && s.chars().all(|ch| ch.is_alphabetic())
+        };
+        match raw.as_slice() {
+            [one] => {
+                if let Some(n) = Self::unit_number(one).filter(|n| n.chars().any(|ch| ch.is_alphabetic())) {
+                    return Some(n);
+                }
+                // "#7", "№7", "U7", "PH12"
+                let lead: String = one.chars().take_while(|ch| !ch.is_numeric()).collect();
+                let n = Self::unit_number(&one[lead.len()..])?;
+                (symbol(&lead) || (word(&lead) && lead.chars().count() <= 2)).then_some(n)
+            }
+            [a, b] if symbol(a) || word(a) => Self::unit_number(b),
+            _ => None,
+        }
     }
 
     /// A dropped leading part that is a place's name holding the caller's house number ("12 Hour
@@ -1434,12 +1486,29 @@ impl Matcher {
 
     /// The query as read, or as one of its comma-free readings if that reading is the candidate's
     /// place.
-    fn compare_any(&self, q: &Components, alts: &[Components], c: &Components, calt: Option<&(Components, Option<String>)>) -> (Verdict, Vec<&'static str>) {
+    fn compare_any(&self, query: &str, q: &Components, alts: &[Components], c: &Components, calt: Option<&(Components, Option<String>)>) -> (Verdict, Vec<&'static str>) {
         let first = self.compare_parsed(q, c, Mode::Query);
+        // a short leading part that may be a unit ("№7", "Studio 12", "7F") before the caller's
+        // number is read as the listing's unit: another unit is not the caller's, and the caller's
+        // own number or no unit at all is at most asked about. Not when the caller wrote that part
+        // ("Sample 57, 12 Example St") or its word ("Example Rd 76" for a caller on Example Rd).
+        let caller_words = format!(" {} ", data::phrase_key(query));
+        let callers_word = |name: &str| {
+            data::phrase_key(name).split(' ').any(|w| w.chars().count() >= 3 && !w.chars().any(|ch| ch.is_numeric()) && caller_words.contains(&format!(" {} ", w)))
+        };
+        let lead_unit = calt.and_then(|(_, name)| name.as_deref().filter(|n| !Self::holds_part(query, n)).and_then(Self::maybe_unit));
+        if let (Some((c2, Some(name))), Some(n)) = (calt, &lead_unit) {
+            if q.house.is_some() && c2.house == q.house && c2.units.is_empty() && !c2.street.key.is_empty() && !callers_word(name) {
+                let mut c3 = c2.clone();
+                c3.units.push(format!("u{}", n));
+                let r = self.compare_parsed(q, &c3, Mode::Query);
+                return if r.0 == Verdict::Same || r.1 == ["candidate_adds_unit"] { (Verdict::Different, vec!["leading_unit"]) } else { r };
+            }
+        }
         if first.0 == Verdict::Same {
             return first;
         }
-        if let Some((c2, name)) = calt {
+        if let (Some((c2, name)), None) = (calt, &lead_unit) {
             // the listing read without its leading name (never a unit part, see
             // `without_leading_name`) gives another number, or the name holds the caller's own number
             // and is no street address of its own ("12 Hour Sample, 12 Example St"), or only a
@@ -2562,6 +2631,14 @@ impl Matcher {
             if !fragile {
                 continue;
             }
+            // a row that opens with what may be a unit ("Bay 12, 12 Example St") is read as that unit
+            let unit_first = self.without_leading_name(raw[i].as_ref()).map_or(false, |(rest, name)| {
+                let next = fold::fold(rest.split(',').next().unwrap_or(""));
+                name.as_deref().and_then(Self::maybe_unit).is_some() && next.split(|ch: char| !ch.is_ascii_digit()).any(|x| x == digits)
+            });
+            if unit_first {
+                continue;
+            }
             // the raw text must hold the caller's number as a whole digit run
             let text = fold::fold(raw[i].as_ref());
             let runs: Vec<&str> = text.split(|ch: char| !ch.is_ascii_digit()).filter(|x| !x.is_empty()).collect();
@@ -2991,7 +3068,7 @@ impl Matcher {
             .iter()
             .zip(&calts)
             .zip(&candidates)
-            .map(|((c, ca), text)| if self.is_control(query, text) { (Verdict::Different, vec!["control"]) } else { self.compare_any(&q, &alts, c, ca.as_ref()) })
+            .map(|((c, ca), text)| if self.is_control(query, text) { (Verdict::Different, vec!["control"]) } else { self.compare_any(query, &q, &alts, c, ca.as_ref()) })
             .collect();
         let mut reports: Vec<RowReport> = verdicts.iter().map(|(v, r)| RowReport { verdict: *v, reasons: r.clone(), notes: vec![] }).collect();
         // a listing's range holding the caller's number ("10-14" for 12) is read as that number: the
@@ -3029,14 +3106,14 @@ impl Matcher {
         let same: Vec<usize> = (0..cs.len()).filter(|&i| verdicts[i].0 == Verdict::Same).collect();
         if same.is_empty() {
             // the caller gave no unit and the site lists the place only with units: ask which one
-            let with_unit: Vec<usize> = (0..cs.len()).filter(|&i| verdicts[i].1 == ["candidate_adds_unit"]).collect();
+            let with_unit: Vec<usize> = (0..cs.len()).filter(|&i| matches!(verdicts[i].1.as_slice(), ["candidate_adds_unit"] | ["leading_unit"])).collect();
             let strict = if with_unit.is_empty() { Pick::None } else { Pick::Ambiguous(with_unit) };
             // rows near the caller's place: a picker asks about them
             let mut near: Vec<usize> = Vec::new();
             let mut reasons: Vec<&'static str> = Vec::new();
             for (i, (v, r)) in verdicts.iter().enumerate() {
                 let why = match (v, r.as_slice()) {
-                    (_, ["candidate_adds_unit"]) => "unit_not_given",
+                    (_, ["candidate_adds_unit"] | ["leading_unit"]) => "unit_not_given",
                     (Verdict::Unknown, ["candidate_has_no_house_number"]) => "number_not_listed",
                     (Verdict::Unknown, ["number_range"]) => "number_range",
                     (Verdict::Unknown, ["town_not_listed"] | ["region_not_listed"] | ["town_spelled_differently"]) => "place_unconfirmed",
@@ -3050,6 +3127,17 @@ impl Matcher {
                 }
             }
             return if near.is_empty() { (strict, Explained::none(reports)) } else { (strict, Explained::ambiguous(near, reasons, reports)) };
+        }
+        // a row that opens with what may be a unit before the caller's address may be the caller's
+        // place too: the rows are asked about, so neither is taken over the other
+        let lead: Vec<usize> = (0..cs.len()).filter(|&i| verdicts[i].1 == ["leading_unit"]).collect();
+        if !lead.is_empty() {
+            let mut ids: Vec<usize> = same.iter().chain(&lead).copied().collect();
+            ids.sort();
+            for &i in &lead {
+                reports[i].reasons.push("unit_not_given");
+            }
+            return (Pick::Ambiguous(ids.clone()), Explained::ambiguous(ids, vec!["unit_not_given"], reports));
         }
         // more distinct rows of the caller's place than `MAX_COMPARED_ROWS` are not compared with
         // each other, but asked about

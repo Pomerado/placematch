@@ -104,6 +104,9 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
   Postcode, region, country, district and business names may be missing on either side.
 - A candidate that adds a unit the caller did not give is not picked. When only such
   candidates fit, the answer is `ambiguous`, so the caller can be asked which unit.
+- A short part before the address that may be a unit, whatever its word ("№7", "Studio 12",
+  "U7", "7F"), is read as the row's unit: another unit is not the caller's, and otherwise the row
+  is at most asked about, never taken, even beside a row that fits.
 - A business listing at the address is the same place as the plain address.
 - The town must be right: a shared district or region name does not make two towns one. A row
   that names no town does not confirm the caller's place. In the US, Canada and Australia, a row
@@ -215,14 +218,14 @@ Held-out split: 76,722 cases from 62 countries, 11 scripts. Cells are accuracy /
 | | PlaceMatch | libpostal baseline | both agree |
 |---|---|---|---|
 | all cases | 92.1% / 0.32% | 75.9% / 1.87% | 74.6% / 0.03% |
-| one candidate (`pair`) | 93.1% / 0.12% | 79.3% / 0.44% | 77.5% / 0.00% |
+| one candidate (`pair`) | 93.0% / 0.12% | 79.3% / 0.44% | 77.5% / 0.00% |
 | 2 to 8 candidates (`pick`) | 90.8% / 0.59% | 71.3% / 3.81% | 70.7% / 0.06% |
 | government and open-data addresses | 96.0% / 0.05% | 82.6% / 1.28% | 80.7% / 0.00% |
 | OpenStreetMap addresses and listings | 90.5% / 0.43% | 73.2% / 2.11% | 72.1% / 0.04% |
 | Latin script | 94.6% / 0.33% | 81.1% / 1.34% | 79.1% / 0.03% |
-| other scripts | 87.7% / 0.31% | 66.6% / 2.83% | 66.6% / 0.04% |
-| no commas | 84.5% / 0.29% | 76.0% / 1.89% | 70.3% / 0.03% |
-| transliterated | 58.6% / 0.25% | 35.2% / 0.25% | 35.1% / 0.00% |
+| other scripts | 87.6% / 0.31% | 66.6% / 2.83% | 66.6% / 0.04% |
+| no commas | 84.4% / 0.29% | 76.0% / 1.89% | 70.3% / 0.03% |
+| transliterated | 58.5% / 0.25% | 35.2% / 0.25% | 35.1% / 0.00% |
 
 "Both agree" answers `match` only when PlaceMatch and libpostal pick the same listing; it trades
 coverage for the fewest wrong picks. Most remaining misses are `none` or `ambiguous` answers
