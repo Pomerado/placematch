@@ -11,6 +11,8 @@ pub struct Tok {
     pub num: bool,
     /// written as an abbreviation (followed by a dot)
     pub abbr: bool,
+    /// joined to the next word by a hyphen ("münchen" in "München-Altstadt")
+    pub hyphen: bool,
 }
 
 pub struct CjkRules {
@@ -123,7 +125,7 @@ fn tokenize_raw(folded: &str, jp: bool) -> Vec<Tok> {
     let flush = |cur: &mut String, sc: Script, seg: usize, toks: &mut Vec<Tok>| {
         if !cur.is_empty() {
             let num = cur.chars().next().map_or(false, |c| c.is_ascii_digit());
-            toks.push(Tok { s: std::mem::take(cur), seg, script: if num { Script::Digit } else { sc }, num, abbr: false });
+            toks.push(Tok { s: std::mem::take(cur), seg, script: if num { Script::Digit } else { sc }, num, abbr: false, hyphen: false });
         }
     };
     let n = chars.len();
@@ -138,7 +140,7 @@ fn tokenize_raw(folded: &str, jp: bool) -> Vec<Tok> {
         }
         if c == '#' {
             flush(&mut cur, cur_sc, seg, &mut toks);
-            toks.push(Tok { s: "#".into(), seg, script: Script::Other, num: false, abbr: false });
+            toks.push(Tok { s: "#".into(), seg, script: Script::Other, num: false, abbr: false, hyphen: false });
             continue;
         }
         if (c == '-' || c == '/' || c == '‐' || c == '−') && !cur.is_empty() {
@@ -183,7 +185,13 @@ fn tokenize_raw(folded: &str, jp: bool) -> Vec<Tok> {
                 }
             }
         } else {
+            let had = !cur.is_empty();
             flush(&mut cur, cur_sc, seg, &mut toks);
+            if had && matches!(c, '-' | '‐' | '−') && chars.get(i + 1).map_or(false, |n| n.is_alphabetic()) {
+                if let Some(t) = toks.last_mut() {
+                    t.hyphen = true;
+                }
+            }
         }
     }
     flush(&mut cur, cur_sc, seg, &mut toks);

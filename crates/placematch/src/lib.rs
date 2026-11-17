@@ -613,10 +613,19 @@ fn text_eq(m: &Matcher, q: &Text, c: &Text, typo: bool) -> Tri {
     Tri::No
 }
 
+/// Two towns' names are one town's: as `text_eq` reads them, or one of them is the other's town
+/// with a district joined by a hyphen ("München-Altstadt-Lehel" for "München", "Munich").
+fn town_eq(m: &Matcher, a: &Text, b: &Text, typo: bool) -> Tri {
+    match text_eq(m, a, b, typo) {
+        Tri::No if (!b.head.is_empty() && b.head == a.key) || (!a.head.is_empty() && a.head == b.key) => Tri::Yes,
+        other => other,
+    }
+}
+
 /// Han administrative suffixes a romanization may translate or leave out ("台中市" / "Taichung").
 const HAN_ADMIN: &[char] = &['市', '区', '區', '県', '縣', '县', '府', '都', '省', '郡', '鎮', '镇', '鄉', '乡', '村', '町', '道'];
 /// Their romanized and English forms.
-const LATIN_ADMIN: &[&str] = &["shi", "ku", "ken", "fu", "to", "do", "gun", "son", "mura", "machi", "cho", "city", "district", "ward", "county", "prefecture", "province", "qu", "xian", "sheng", "zhen", "xiang", "town", "township", "village", "hsien", "hsiang", "chen", "shih", "chu", "cun"];
+pub(crate) const LATIN_ADMIN: &[&str] = &["shi", "ku", "ken", "fu", "to", "do", "gun", "son", "mura", "machi", "cho", "city", "district", "ward", "county", "prefecture", "province", "qu", "xian", "sheng", "zhen", "xiang", "town", "township", "village", "hsien", "hsiang", "chen", "shih", "chu", "cun"];
 
 /// One side is Han or Kana and the other a romanization that reads as it.
 fn reading_eq(q: &Text, c: &Text) -> bool {
@@ -1942,7 +1951,7 @@ impl Matcher {
             for (a, b, region) in pairs {
                 // one edit in a town name is only a typo for long names ("Lublin" and "Lubin" are two towns)
                 let typo_town = typo && letters(&a.key).min(letters(&b.key)) >= 7;
-                match text_eq(self, a, b, typo_town) {
+                match town_eq(self, a, b, typo_town) {
                     Tri::Yes if region == 1 => {}
                     Tri::Yes if region == 2 => any_unknown = true,
                     Tri::Yes if spelling && typo_town && text_eq(self, a, b, false) != Tri::Yes => misspelled = true,
@@ -1965,7 +1974,7 @@ impl Matcher {
                         }
                         let toks = qc.toks[keep.clone()].to_vec();
                         let key: String = toks.iter().map(|t| t.0.as_str()).collect();
-                        let t = Text { skel: fold::skeleton(&key), key, script: qc.script, abbr: qc.abbr.get(keep.clone()).map_or(vec![false; toks.len()], |a| a.to_vec()), toks, native: String::new() };
+                        let t = Text { skel: fold::skeleton(&key), key, script: qc.script, abbr: qc.abbr.get(keep.clone()).map_or(vec![false; toks.len()], |a| a.to_vec()), toks, native: String::new(), head: String::new() };
                         if c.localities.iter().any(|l| text_eq(self, &t, l, false) == Tri::Yes) {
                             any_yes = true;
                         }
@@ -1991,7 +2000,7 @@ impl Matcher {
                 let towns = |x: &Components| -> Vec<(Text, bool)> { x.localities.iter().filter(|t| !self.data.is_country_name(&t.key)).map(|t| (t.clone(), x.regions.contains(&t.key))).collect() };
                 let (qt, ct) = (towns(q), towns(c));
                 let unmatched = |a: &[(Text, bool)], b: &[(Text, bool)]| -> Vec<bool> {
-                    a.iter().filter(|(t, _)| !b.iter().any(|(u, _)| text_eq(self, t, u, typo) != Tri::No || within(&u.key, &t.key) || within(&t.key, &u.key))).map(|(_, r)| *r).collect()
+                    a.iter().filter(|(t, _)| !b.iter().any(|(u, _)| town_eq(self, t, u, typo) != Tri::No || within(&u.key, &t.key) || within(&t.key, &u.key))).map(|(_, r)| *r).collect()
                 };
                 let (uq, uc) = (unmatched(&qt, &ct), unmatched(&ct, &qt));
                 if uq.iter().any(|&rq| uc.iter().any(|&rc| !(rq && rc))) {
@@ -2836,7 +2845,7 @@ impl Matcher {
         }
         let mk = |toks: &[(String, Vec<u32>)], abbr: &[bool], sc: Option<Script>| -> Text {
             let key: String = toks.iter().map(|t| t.0.as_str()).collect();
-            Text { skel: fold::skeleton(&key), key, script: sc, toks: toks.to_vec(), abbr: abbr.to_vec(), native: String::new() }
+            Text { skel: fold::skeleton(&key), key, script: sc, toks: toks.to_vec(), abbr: abbr.to_vec(), native: String::new(), head: String::new() }
         };
         let head = mk(&x.street.toks[..k], &x.street.abbr[..k.min(x.street.abbr.len())], x.street.script);
         // the other side may carry its type inside the name ("reunalan" + "tie")
@@ -3327,7 +3336,12 @@ impl Matcher {
         // prefer the listing with the caller's own number over a range holding it, a listing that is
         // the caller's place as written over one read without its leading name, the listing without
         // a business name, then the most complete one
-        let best = clusters[0].iter().copied().min_by_key(|&i| (cs[i].units != q.units, ranged[i], rewritten[i], cs[i].business.len(), usize::MAX - cs[i].localities.len())).unwrap();
+        // (the most complete: the most of the caller's own places, then the fewest the caller did
+        // not name, so a row that adds a town or district is not taken over one that adds none)
+        let named = |t: &Text| q.localities.iter().any(|u| town_eq(self, u, t, false) == Tri::Yes);
+        let kept = |i: usize| cs[i].localities.iter().filter(|t| named(t)).count();
+        let added = |i: usize| cs[i].localities.len() - kept(i);
+        let best = clusters[0].iter().copied().min_by_key(|&i| (cs[i].units != q.units, ranged[i], rewritten[i], cs[i].business.len(), usize::MAX - kept(i), added(i))).unwrap();
         // a row read across scripts: its street or town is written in another script than the caller's
         let across = |i: usize| {
             let (c, qq) = (&cs[i], &q);

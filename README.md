@@ -117,6 +117,12 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
   is left out before the row is read; a whole number right before the address ("5M, 350 Example
   Ave") is an apartment, not a distance.
 - A business listing at the address is the same place as the plain address.
+- A town written with its district after a hyphen ("München-Altstadt-Lehel", "Berlin-Mitte") is
+  that town. A name joined by a word such as "en", "am" or "upon" ("Aix-en-Provence",
+  "Newcastle-under-Lyme"), or ending in a word such as "City", is a name of its own.
+- Among rows of the caller's place, PlaceMatch takes the one that keeps the most of the caller's
+  own place names, then the one that adds the fewest the caller did not write: a row that adds a
+  town or district is not taken over the same address without it.
 - The town must be right: a shared district or region name does not make two towns one. A row
   that names no town does not confirm the caller's place. In the US, Canada and Australia, a row
   that leaves out only the state, with the caller's town spelled the same, in a part of its own or
