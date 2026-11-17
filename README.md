@@ -62,19 +62,25 @@ assert_eq!(e.notes, vec!["unit_not_listed"]); // type the unit into the site's o
 
 ### Without a country
 
+A country is given as its ISO 3166-1 code in any case; "UK" is read as "GB", and a code PlaceMatch
+does not know is read as no country.
+
 A caller's country is the best guide, but it may be left out. Then PlaceMatch reads the texts by
-the one country they show: a country's name, a state or province with its postcode ("IL 62701",
-"ON K1A 0B1"), or a postcode only one country writes ("K1A 0B1", "SW1A 1AA"). The caller's text
-decides when it shows a country, and a row that shows another is then another place; otherwise the
-rows decide when they all show one country and the caller's text fits it (a state or postcode of it,
-or no place at all). A US state with a row's ZIP code of that state counts too. When the texts show
-nothing, or rows of two countries, they are read with no country, which asks more often and never
-guesses; a country the caller gives is never replaced. `Matcher::infer_country` answers on its own.
+the one country they show: a country's name ("UK" and "US" included), a state or province with its
+postcode ("IL 62701", "ON K1A 0B1"), or a postcode only one country writes ("K1A 0B1", "SW1A 1AA").
+The caller's text decides when it shows a country, and a row that shows another is then another
+place; otherwise the rows decide when they all show one country and the caller's text fits it (a
+state or postcode of it, or no place at all). A US state with a row's ZIP code of that state counts
+too. When the texts show nothing, or rows of two countries, they are read with no country, which
+asks more often and never guesses: when rows of two countries would each be the place, read by their
+own country ("10 Main St, Vancouver" beside Vancouver, WA and Vancouver, BC), the answer asks. A
+country the caller gives is never replaced. `Matcher::infer_country` answers on its own.
 
 On the US cases of the benchmark and fixtures, answers with no country equal the answers with `US`
-in all but 15 of 1,540 tuning cases, none of 160 held-out cases and 17 of 164 fixtures, and none of
-those differences picks a wrong row: most ask where the US answer matched. Outside the US, pass the
-country: with none, wrong picks are two to three times those with it.
+in all but 15 of 1,540 tuning cases, none of 160 held-out cases and 16 of 165 fixtures, and none of
+those differences picks a wrong row for a caller who gives no country: most ask where the US answer
+matched. Outside the US, pass the country: with none, wrong picks are two to three times those with
+it.
 
 `pick` and `compare` keep their answers: they answer whether a row is the place. `pick_explained`
 also says what a picker should ask about, so it asks where `pick` says `none` because only near
@@ -104,7 +110,9 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
   by its first three digits. A state comes from its own part or code,
   never from a town named like a state ("Washington, PA" is not "Washington, DC").
 - A country the caller gives or writes is never crossed: a row that shows another country is another
-  place ("Paris, TX 75460" is not in France; "London, ON N6A 1A1" is not in the United Kingdom).
+  place ("Paris, TX 75460" is not in France; "London, ON N6A 1A1" is not in the United Kingdom), and
+  so is, for a caller in the US, Canada, the UK or Australia, a row whose postcode is not of that
+  country's form ("Vancouver 98660" is not in Canada).
 - Spellings that mean the same thing agree: abbreviations, diacritics, case and punctuation,
   component order (number before or after the street), joined or split compound names, native
   digits, Japanese block addresses, transliteration, and a one-letter typo in a long name.
@@ -195,7 +203,7 @@ Held-out split: 76,722 cases from 62 countries, 11 scripts. Cells are accuracy /
 | government and open-data addresses | 96.0% / 0.05% | 82.6% / 1.28% | 80.7% / 0.00% |
 | OpenStreetMap addresses and listings | 90.5% / 0.43% | 73.2% / 2.11% | 72.1% / 0.04% |
 | Latin script | 94.6% / 0.33% | 81.1% / 1.34% | 79.1% / 0.03% |
-| other scripts | 87.6% / 0.31% | 66.6% / 2.83% | 66.6% / 0.04% |
+| other scripts | 87.7% / 0.31% | 66.6% / 2.83% | 66.6% / 0.04% |
 | no commas | 84.4% / 0.29% | 76.0% / 1.89% | 70.3% / 0.03% |
 | transliterated | 58.6% / 0.25% | 35.2% / 0.25% | 35.1% / 0.00% |
 
@@ -236,7 +244,9 @@ const e = m.pickExplained("example center", [
 `pickExplained` returns the fields above in snake case (`prefer_on_read`, `cross_script`); `options`
 may be left out or `null`. `pick` and `compare` are there too. Every call takes a query and rows of
 at most 512 characters each (JavaScript string length) and at most 100 rows (`LIMITS`); longer input
-throws a `RangeError` and is never cut, because matching time grows quickly with text length. `@pomerado/placematch/loader` exports `load(bytes)` for other
+throws a `RangeError` and is never cut. Within the limits, every text is read as at most 12 comma
+parts and 192 characters (its first parts and its last ones), and more than 16 different rows of one
+place are asked about rather than compared with each other, so a page of long rows answers quickly. `@pomerado/placematch/loader` exports `load(bytes)` for other
 runtimes, and `@pomerado/placematch/placematch.wasm` is the module. `js/placematch.d.ts` has the
 types.
 

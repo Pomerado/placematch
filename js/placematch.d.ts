@@ -51,7 +51,8 @@ export interface Explained {
   unit: string | null;
   /** With no country given: the country PlaceMatch read the texts by, when they show one (a
    * country's name, a state with its ZIP code, a postcode only one country writes); null when a
-   * country was given, the texts show none or two, or there are no rows. */
+   * country was given, the texts show none or two, or there are no rows. A country is an ISO
+   * 3166-1 code in any case ("UK" is "GB"); one PlaceMatch does not know is read as none given. */
   inferred_country: string | null;
 }
 

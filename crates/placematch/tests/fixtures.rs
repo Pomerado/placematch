@@ -123,3 +123,20 @@ fn place_name_picker_modes() {
     }
     assert!(failures.is_empty(), "picker answers differ: {:?}", failures);
 }
+
+/// Rows come from websites: a page of long rows with many parts, at the JavaScript caps, still
+/// answers quickly. The bound is generous; such a page once took over 20 seconds.
+#[test]
+fn long_rows_answer_quickly() {
+    let m = Matcher::new();
+    let bound = std::time::Duration::from_secs(if cfg!(debug_assertions) { 30 } else { 3 });
+    for (unit, country) in [("UK, ", Some("US")), ("東京都", Some("US")), ("Example Park, ", None), ("a ", None)] {
+        let text = unit.repeat(512 / unit.chars().count().max(1)).chars().take(512).collect::<String>();
+        let rows: Vec<&str> = vec![text.as_str(); 100];
+        let start = std::time::Instant::now();
+        m.pick(&text, &rows, country);
+        let explained: Vec<Row> = rows.iter().map(|&t| Row::from(t)).collect();
+        m.pick_explained(&text, &explained, &PickOptions { country });
+        assert!(start.elapsed() < bound, "{:?}: {:?}", unit, start.elapsed());
+    }
+}

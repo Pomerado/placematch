@@ -83,6 +83,23 @@ test("input over the caps is refused, not cut", () => {
   assert.equal(m.pickExplained("x".repeat(512), Array(100).fill("y".repeat(512))).outcome, "none");
 });
 
+test("a country hint is read in any case, \"UK\" is the United Kingdom, and an unknown one is no hint", () => {
+  for (const country of ["GB", "gb", "UK", "uk"]) {
+    assert.equal(m.pickExplained("10 Example St, London", ["10 Example St, London, KY 40741"], { country }).outcome, "none");
+    assert.equal(m.pickExplained("10 Example St, London", ["10 Example St, London SW1A 1AA"], { country }).outcome, "match");
+  }
+  const unknown = m.pickExplained("10 Example St, London, United Kingdom", ["10 Example St, London, KY 40741"], { country: "XX" });
+  assert.equal(unknown.outcome, "none");
+  assert.equal(unknown.inferred_country, "GB");
+});
+
+test("a page of long rows at the caps answers quickly", () => {
+  const text = "UK, ".repeat(128);
+  const start = performance.now();
+  m.pickExplained(text, Array(100).fill(text), { country: "US" });
+  assert.ok(performance.now() - start < 3000);
+});
+
 test("the picker checks answer from JavaScript", () => {
   assert.equal(m.isControl("Example Park, Springfield", "See more results for Example Park, Springfield"), true);
   assert.equal(m.isControl("Example Park, Springfield", "Jane Doe Example Park, Springfield"), false);

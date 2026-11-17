@@ -59,9 +59,14 @@ building name. A row must still confirm where the caller's place is:
   state or province with that country's postcode (`ON N6A 1A1`), a postcode form only that country
   writes, a state or province named in full after the town where only other countries have it
   (`London, Ontario` for the United Kingdom), or a two-letter state code after the town that only
-  other countries use (`Paris, TX` for France). Ireland, the United Kingdom and the Crown
-  Dependencies are not told apart this way. When the row taken shows nothing of the caller's
-  country and a row left out for its country would also have been the place, the answer asks;
+  other countries use (`Paris, TX` for France). For a caller in the US, Canada, the United Kingdom
+  or Australia, whose postcodes are written in one form, a row's postcode of another form shows
+  another country (`Vancouver 98660` for Canada). `UK`, `U.K.`, `US`, `U.S.` and `USA` written as
+  the last part are the United Kingdom and the United States. A postcode or state does not tell
+  Ireland, the United Kingdom and the Crown Dependencies apart (Northern Ireland is written both
+  ways); a row that names the other of them as its country is still another place. When the row
+  taken shows nothing of the caller's country and a row left out for its country would also have
+  been the place, the answer asks;
 - with no country given, a place name that is also a state's or province's (`Example Park, New
   York`) does not confirm a row in another town of that state: it may be the city.
 
@@ -102,7 +107,9 @@ town name of six or more letters (never a changed digit, and never in a town typ
 With no country given, PlaceMatch reads the texts by the one country they show (see
 `Matcher::infer_country`): a country's name, a state or province with its postcode, or a postcode
 only one country writes. When they show none, or two, the texts are read with no country, which
-asks more often.
+asks more often; when rows of two countries would each be the place, read by their own country
+(`10 Main St, Vancouver` beside `..., Vancouver, WA` and `..., Vancouver, BC`), the answer asks. A
+country hint is an ISO code in any case, `UK` is `GB`, and an unknown code is no hint.
 
 ## Outcomes for `pick`
 
