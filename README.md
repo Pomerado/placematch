@@ -110,8 +110,8 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
   that leaves out only the state, with the caller's town spelled the same, in a part of its own or
   right after the caller's street, and no postcode or other country shown, is taken; the risk left
   is a same-named town in another state on a site that shows neither state nor postcode. It is
-  asked about when it also leaves out the caller's postcode (unless it is a place's listing by
-  name, street and town, as sites show places), when the same address is listed in another state
+  asked about when it also leaves out the caller's postcode (a place's listing by name, street and
+  town included), when the same address is listed in another state
   beside it, or when the caller's town is spelled another way (`town_spelled_differently`). A US
   ZIP code confirms or contradicts a state
   by its first three digits. A state comes from its own part or code, or is written after the town

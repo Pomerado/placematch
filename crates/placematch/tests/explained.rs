@@ -446,6 +446,9 @@ fn a_zip_code_outside_the_callers_state_is_another_place() {
     // one that leaves out the caller's ZIP code too confirms neither, and asks
     let e = explain(&m, "1 Example St, Exampleton, IL 60000", &["1 Example St, Exampleton"]);
     assert_eq!((e.outcome, e.reasons), (Outcome::Ambiguous, vec!["place_unconfirmed"]));
+    // a place's listing by name, street and town alone too: it is the one row asked about
+    let e = explain(&m, "1 Example Building, Suite 5, Example City, CA 94000", &["Example Building, 1 Example Bldg, Example City", "Example Building Garage, 5 Sample St, Example City"]);
+    assert_eq!((e.outcome, e.same), (Outcome::Ambiguous, vec![0]));
     // so does one beside the same address in another state, which it may be
     for rows in [["1 Example St, Exampleton", "1 Example St, Exampleton, WI"], ["1 Example St, Exampleton, WI", "1 Example St, Exampleton"]] {
         let e = explain(&m, "1 Example St, Exampleton, IL", &rows);

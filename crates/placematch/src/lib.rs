@@ -1461,8 +1461,7 @@ impl Matcher {
         // Its town is in a part of its own, or follows the caller's street word for word with no
         // comma ("1 Example St Exampleton"; in "1 Example St St Exampleton", "St" may begin the
         // town). A caller's postcode the row leaves out too is a second part of the address it
-        // does not confirm, unless the row is a place's listing ("Example Building, 1 Example Bldg,
-        // Example City"), which sites show by name, street and town alone.
+        // does not confirm, a place's listing by name, street and town included.
         // (the caller's text may run its town on into its street too: "1 Example St Exampleton, IL")
         let runs = |x: &Components| -> [String; 2] {
             let town = x.city.as_ref().filter(|t| !x.regions.contains(&t.key)).map_or("", |t| t.key.as_str());
@@ -1472,7 +1471,7 @@ impl Matcher {
         let (rc, rq) = (runs(c), runs(q));
         let run_on = rc[0] == rq[0] || rc[1] == rq[1];
         let own_part = c.parts >= 2 || (!q.street.key.is_empty() && ((c.street.key == q.street.key && c.street_type == q.street_type) || run_on));
-        let postcode_too = q.postcode.is_some() && c.business.is_empty();
+        let postcode_too = q.postcode.is_some();
         let row_silent = towns(c) > 0 && own_part && !postcode_too && c.postcode.is_none() && own_country(c) && c.town_region.is_none();
         if states && !row_silent && (!self.region_ids(q, false).is_empty() || q.postcode.is_some() || town_region) && self.region_ids(c, false).is_empty() && !zip_confirms && !(c.town_region.is_some() && c.town_region == q.town_region) {
             return Some("region_not_listed");
@@ -2448,7 +2447,8 @@ impl Matcher {
         }
         // a row of the caller's exact name the site categorized beside one it did not (a map pin
         // dropped under the venue's own name): they may be two places, so a write asks; a read may
-        // take the categorized one when the caller gave a town or postcode it holds in full
+        // take the categorized one when the caller gave a town or postcode it holds in full. (`pick`
+        // sees no categories: unmarked rows of one name in one town are one place.)
         let distinct: Vec<&(usize, bool, Components)> = exact.iter().filter(|x| first_of_text(x.0)).collect();
         let venues: Vec<&&(usize, bool, Components)> = distinct.iter().filter(|x| rows[x.0].categorized).collect();
         if !venues.is_empty() && venues.len() < distinct.len() {
