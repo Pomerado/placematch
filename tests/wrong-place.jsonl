@@ -280,3 +280,9 @@
 {"id": "w315", "country": null, "task": "pick", "query": "1 Example St, Exampleton, IL 60000-1234", "candidates": ["1 Example St, Exampleton, IL 60000, USA"], "expected": "match", "accept": [0]}
 {"id": "w316", "country": null, "task": "pick", "query": "350 Fifth Ave Apt 3, Exampleton, NY", "candidates": ["350 5th Ave, Exampleton, NY, USA"], "expected": "match", "accept": [0]}
 {"id": "w317", "country": null, "task": "pick", "query": "12A Example St, Exampleton, IL", "candidates": ["12 A Example St, Exampleton, IL, USA"], "expected": "match", "accept": [0]}
+{"id": "w318", "country": "US", "task": "pick", "query": "1600 Example Ave N.W., Exampleton, DC", "candidates": ["1600 Example Ave SW Exampleton, DC, USA"], "expected": "none", "accept": [], "note": "A compass pair written with dots is never another direction."}
+{"id": "w319", "country": "US", "task": "pick", "query": "1600 Example Ave N.W., Exampleton, DC", "candidates": ["1600 Example Ave S.W., Exampleton, DC, USA", "1600 Example Ave N.E., Exampleton, DC, USA"], "expected": "none", "accept": []}
+{"id": "w320", "country": "US", "task": "pick", "query": "60000", "candidates": ["Exampleton, IL 60001, USA", "1 Example St, Sampleton, IL 60999, USA"], "expected": "not_match", "accept": [], "note": "A ZIP code alone never takes a row in another ZIP code."}
+{"id": "w321", "country": null, "task": "pick", "query": "1600 Example Ave N.W., Exampleton, DC", "candidates": ["1600 Example Ave SW Exampleton, DC, USA"], "expected": "none", "accept": []}
+{"id": "w322", "country": null, "task": "pick", "query": "1600 Example Ave N.W., Exampleton, DC", "candidates": ["1600 Example Ave S.W., Exampleton, DC, USA", "1600 Example Ave N.E., Exampleton, DC, USA"], "expected": "none", "accept": []}
+{"id": "w323", "country": null, "task": "pick", "query": "60000", "candidates": ["Exampleton, IL 60001, USA", "1 Example St, Sampleton, IL 60999, USA"], "expected": "not_match", "accept": []}
