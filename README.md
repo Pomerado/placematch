@@ -194,12 +194,18 @@ name decides:
 - same-name rows on two streets or in two towns (two branches of a chain) are two places: the
   answer asks (`several_places`).
 
-A dash with a space on each side separates a row's parts as a comma does ("Example Park — 12
-Sample Plaza" is "Example Park, 12 Sample Plaza", and "Terminal 2 — Example Airport" names
-Terminal 2). A short code in parentheses after a name, two to five capital letters such as an
-airport's ("Example International Airport (EXA)"), is not part of the name, on either side; two
-codes that differ name two places, and a compass abbreviation ("(NE)") or any other parenthesis
-("(Gate G)") stays part of the name.
+A dash with a space on each side separates a row's name from what follows, as a comma does, only
+when what follows is an address: a house number and street ("Example Park — 12 Sample Plaza" is
+"Example Park, 12 Sample Plaza"), a postcode, or a town the caller gave ("Example Park — Exampleton,
+CA"). A part of a place before the caller's name ("Terminal 2 — Example Airport") is that part, not
+the place. Any other dash is part of the name: "Example Stadium - Gate A", "Example Inn - Airport"
+and "Example - Sample Stadium" are other places than "Example Stadium", "Example Inn" and
+"Example", and a caller who types "Example - Sample Stadium" is that row. A transport place's
+three-letter code in parentheses ("Example International Airport (EXA)": a name holding a word such
+as airport, station or terminal) is not part of the name, on either side; rows or a caller whose
+codes differ name two places. Other parentheses stay part of the name: a Roman numeral ("(II)"), a
+state ("(IL)"), a compass abbreviation, a code beside another kind of name ("Example Bank (ATM)") or
+a part of the place ("(Gate B)").
 
 A town typed alone ("Munich") is compared as a town, in its other languages too ("München"). A row
 whose first part names a venue by a place-type word the caller did not write ("Example Station,

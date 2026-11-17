@@ -534,8 +534,8 @@ fn rows_of_a_named_place_with_no_town_are_all_offered() {
     let rows = [
         Row::from("Exampleton Example Terminal — 1 Example Plaza"),
         Row { text: "Example Building — 1 Example Plaza", categorized: true },
-        Row::from("EX Example Building (Gate G)"),
-        Row::from("Example Building — 301 Sample Ctr"),
+        Row::from("XB Example Building (Gate B)"),
+        Row::from("Example Building — 88 Sample Ctr"),
         Row::from("The Sample Promenade/Example Building"),
     ];
     let e = m.pick_explained("Example Building, Exampleton, CA", &rows, &PickOptions { country: Some("US") });
@@ -551,8 +551,8 @@ fn exact_name_rows_on_two_streets_after_a_dash_are_two_places() {
     let rows = [
         Row::from("Exampleton Example Terminal — 1 Example Bldg, Exampleton, CA"),
         Row { text: "Example Building — 1 Example Bldg, Exampleton, CA", categorized: true },
-        Row::from("Exampleton Example Building (Gate G) — Example Station, Exampleton, CA"),
-        Row::from("Example Building — 301 Sample Ctr, Exampleton, CA"),
+        Row::from("Exampleton Example Building (Gate B) — Example Station, Exampleton, CA"),
+        Row::from("Example Building — 88 Sample Ctr, Exampleton, CA"),
         Row::from("The Sample Promenade/Example Building — Exampleton, CA"),
     ];
     let e = m.pick_explained("Example Building, Exampleton, CA", &rows, &PickOptions { country: Some("US") });
@@ -567,8 +567,8 @@ fn terminals_that_name_the_airport_after_a_dash_do_not_take_its_match() {
     let m = Matcher::new();
     let texts = [
         "Example International Airport (EXA) — 400 Sample Rd, Exampleton, CA",
-        "Terminal 3 (Door 3-4) — Example International Airport (EXA)",
-        "Sample Terminal 3 — Example International Airport (EXA)",
+        "Terminal 3 (Door 7) — Example International Airport (EXA)",
+        "Sample Air Terminal 4 — Example International Airport (EXA)",
         "Terminal 2 — Example International Airport (EXA)",
         "Jane Example Terminal 1 — Example International Airport (EXA)",
     ];
