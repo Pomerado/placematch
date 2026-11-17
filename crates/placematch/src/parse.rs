@@ -687,7 +687,10 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
             let typed_after = !seg_has_type[seg] && (seg + 1..nseg).any(|s2| seg_has_type[s2] && (0..n).any(|q| toks[q].seg == s2 && toks[q].num && !used[q]));
             // a postcode right after a state or province code ends its part ("Exampleton, IL 60000"),
             // where states are written before the postcode
-            let after_state = seg > 0
+            // (a part of its own, the state and postcode alone, may open the text too: "OH 46010,
+            // Exampleton", the area after a street)
+            let alone = nseg > 1 && (0..n).filter(|&q| toks[q].seg == seg && !used[q]).count() == len + 1;
+            let after_state = (seg > 0 || alone)
                 && k > 0
                 && toks[k - 1].seg == seg
                 && k + len == n.min((k..n).find(|&q| toks[q].seg != seg).unwrap_or(n))

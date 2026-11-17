@@ -286,3 +286,17 @@
 {"id": "w321", "country": null, "task": "pick", "query": "1600 Example Ave N.W., Exampleton, DC", "candidates": ["1600 Example Ave SW Exampleton, DC, USA"], "expected": "none", "accept": []}
 {"id": "w322", "country": null, "task": "pick", "query": "1600 Example Ave N.W., Exampleton, DC", "candidates": ["1600 Example Ave S.W., Exampleton, DC, USA", "1600 Example Ave N.E., Exampleton, DC, USA"], "expected": "none", "accept": []}
 {"id": "w323", "country": null, "task": "pick", "query": "60000", "candidates": ["Exampleton, IL 60001, USA", "1 Example St, Sampleton, IL 60999, USA"], "expected": "not_match", "accept": []}
+{"id": "w324", "country": "US", "task": "pick", "query": "Example Rd, Exampleton, IN", "candidates": ["Example Rd, OH 46010, Exampleton"], "expected": "not_match", "accept": [], "note": "A state and postcode in a part of their own before the town are the row's area: another state is another place."}
+{"id": "w325", "country": "US", "task": "pick", "query": "Example Rd, Exampleton, IN 46000", "candidates": ["Example Rd, IN 46010, Exampleton"], "expected": "not_match", "accept": [], "note": "Another ZIP code in that part is another place."}
+{"id": "w326", "country": "US", "task": "pick", "query": "Example Rd, Exampleton, IN", "candidates": ["Example Rd, OH 46010, Exampleton, USA"], "expected": "not_match", "accept": []}
+{"id": "w327", "country": "US", "task": "pick", "query": "Example Rd, Exampleton, IN 46000", "candidates": ["Example Rd, IN 46010, Exampleton, USA"], "expected": "not_match", "accept": []}
+{"id": "w328", "country": "US", "task": "pick", "query": "Example Rd, Exampleton, IN 46000", "candidates": ["Example Rd, IN 46000, Exampleton"], "expected": "match", "accept": [0], "note": "The same state and ZIP code there are the caller's."}
+{"id": "w329", "country": "US", "task": "pick", "query": "Example Rd, Exampleton, IN", "candidates": ["Example Rd, IN 46010, Exampleton"], "expected": "match", "accept": [0]}
+{"id": "w330", "country": null, "task": "pick", "query": "Example Rd, Exampleton, IN", "candidates": ["Example Rd, OH 46010, Exampleton"], "expected": "not_match", "accept": []}
+{"id": "w331", "country": null, "task": "pick", "query": "Example Rd, Exampleton, IN 46000", "candidates": ["Example Rd, IN 46010, Exampleton"], "expected": "not_match", "accept": []}
+{"id": "w332", "country": null, "task": "pick", "query": "Example Rd, Exampleton, IN", "candidates": ["Example Rd, OH 46010, Exampleton, USA"], "expected": "not_match", "accept": []}
+{"id": "w333", "country": null, "task": "pick", "query": "Example Rd, Exampleton, IN 46000", "candidates": ["Example Rd, IN 46010, Exampleton, USA"], "expected": "not_match", "accept": []}
+{"id": "w334", "country": null, "task": "pick", "query": "Example Rd, Exampleton, IN 46000", "candidates": ["Example Rd, IN 46000, Exampleton"], "expected": "match", "accept": [0]}
+{"id": "w335", "country": null, "task": "pick", "query": "Example Rd, Exampleton, IN", "candidates": ["Example Rd, IN 46010, Exampleton"], "expected": "match", "accept": [0]}
+{"id": "w336", "country": "AU", "task": "pick", "query": "Example Rd, Exampleton, WA 6000", "candidates": ["Example Rd, WA 6010, Exampleton"], "expected": "not_match", "accept": []}
+{"id": "w337", "country": "AU", "task": "pick", "query": "Example Rd, Exampleton, WA 6000", "candidates": ["Example Rd, WA 6000, Exampleton"], "expected": "match", "accept": [0]}
