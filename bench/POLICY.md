@@ -119,7 +119,11 @@ Any other leading part with a number that a row is compared without (`Lower Leve
 `Sample Shop 3`) is at most asked about when its number is not the address's and the caller gave
 a unit, or when it has three words or fewer and the caller gave no unit. Beside a row with the
 caller's own unit, that row is still taken. A distance a row opens with (`0.2 mi`, `350 ft`) is
-left out before the row is read, so it is never the house number.
+left out before the row is read, so it is never the house number. A whole number with a unit of
+length right before the address (`5M, 350 Example Ave`, `5 m, 12 Example St`) is read as a
+possible unit, not a distance: a distance has a decimal or a place's name after it. A leading part
+that is only the caller's own house number or postcode (`7, 7 Example St`) is not taken as text
+the caller wrote, so it is read as a possible unit too.
 
 Business listings count: `Cafe Luna, 10 Main St, Springfield` is the same place as
 `10 Main St, Springfield`.

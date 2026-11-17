@@ -1371,7 +1371,8 @@ impl Matcher {
         }
         let rest = parts[1..].join(",");
         // a listing that repeats its address ("Example Rd 16C, Example Rd 16C, …") drops no name
-        let name = (!Self::holds_part(&rest, parts[0])).then(|| parts[0].to_string());
+        let worded = parts[0].chars().any(|ch| ch.is_alphabetic());
+        let name = (!worded || !Self::holds_part(&rest, parts[0])).then(|| parts[0].to_string());
         Some((rest, name))
     }
 
@@ -1413,7 +1414,17 @@ impl Matcher {
     /// unit.
     fn postcode_number(part: &str, c: &Components) -> bool {
         let pc: String = c.postcode.as_deref().unwrap_or("").chars().filter(|ch| ch.is_alphanumeric()).collect::<String>().to_lowercase();
-        pc.len() >= 3 && part.split(|ch: char| !ch.is_alphanumeric()).any(|w| w.to_lowercase() == pc)
+        // (with a name: a number and the postcode alone may still be a unit)
+        let named = part.split(|ch: char| !ch.is_alphanumeric()).any(|w| w.chars().count() >= 2 && w.chars().all(|ch| ch.is_alphabetic()));
+        named && pc.len() >= 3 && part.split(|ch: char| !ch.is_alphanumeric()).any(|w| w.to_lowercase() == pc)
+    }
+
+    /// The caller wrote the part too ("Sample 57", "11, 12 Example Ave"), other than as the house
+    /// number or postcode alone ("7" for a caller at 7 Example St).
+    fn caller_wrote(query: &str, q: &Components, part: &str) -> bool {
+        let key = |t: &str| t.chars().filter(|ch| ch.is_alphanumeric()).collect::<String>().to_lowercase();
+        let own = [q.house.as_deref(), q.postcode.as_deref()].iter().flatten().any(|h| key(part) == key(h));
+        !own && Self::holds_part(query, part)
     }
 
     /// The text holds the part's words in a row.
@@ -1489,10 +1500,12 @@ impl Matcher {
             return None;
         }
         // a decimal part, with a point or a comma
+        let mut decimal = false;
         if let Some(sep) = t[i..].chars().next().filter(|ch| *ch == '.' || *ch == ',') {
             let n = digits(&t[i + sep.len_utf8()..]);
             if n > 0 {
                 i += sep.len_utf8() + n;
+                decimal = true;
             }
         }
         let rest = t[i..].trim_start();
@@ -1501,6 +1514,11 @@ impl Matcher {
             .find(|u| rest.get(..u.len()).map_or(false, |h| h.eq_ignore_ascii_case(u)) && rest.get(u.len()..).map_or(false, |t| t.trim_start().starts_with(',')))?
             .len();
         let after = rest[unit_len..].trim_start().strip_prefix(',')?.trim_start();
+        // a whole number right before an address part is a unit ("5M, 350 Example Ave", "5 Ft, …"),
+        // not a distance: a distance has a decimal or a name after it
+        if !decimal && after.starts_with(|ch: char| ch.is_numeric()) {
+            return None;
+        }
         (after.split(',').count() >= 2).then(|| after.to_string())
     }
 
@@ -1516,9 +1534,14 @@ impl Matcher {
             let caller_words = format!(" {} ", data::phrase_key(query));
             data::phrase_key(name).split(' ').any(|w| w.chars().count() >= 3 && !w.chars().any(|ch| ch.is_numeric()) && caller_words.contains(&format!(" {} ", w)))
         };
-        let lead_unit = calt.and_then(|(_, name)| name.as_deref().filter(|n| !Self::holds_part(query, n)).and_then(Self::maybe_unit));
+        let lead_unit = calt.and_then(|(_, name)| name.as_deref().filter(|n| !Self::caller_wrote(query, q, n)).and_then(Self::maybe_unit));
         if let (Some((c2, Some(name))), Some(n)) = (calt, &lead_unit) {
             if q.house.is_some() && c2.house == q.house && c2.units.is_empty() && !c2.street.key.is_empty() && !callers_word(name) && !Self::postcode_number(name, c2) {
+                // (the rest must be the caller's place first: another town is no unit to ask about)
+                let base = self.compare_parsed(q, c2, Mode::Query);
+                if base.0 != Verdict::Same {
+                    return if first.0 == Verdict::Same { first } else { base };
+                }
                 let mut c3 = c2.clone();
                 c3.units.push(format!("u{}", n));
                 let r = self.compare_parsed(q, &c3, Mode::Query);
@@ -1542,7 +1565,7 @@ impl Matcher {
                     // address's is at most asked about for a caller with a unit, and a short part
                     // is asked about for a caller with none. A row with the caller's own unit still
                     // wins beside it.
-                    if let Some(n) = name.as_ref().filter(|n| c2.house != c.house && c2.units.is_empty() && !numbered_name(n) && !Self::postcode_number(n, c2) && !Self::holds_part(query, n)) {
+                    if let Some(n) = name.as_ref().filter(|n| c2.house != c.house && c2.units.is_empty() && !numbered_name(n) && !Self::postcode_number(n, c2) && !Self::caller_wrote(query, q, n)) {
                         let digits = |t: &str| t.split(|ch: char| !ch.is_numeric()).filter(|d| !d.is_empty()).map(str::to_string).collect::<Vec<String>>();
                         let house: String = c2.house.as_deref().map(|h| h.chars().filter(|ch| ch.is_numeric()).collect()).unwrap_or_default();
                         let other = digits(n).iter().any(|d| *d != house);
