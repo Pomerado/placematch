@@ -22,7 +22,7 @@ checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
 
 [[package]]
 name = "placematch"
-version = "0.1.0"
+version = "0.2.1"
 dependencies = [
  "any_ascii",
  "regex-lite",
@@ -32,7 +32,7 @@ dependencies = [
 
 [[package]]
 name = "placematch-bench"
-version = "0.1.0"
+version = "0.2.1"
 dependencies = [
  "placematch",
  "serde_json",
@@ -40,7 +40,7 @@ dependencies = [
 
 [[package]]
 name = "placematch-wasm"
-version = "0.1.0"
+version = "0.2.1"
 dependencies = [
  "placematch",
 ]
