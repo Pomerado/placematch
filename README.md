@@ -194,7 +194,16 @@ name decides:
 - same-name rows on two streets or in two towns (two branches of a chain) are two places: the
   answer asks (`several_places`).
 
-A town typed alone ("Munich") is compared as a town, in its other languages too ("München").
+A dash with a space on each side separates a row's parts as a comma does ("Example Park — 12
+Sample Plaza" is "Example Park, 12 Sample Plaza", and "Terminal 2 — Example Airport" names
+Terminal 2). A short code in parentheses after a name, two to five capital letters such as an
+airport's ("Example International Airport (EXA)"), is not part of the name, on either side; two
+codes that differ name two places, and a compass abbreviation ("(NE)") or any other parenthesis
+("(Gate G)") stays part of the name.
+
+A town typed alone ("Munich") is compared as a town, in its other languages too ("München"). A row
+whose first part names a venue by a place-type word the caller did not write ("Example Station,
+Munich"; "International Terminal, Example International Airport") is that venue, not the town.
 
 A place's name with a postcode alone ("Example Center, 94000") is the name with the postcode as
 its area. Rows of the very same name in one town are one place, except that a row the site

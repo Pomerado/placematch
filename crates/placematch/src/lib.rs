@@ -2034,7 +2034,7 @@ impl Matcher {
             return None;
         }
         let first = query.split(',').next().unwrap_or("");
-        let words = self.name_words(first);
+        let words = self.name_words(&self.without_short_codes(first));
         if words.is_empty() || !words.iter().any(|w| w.0.chars().any(|ch| ch.is_ascii_alphabetic())) {
             return None;
         }
@@ -2052,6 +2052,73 @@ impl Matcher {
             Some(h) if words[0].0.starts_with(h.as_str()) && words[0].0.len() > h.len() && !query.split(',').skip(1).any(|p| p.chars().any(|ch| ch.is_ascii_digit()) && p.split_whitespace().any(|w| w.chars().all(|ch| ch.is_ascii_digit()) && w.len() < 4)) => Some(words),
             _ => None,
         }
+    }
+
+    /// The short codes written in parentheses in a place's name, such as an airport's or a
+    /// station's letters ("Example International Airport (EXA)"): two to five capital letters that
+    /// are not a compass abbreviation ("Example Park (NE)" names a part of the park). Folded.
+    fn short_codes(&self, part: &str) -> Vec<String> {
+        let mut codes = Vec::new();
+        let mut rest = part;
+        while let Some(open) = rest.find('(') {
+            let after = &rest[open + 1..];
+            let Some(close) = after.find(')') else { break };
+            let inner = after[..close].trim();
+            let compass = || self.data.lookup(&inner.to_ascii_lowercase()).iter().any(|e| e.class == data::Class::Directional);
+            if (2..=5).contains(&inner.len()) && inner.chars().all(|ch| ch.is_ascii_uppercase()) && !compass() {
+                codes.push(inner.to_ascii_lowercase());
+            }
+            rest = &after[close + 1..];
+        }
+        codes
+    }
+
+    /// A place's name without its short codes in parentheses (`short_codes`), so that "Example
+    /// International Airport (EXA)" is compared as "Example International Airport". Any other
+    /// parenthesis ("(Gate G)", "(B gates)") stays: it may name a part of the place.
+    fn without_short_codes<'t>(&self, part: &'t str) -> std::borrow::Cow<'t, str> {
+        let codes = self.short_codes(part);
+        if codes.is_empty() {
+            return std::borrow::Cow::Borrowed(part);
+        }
+        let mut out = String::with_capacity(part.len());
+        let mut rest = part;
+        while let Some(open) = rest.find('(') {
+            let after = &rest[open + 1..];
+            let Some(close) = after.find(')') else { break };
+            let inner = after[..close].trim();
+            out.push_str(&rest[..open]);
+            if !codes.contains(&inner.to_ascii_lowercase()) {
+                out.push_str(&rest[open..open + close + 2]);
+            }
+            rest = &after[close + 1..];
+        }
+        out.push_str(rest);
+        std::borrow::Cow::Owned(out)
+    }
+
+    /// A row as a caller's place name is compared with it: a dash with a space on each side
+    /// separates its parts as a comma does ("Example Park — 12 Sample Plaza" is read as "Example
+    /// Park, 12 Sample Plaza", and "Terminal 2 — Example Airport" names Terminal 2). A dash with no
+    /// space beside it ("Example-Park", "10-14") is part of a word.
+    fn dash_parts(text: &str) -> std::borrow::Cow<'_, str> {
+        let chars: Vec<char> = text.chars().collect();
+        let separates = |i: usize| matches!(chars[i], '-' | '\u{2013}' | '\u{2014}') && i > 0 && i + 1 < chars.len() && chars[i - 1].is_whitespace() && chars[i + 1].is_whitespace();
+        if !(0..chars.len()).any(separates) {
+            return std::borrow::Cow::Borrowed(text);
+        }
+        let mut out = String::with_capacity(text.len());
+        for i in 0..chars.len() {
+            if separates(i) {
+                while out.ends_with(char::is_whitespace) {
+                    out.pop();
+                }
+                out.push(',');
+            } else {
+                out.push(chars[i]);
+            }
+        }
+        std::borrow::Cow::Owned(out)
     }
 
     /// A text of a name with no digits and then a lone number of four or more digits, after a
@@ -2549,15 +2616,22 @@ impl Matcher {
         let mut named_after_any = false;
         // a row of the caller's exact name outside the caller's area
         let mut exact_elsewhere = false;
+        let query_codes = self.short_codes(query.split(',').next().unwrap_or(""));
         for (i, row) in rows.iter().enumerate() {
-            let c = row.text;
-            if self.is_control(query, c) {
+            if self.is_control(query, row.text) {
                 reports.push(report(Verdict::Different, vec!["control"]));
                 continue;
             }
+            let c = &*Self::dash_parts(row.text);
+            let first = c.split(',').next().unwrap_or("");
+            let words = self.name_words(&self.without_short_codes(first));
+            // a row whose first part names a venue by a place-type word the caller did not write
+            // ("International Terminal, Example International Airport" for "Example International
+            // Airport") is that venue, not a place in the caller's town
+            let venue_part = words.iter().any(|w| !name.iter().any(|n| n.0 == w.0) && self.data.lookup(&w.0).iter().any(|e| e.class == data::Class::Place));
             // a town typed alone, with no country: a row adding a place the caller did not name may
             // be another town of the name ("Paris, TX" for "Paris")
-            if let Some(q) = town_alone.as_ref().filter(|q| q.cc.is_none()) {
+            if let Some(q) = town_alone.as_ref().filter(|q| q.cc.is_none() && !venue_part) {
                 let whole = parse::parse(ctx, c);
                 let named = |u: &Text| q.localities.iter().any(|t| t.key == u.key || text_eq(self, t, u, false) == Tri::Yes);
                 if whole.street.is_empty() && whole.house.is_none() && whole.localities.iter().any(named) && whole.localities.iter().any(|u| !whole.countries.contains(&u.key) && !named(u)) {
@@ -2566,10 +2640,13 @@ impl Matcher {
                     continue;
                 }
             }
-            let first = c.split(',').next().unwrap_or("");
-            let words = self.name_words(first);
             let mut rel = self.name_relation(name, &words);
-            if rel == 0 {
+            // two short codes that differ name two places ("(EXA)" and "(EXB)")
+            let row_codes = self.short_codes(first);
+            if !query_codes.is_empty() && !row_codes.is_empty() && !row_codes.iter().any(|k| query_codes.contains(k)) {
+                rel = 0;
+            }
+            if rel == 0 && !venue_part {
                 if let Some(q) = &town_alone {
                     let whole = parse::parse(ctx, c);
                     // with no allowance for a typo: "Homburg" is not "Hamburg"

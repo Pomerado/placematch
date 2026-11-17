@@ -510,3 +510,37 @@ fn a_row_that_adds_a_place_is_asked_about_beside_a_hyphenated_form_of_the_town()
     let e = m.pick_explained("Beispielplatz 8, Munich, Germany", &rows, &opts);
     assert_eq!((e.outcome, e.index), (Outcome::Match, Some(1)));
 }
+
+#[test]
+fn a_named_place_is_read_across_a_dash_and_without_its_short_code() {
+    let m = Matcher::new();
+    let rows = [
+        "Example International Airport (EXA) — 400 Sample Rd",
+        "Terminal 1 — Example International Airport",
+        "Terminal 2 — Example International Airport",
+        "International Terminal — Example International Airport",
+    ];
+    for country in [Some("US"), None] {
+        let explained: Vec<Row> = rows.iter().map(|&t| Row::from(t)).collect();
+        let e = m.pick_explained("Example International Airport", &explained, &PickOptions { country });
+        assert_eq!((e.outcome, e.index, e.same.clone()), (Outcome::Match, Some(0), vec![0]), "{:?}", country);
+        assert!(e.rows[1..].iter().all(|r| r.verdict == Verdict::Different));
+    }
+}
+
+#[test]
+fn rows_of_a_named_place_with_no_town_are_all_offered() {
+    let m = Matcher::new();
+    let rows = [
+        Row::from("Exampleton Example Terminal — 1 Example Plaza"),
+        Row { text: "Example Building — 1 Example Plaza", categorized: true },
+        Row::from("EX Example Building (Gate G)"),
+        Row::from("Example Building — 301 Sample Ctr"),
+        Row::from("The Sample Promenade/Example Building"),
+    ];
+    let e = m.pick_explained("Example Building, Exampleton, CA", &rows, &PickOptions { country: Some("US") });
+    // the caller gave a town and no row states one: ask, offering every row of the name, and let
+    // no row be taken on a read
+    assert_eq!((e.outcome, e.same.clone(), e.reasons.clone(), e.prefer_on_read), (Outcome::Ambiguous, vec![1, 2, 3, 4], vec!["place_unconfirmed"], None));
+    assert_eq!(e.rows[0].verdict, Verdict::Different);
+}
