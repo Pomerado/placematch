@@ -1775,6 +1775,12 @@ impl Matcher {
             (Some(_), None) | (None, Some(_)) if !peer => return (Verdict::Different, vec!["po_box_missing"]),
             _ => {}
         }
+        // a second number of the house number's part, when both sides give one
+        if let (Some(a), Some(b)) = (&q.second_number, &c.second_number) {
+            if a != b {
+                return (Verdict::Different, vec!["house_number"]);
+            }
+        }
         // house number
         match (&q.house, &c.house) {
             (Some(a), Some(b)) => {

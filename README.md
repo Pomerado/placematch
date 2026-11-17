@@ -117,6 +117,8 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
   is left out before the row is read; a whole number right before the address ("5M, 350 Example
   Ave") is an apartment, not a distance.
 - A business listing at the address is the same place as the plain address.
+- A part of two numbers and no words ("30 18, Exampleton") gives the place two numbers: when both
+  sides give the second one, another second number is another place.
 - A town written with its district after a hyphen ("München-Altstadt-Lehel", "Berlin-Mitte") is
   that town. A name joined by a word such as "en", "am" or "upon" ("Aix-en-Provence",
   "Newcastle-under-Lyme"), or ending in a word such as "City", is a name of its own.
