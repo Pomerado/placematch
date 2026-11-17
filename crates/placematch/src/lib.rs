@@ -1352,7 +1352,7 @@ impl Matcher {
         }
         let c = parse::parse(&ctx, candidate);
         let alts: Vec<Components> = Self::comma_free_readings(query).iter().map(|a| parse::parse(&ctx, a)).collect();
-        let calt = Self::without_leading_name(candidate).map(|t| parse::parse(&ctx, &t));
+        let calt = self.without_leading_name(candidate).map(|(t, name)| (parse::parse(&ctx, &t), name));
         self.compare_any(&q, &alts, &c, calt.as_ref())
     }
 
@@ -1361,15 +1361,50 @@ impl Matcher {
     /// house number.
     /// A listing may also open with the distance to it ("0.2 mi, Sample Cafe, 12 Example St"):
     /// the listing without the distance, then without a numbered name as above.
-    fn without_leading_name(candidate: &str) -> Option<String> {
+    /// It also returns the name part dropped, if any. A unit, floor or building part is never
+    /// dropped.
+    fn without_leading_name(&self, candidate: &str) -> Option<(String, Option<String>)> {
         if let Some(rest) = Self::without_leading_distance(candidate) {
-            return Some(Self::without_leading_name(&rest).unwrap_or(rest));
+            return Some(self.without_leading_name(&rest).unwrap_or((rest, None)));
         }
         let parts: Vec<&str> = candidate.split(',').collect();
-        if parts.len() < 3 || !parts[0].chars().any(|ch| ch.is_numeric()) || !parts[1].chars().any(|ch| ch.is_numeric()) {
+        // a unit, floor or building part is part of the address, not a name
+        if parts.len() < 3 || !parts[0].chars().any(|ch| ch.is_numeric()) || !parts[1].chars().any(|ch| ch.is_numeric()) || Self::unit_part(parts[0]) {
             return None;
         }
-        Some(parts[1..].join(","))
+        Some((parts[1..].join(","), Some(parts[0].to_string())))
+    }
+
+    /// A part that names a unit, floor or building within an address rather than a place: "#7",
+    /// "Unit 7", "Apt 7B", "Suite 310", "Bldg 7", "7th Floor", "Level 7".
+    fn unit_part(part: &str) -> bool {
+        const WORDS: &[&str] = &[
+            "unit", "apt", "apartment", "suite", "ste", "building", "bldg", "bld", "floor", "fl", "flr", "flat", "lot", "space", "spc", "room", "rm", "shop", "level", "lvl", "office", "ofc", "dept", "trailer", "trlr", "stall", "slip", "pier", "hangar", "box",
+        ];
+        let t = part.trim();
+        if t.starts_with('#') {
+            return true;
+        }
+        let key = data::phrase_key(t);
+        let w: Vec<&str> = key.split(' ').filter(|w| !w.is_empty()).collect();
+        let num = |i: usize| w.get(i).map_or(false, |x| x.chars().any(|ch| ch.is_ascii_digit()));
+        let word = |i: usize| w.get(i).map_or(false, |x| WORDS.contains(x) || *x == "#");
+        // a unit word and its number ("Unit 7", "Apt # 7"), or a number and its unit word ("7th Floor")
+        (word(0) && (num(1) || (w.get(1) == Some(&"#") && num(2)))) || (num(0) && word(1))
+    }
+
+    /// A dropped leading part that is a place's name holding the caller's house number ("12 Hour
+    /// Sample", "Sample79 Mall"), not a street address of its own ("12 Example Rd").
+    fn numbered_name(&self, name: &str, house: &str) -> bool {
+        let key = data::phrase_key(name);
+        if !key.split(' ').any(|w| w.eq_ignore_ascii_case(house)) {
+            return false;
+        }
+        // an address: the number standing alone at either end, and a street type
+        let raw: Vec<&str> = name.split_whitespace().collect();
+        let alone = |w: Option<&&str>| w.map_or(false, |w| w.trim_matches(|ch: char| !ch.is_alphanumeric()).eq_ignore_ascii_case(house));
+        let typed = key.split(' ').any(|w| self.data.lookup(w).iter().any(|e| e.class == data::Class::StreetType));
+        !((alone(raw.first()) || alone(raw.last())) && typed)
     }
 
     /// A listing that opens with a distance ("0.2 mi", "1.4 km", "350 ft", "0,3 km") and goes on:
@@ -1399,14 +1434,18 @@ impl Matcher {
 
     /// The query as read, or as one of its comma-free readings if that reading is the candidate's
     /// place.
-    fn compare_any(&self, q: &Components, alts: &[Components], c: &Components, calt: Option<&Components>) -> (Verdict, Vec<&'static str>) {
+    fn compare_any(&self, q: &Components, alts: &[Components], c: &Components, calt: Option<&(Components, Option<String>)>) -> (Verdict, Vec<&'static str>) {
         let first = self.compare_parsed(q, c, Mode::Query);
         if first.0 == Verdict::Same {
             return first;
         }
-        if let Some(c2) = calt {
-            // (a numbered name may open with the caller's own number: "12 Hour Sample, 12 Example St")
-            if q.house.is_some() && c2.house == q.house {
+        if let Some((c2, name)) = calt {
+            // the listing read without its leading name (never a unit part, see
+            // `without_leading_name`) gives another number, or the name holds the caller's own number
+            // and is no street address of its own ("12 Hour Sample, 12 Example St"), or only a
+            // distance was dropped
+            let numbered_name = |n: &String| q.house.as_deref().map_or(false, |h| self.numbered_name(n, h));
+            if q.house.is_some() && c2.house == q.house && (c2.house != c.house || name.as_ref().map_or(true, numbered_name)) {
                 let r = self.compare_parsed(q, c2, Mode::Query);
                 if r.0 == Verdict::Same {
                     return r;
@@ -2946,7 +2985,7 @@ impl Matcher {
         let candidates: Vec<&str> = rows.iter().map(|r| r.text).collect();
         let mut cs: Vec<Components> = candidates.iter().map(|c| parse::parse(&ctx, c)).collect();
         let alts: Vec<Components> = Self::comma_free_readings(query).iter().map(|a| parse::parse(&ctx, a)).collect();
-        let calts: Vec<Option<Components>> = candidates.iter().map(|c| Self::without_leading_name(c).map(|t| parse::parse(&ctx, &t))).collect();
+        let calts: Vec<Option<(Components, Option<String>)>> = candidates.iter().map(|c| self.without_leading_name(c).map(|(t, name)| (parse::parse(&ctx, &t), name))).collect();
         // a site's control ("See more results for <text>") is never a place, nor a row to ask about
         let mut verdicts: Vec<(Verdict, Vec<&'static str>)> = cs
             .iter()
