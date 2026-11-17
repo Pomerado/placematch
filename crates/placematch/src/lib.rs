@@ -331,7 +331,10 @@ enum Area {
 
 /// Words that name a transport place, whose name a site may follow with its three-letter code
 /// ("Example International Airport (EXA)"), in the languages most such codes are written beside.
-const TRANSPORT_WORDS: &[&str] = &["airport", "aerodrome", "airfield", "heliport", "station", "terminal", "aeroport", "aeropuerto", "aeroporto", "flughafen", "bahnhof", "gare", "estacion", "stazione"];
+const TRANSPORT_WORDS: &[&str] = &["airport", "aerodrome", "airfield", "heliport", "station", "terminal", "aeroport", "aeropuerto", "aeroporto", "flughafen", "luchthaven", "bahnhof", "hauptbahnhof", "gare", "estacion", "estacao", "stazione"];
+
+/// The three-letter compass points, which a short code is never ("Example Station (NNE)").
+const COMPASS_POINTS: &[&str] = &["nne", "ene", "ese", "sse", "ssw", "wsw", "wnw", "nnw"];
 
 /// Age and size words that, before a place's name, may name another place ("Old Example Park",
 /// "Upper Example Park"), in the languages PlaceMatch reads; compass words come from the dictionaries.
@@ -2061,8 +2064,9 @@ impl Matcher {
     /// The short codes written in parentheses in the name of a transport place, such as an
     /// airport's or a station's letters ("Example International Airport (EXA)"): three capital
     /// letters, after a name that holds a transport word (`TRANSPORT_WORDS`). A Roman numeral
-    /// ("(III)") or a compass abbreviation ("(NNE)") is not one, and nor is any code beside another
-    /// kind of name ("Example Bank (ATM)", "Example Plaza (II)", "Example Park (IL)"). Folded.
+    /// ("(III)"), a compass point ("(NNE)") or a direction the dictionaries know is not one, and nor
+    /// is any code beside another kind of name ("Example Bank (ATM)", "Example Plaza (II)",
+    /// "Example Park (IL)"). Folded.
     fn short_codes(&self, part: &str) -> Vec<String> {
         let mut groups = Vec::new();
         let mut outside = String::new();
@@ -2083,13 +2087,13 @@ impl Matcher {
             .into_iter()
             .filter(|g| g.len() == 3 && g.chars().all(|ch| ch.is_ascii_uppercase()))
             .map(|g| g.to_ascii_lowercase())
-            .filter(|k| !k.chars().all(|ch| matches!(ch, 'i' | 'v' | 'x')) && !self.data.lookup(k).iter().any(|e| e.class == data::Class::Directional))
+            .filter(|k| !k.chars().all(|ch| matches!(ch, 'i' | 'v' | 'x')) && !COMPASS_POINTS.contains(&k.as_str()) && !self.data.lookup(k).iter().any(|e| e.class == data::Class::Directional))
             .collect()
     }
 
     /// A place's name without its short codes in parentheses (`short_codes`), so that "Example
     /// International Airport (EXA)" is compared as "Example International Airport". Any other
-    /// parenthesis ("(Gate G)", "(B gates)") stays: it may name a part of the place.
+    /// parenthesis ("(Gate B)", "(B gates)") stays: it may name a part of the place.
     fn without_short_codes<'t>(&self, part: &'t str) -> std::borrow::Cow<'t, str> {
         let codes = self.short_codes(part);
         if codes.is_empty() {
@@ -2138,7 +2142,9 @@ impl Matcher {
             return (std::borrow::Cow::Borrowed(text), true);
         }
         let street = parse::parse(ctx, segment);
-        let address = street.house.is_some() && !street.street.is_empty() && (segment.starts_with(|ch: char| ch.is_ascii_digit()) || !street.street_type.is_empty());
+        // a house number with a street type or a building word ("12 Sample Plaza", "1 Example Bldg"),
+        // not a count or a numbered part ("24 Hour Parking", "12 Screens")
+        let address = street.house.is_some() && !street.street.is_empty() && (!street.street_type.is_empty() || segment.split_whitespace().any(|w| self.data.lookup(&w.to_lowercase()).iter().any(|e| e.class == data::Class::Building)));
         let area = Self::area_parse(ctx, segment);
         let postcode = area.postcode.is_some() && area.house.is_none() && area.street.is_empty() && !segment.chars().any(|ch| ch.is_alphabetic() && !ch.is_ascii_uppercase());
         let callers_town = self.towns(&area).iter().any(|u| self.towns(qa).iter().any(|t| text_eq(self, t, u, false) == Tri::Yes));
