@@ -1951,7 +1951,7 @@ impl Matcher {
             for (a, b, region) in pairs {
                 // one edit in a town name is only a typo for long names ("Lublin" and "Lubin" are two towns)
                 let typo_town = typo && letters(&a.key).min(letters(&b.key)) >= 7;
-                match town_eq(self, a, b, typo_town) {
+                match text_eq(self, a, b, typo_town) {
                     Tri::Yes if region == 1 => {}
                     Tri::Yes if region == 2 => any_unknown = true,
                     Tri::Yes if spelling && typo_town && text_eq(self, a, b, false) != Tri::Yes => misspelled = true,
@@ -1974,16 +1974,37 @@ impl Matcher {
                         }
                         let toks = qc.toks[keep.clone()].to_vec();
                         let key: String = toks.iter().map(|t| t.0.as_str()).collect();
-                        let t = Text { skel: fold::skeleton(&key), key, script: qc.script, abbr: qc.abbr.get(keep.clone()).map_or(vec![false; toks.len()], |a| a.to_vec()), toks, native: String::new(), head: String::new() };
+                        let t = Text { skel: fold::skeleton(&key), key, script: qc.script, abbr: qc.abbr.get(keep.clone()).map_or(vec![false; toks.len()], |a| a.to_vec()), toks, native: String::new(), head: String::new(), head_known: false };
                         if c.localities.iter().any(|l| text_eq(self, &t, l, false) == Tri::Yes) {
                             any_yes = true;
                         }
                     }
                 }
             }
+            // a town written with a district after a hyphen ("München-Altstadt-Lehel") is the
+            // caller's town only with evidence: a town the data knows by name, or the same postcode
+            // on both sides; otherwise it may be another town whose name opens with the caller's
+            // ("Baden-Baden" for "Baden"), and it is asked about
+            let mut head_unconfirmed = false;
+            if !any_yes {
+                // either side's place name opens with a place name the other side gives
+                let opens = |t: &Text, u: &Text| !u.head.is_empty() && u.head == t.key;
+                let (qs, cs) = (std::iter::once(qc).chain(&q.localities), std::iter::once(cc).chain(&c.localities));
+                let hit = qs.clone().find_map(|a| cs.clone().find(|b| opens(a, b))).or_else(|| cs.clone().find_map(|b| qs.clone().find(|a| opens(b, a))));
+                if let Some(t) = hit {
+                    if same_code || t.head_known {
+                        any_yes = true;
+                    } else {
+                        head_unconfirmed = true;
+                    }
+                }
+            }
             if !any_yes {
                 // the caller's town spelled another way may be the row's or another town: ask
-                if misspelled && !any_unknown {
+                if head_unconfirmed {
+                    unknown = true;
+                    reasons.push("town_district_unconfirmed");
+                } else if misspelled && !any_unknown {
                     unknown = true;
                     reasons.push("town_spelled_differently");
                 } else if any_unknown {
@@ -2845,7 +2866,7 @@ impl Matcher {
         }
         let mk = |toks: &[(String, Vec<u32>)], abbr: &[bool], sc: Option<Script>| -> Text {
             let key: String = toks.iter().map(|t| t.0.as_str()).collect();
-            Text { skel: fold::skeleton(&key), key, script: sc, toks: toks.to_vec(), abbr: abbr.to_vec(), native: String::new(), head: String::new() }
+            Text { skel: fold::skeleton(&key), key, script: sc, toks: toks.to_vec(), abbr: abbr.to_vec(), native: String::new(), head: String::new(), head_known: false }
         };
         let head = mk(&x.street.toks[..k], &x.street.abbr[..k.min(x.street.abbr.len())], x.street.script);
         // the other side may carry its type inside the name ("reunalan" + "tie")
@@ -3236,7 +3257,7 @@ impl Matcher {
                     (_, ["candidate_adds_unit"] | ["leading_unit"]) => "unit_not_given",
                     (Verdict::Unknown, ["candidate_has_no_house_number"]) => "number_not_listed",
                     (Verdict::Unknown, ["number_range"]) => "number_range",
-                    (Verdict::Unknown, ["town_not_listed"] | ["region_not_listed"] | ["town_spelled_differently"]) => "place_unconfirmed",
+                    (Verdict::Unknown, ["town_not_listed"] | ["region_not_listed"] | ["town_spelled_differently"] | ["town_district_unconfirmed"]) => "place_unconfirmed",
                     (Verdict::Different, ["postcode"]) if self.postcode_only_differs(&q, &cs[i]) => "postcode_differs",
                     _ => continue,
                 };

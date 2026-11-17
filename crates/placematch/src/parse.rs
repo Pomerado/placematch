@@ -18,6 +18,8 @@ pub struct Text {
     /// a town's name the place's name opens with, joined to a district by a hyphen ("munchen" for
     /// "München-Altstadt-Lehel"): its key, or empty
     pub head: String,
+    /// `head` is a town the data knows by name
+    pub head_known: bool,
 }
 
 impl Text {
@@ -1148,7 +1150,7 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
                 native.truncate(native.len() - cut.len());
             }
         }
-        c.street = Text { skel: skeleton(&key), key, script: sc, toks: toks_out, abbr: abbr_out, native, head: String::new() };
+        c.street = Text { skel: skeleton(&key), key, script: sc, toks: toks_out, abbr: abbr_out, native, head: String::new(), head_known: false };
         for &k in &idx {
             used[k] = true;
         }
@@ -1302,8 +1304,8 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
             let sc = text_words.first().map(|&k| toks[k].script);
             let ab: Vec<bool> = text_words.iter().map(|&k| toks[k].abbr).collect();
             let native: String = text_words.iter().map(|&k| toks[k].s.as_str()).collect();
-            let head = if is_country || is_region { String::new() } else { town_head(data, &toks, &text_words) };
-            let t = Text { skel: skeleton(&key), key, script: sc, toks: tk, abbr: ab, native, head };
+            let (head, head_known) = if is_country || is_region { (String::new(), false) } else { town_head(data, &toks, &g, &text_words) };
+            let t = Text { skel: skeleton(&key), key, script: sc, toks: tk, abbr: ab, native, head, head_known };
             seg_texts.push((g[0], t, is_region, is_country));
         }
     }
@@ -1408,27 +1410,52 @@ impl<'a> Ctx<'a> {
     }
 }
 
-/// Words that join the parts of one town's name ("Aix-en-Provence", "Newcastle-under-Lyme"): a name
-/// with one of them is that town's own name, not a town and its district.
-const NAME_JOINERS: &[&str] = &["am", "an", "auf", "bei", "de", "del", "della", "der", "des", "di", "du", "en", "im", "in", "la", "le", "les", "lez", "on", "ob", "sous", "sur", "under", "upon", "y"];
+/// Words that join the parts of one town's name ("Aix-en-Provence", "Stoke-on-Trent",
+/// "Weston-super-Mare"): a name with one of them is that town's own name, not a town and its
+/// district.
+const NAME_JOINERS: &[&str] = &[
+    "am", "an", "aux", "auf", "bei", "de", "del", "della", "der", "des", "di", "du", "en", "im", "in", "la", "le", "les", "lez", "on", "ob", "sous", "super", "sur", "under", "upon", "y", "zu", "zum", "zur",
+];
 
-/// The town a place's name opens with when it is written as the town and a district joined by a
-/// hyphen ("München-Altstadt-Lehel", "Berlin-Mitte"): the first word's key, as its exonym's
-/// canonical form when it has one; empty for a single word, a first word of fewer than four letters,
-/// a name joined by a word such as "en" or "upon", which is one town's name, or one that goes on
-/// with an administrative word such as "City", which names the area.
-fn town_head(data: &Data, toks: &[crate::token::Tok], words: &[usize]) -> String {
-    let (Some(&first), true) = (words.first(), words.len() >= 2) else {
-        return String::new();
+/// The town a place's name opens with when it is written as the town and a district joined by
+/// hyphens ("München-Altstadt-Lehel", "Berlin-Mitte"): the first word's key, as its exonym's
+/// canonical form when it has one, and whether the data knows it as a town's name. Empty for a
+/// name not joined by a hyphen after its first word, a first word of fewer than four letters, a
+/// name joined by a word such as "on" or "sur" (one town's own name), one that goes on with an
+/// administrative word such as "City" (the area's name), or one whose rest is a town of its own
+/// ("Dallas-Fort Worth").
+fn town_head(data: &Data, toks: &[crate::token::Tok], group: &[usize], words: &[usize]) -> (String, bool) {
+    let none = (String::new(), false);
+    let Some(&first) = words.first() else {
+        return none;
     };
     let t = &toks[first];
     let key = ascii_key(&t.s);
     if !t.hyphen || t.num || t.script != Script::Latin || key.chars().filter(|ch| ch.is_alphabetic()).count() < 4 {
-        return String::new();
+        return none;
     }
-    // "Sofia-City", "Example-District": the area's own name, not a district of the town
-    if words[1..].iter().any(|&k| toks[k].num || NAME_JOINERS.contains(&ascii_key(&toks[k].s).as_str()) || crate::LATIN_ADMIN.contains(&ascii_key(&toks[k].s).as_str())) {
-        return String::new();
+    // the words joined to it by hyphens, as written: stop words included
+    let at = group.iter().position(|&k| k == first).unwrap_or(group.len());
+    let mut rest: Vec<usize> = Vec::new();
+    for w in group.windows(2).skip(at) {
+        if !toks[w[0]].hyphen {
+            break;
+        }
+        rest.push(w[1]);
     }
-    data.exonyms.get(&key).cloned().unwrap_or(key)
+    if rest.is_empty() {
+        return none;
+    }
+    let word = |k: usize| ascii_key(&toks[k].s);
+    if rest.iter().any(|&k| toks[k].num || NAME_JOINERS.contains(&word(k).as_str()) || crate::LATIN_ADMIN.contains(&word(k).as_str())) {
+        return none;
+    }
+    let tail: String = rest.iter().map(|&k| word(k)).collect();
+    if data.exonyms.contains_key(&tail) {
+        return none;
+    }
+    match data.exonyms.get(&key) {
+        Some(canon) => (canon.clone(), true),
+        None => (key, false),
+    }
 }
