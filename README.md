@@ -119,9 +119,12 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
 - A business listing at the address is the same place as the plain address.
 - A part of two numbers and no words ("30 18, Exampleton") gives the place two numbers: when both
   sides give the second one, another second number is another place.
-- A town written with its district after a hyphen ("München-Altstadt-Lehel", "Berlin-Mitte") is
-  that town. A name joined by a word such as "en", "am" or "upon" ("Aix-en-Provence",
-  "Newcastle-under-Lyme"), or ending in a word such as "City", is a name of its own.
+- A town written with a district after a hyphen ("München-Altstadt-Lehel", "Berlin-Mitte") is
+  the caller's town only with evidence: a town PlaceMatch knows by name, or the same postcode on
+  both sides. Otherwise the row is asked about (`place_unconfirmed`), since the name may be another
+  town's that opens with the caller's ("Baden-Baden" for "Baden"). A name joined by a word such
+  as "en", "on", "sur" or "upon" ("Stoke-on-Trent"), one ending in a word such as "City", or one
+  whose rest is a town of its own, is a name of its own.
 - Among rows of the caller's place, PlaceMatch takes the one that keeps the most of the caller's
   own place names, then the one that adds the fewest the caller did not write: a row that adds a
   town or district is not taken over the same address without it.
