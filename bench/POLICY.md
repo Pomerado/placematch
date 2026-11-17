@@ -119,8 +119,15 @@ Any other leading part with a number that a row is compared without (`Lower Leve
 `Sample Shop 3`) is at most asked about when its number is not the address's and the caller gave
 a unit, or when it has three words or fewer and the caller gave no unit. A part with two words or
 more and its number not last (`24 Hour Sample`, `7 Sample Store`) is a place's name and is taken
-by its address, unless it is a street address of its own (`50 Example Street`); a row taken this
-way is told apart from other rows by its address. Beside a row with the
+by its address, unless it is a street address of its own (`50 Example Street`, `50A Example
+Street`, `No. 50 Example Street`) or may be another unit: words after a unit's number (`Block 7
+East`, `Piso 3 Puerta B`) look the same, so for a caller with a unit every number in the part must
+be that unit's (`24 Hour Sample` for Suite 24), and for a caller with none the part must open with
+its number and name no side (`24 Hour Sample`, not `Tower 2 West` or `7 East Wing`). A row taken
+this way is told apart from other rows by its address, but a row that is the caller's place as
+written is preferred over it (`Sample Cafe, 12 Example St` for a caller who named Sample Cafe).
+The caller's house number written as a part of its own (`7, Example St`) is not the caller writing
+a row's leading `7`, unless the caller wrote that number twice (`60, Example Rd 60`). Beside a row with the
 caller's own unit, that row is still taken. A distance a row opens with (`0.2 mi`, `350 ft`) is
 left out before the row is read, so it is never the house number. A whole number with a unit of
 length right before the address (`5M, 350 Example Ave`, `5 m, 12 Example St`) is read as a

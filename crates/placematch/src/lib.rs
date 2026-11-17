@@ -1424,23 +1424,46 @@ impl Matcher {
     fn caller_wrote(query: &str, q: &Components, part: &str) -> bool {
         let key = |t: &str| t.chars().filter(|ch| ch.is_alphanumeric()).collect::<String>().to_lowercase();
         let own = [q.house.as_deref(), q.postcode.as_deref()].iter().flatten().any(|h| key(part) == key(h));
-        // a part of its own in the caller's text counts, even a number ("306, 11 Example Rd")
-        let own_part = query.split(',').any(|p| !key(p).is_empty() && key(p) == key(part));
+        // a part of its own in the caller's text counts, even a number ("306, 11 Example Rd"), but
+        // the caller's house number standing alone ("7, Example St") only when the caller wrote it
+        // again elsewhere ("60, Example Rd 60")
+        let house_alone = q.house.as_deref().map_or(false, |h| key(part) == key(h));
+        let twice = q.house.as_deref().map_or(false, |h| query.split(',').filter(|p| p.split(|ch: char| !ch.is_alphanumeric()).any(|w| !w.is_empty() && key(w) == key(h))).count() >= 2);
+        let own_part = (!house_alone || twice) && query.split(',').any(|p| !key(p).is_empty() && key(p) == key(part));
         own_part || (!own && Self::holds_part(query, part))
     }
 
     /// A part that reads as a place's name rather than a unit: two words or more, with the number
-    /// not at the end ("24 Hour Sample", "7 Eleven Store", "Sample Grand 2009 Ltd"). A unit puts
-    /// its number last ("Villa No 7", "Lower Level 7") or has a single word ("Studio 12", "7e
-    /// étage"), and a street address of its own ("50 Example Street") is no name either.
-    fn named_part(&self, part: &str) -> bool {
+    /// not at the end ("24 Hour Sample", "7 Sample Store"). A unit puts its number last ("Villa No
+    /// 7", "Lower Level 7") or has a single word ("Studio 12", "7e étage"), and a street address of
+    /// its own ("50 Example Street", "50A Example Street", "No. 50 Example Street") is no name
+    /// either. Words after a unit's number ("Block 7 East", "Piso 3 Puerta B") look the same, so
+    /// the part is a name only where it cannot be another unit than the caller's: for a caller
+    /// with a unit, every number in it is that unit's ("24 Hour Sample" for Suite 24); for a caller
+    /// with none, it opens with its number and names no side ("24 Hour Sample", not "Tower 2 West"
+    /// or "7 East Wing").
+    fn named_part(&self, part: &str, q: &Components) -> bool {
         let toks: Vec<&str> = part.split_whitespace().map(|t| t.trim_matches(|ch: char| !ch.is_alphanumeric())).filter(|t| !t.is_empty()).collect();
         let words = toks.iter().filter(|t| t.chars().count() >= 2 && t.chars().all(|ch| ch.is_alphabetic())).count();
         let last_number = toks.last().map_or(true, |t| t.chars().any(|ch| ch.is_numeric()));
         let key = data::phrase_key(part);
         let typed = key.split(' ').any(|w| self.data.lookup(w).iter().any(|e| e.class == data::Class::StreetType));
-        let address = typed && toks.first().map_or(false, |t| t.chars().all(|ch| ch.is_numeric()));
-        words >= 2 && !last_number && !address
+        // a house number: digits with letters or a range ("50A", "50-52"), or "No." and a number
+        let house_number = |t: &str| t.starts_with(|ch: char| ch.is_numeric()) && t.chars().all(|ch| ch.is_alphanumeric() || ch == '-' || ch == '/');
+        let numbered = toks.first().map_or(false, |t| house_number(t))
+            || (toks.len() >= 2 && matches!(toks[0].to_lowercase().as_str(), "no" | "nr" | "nº" | "n") && toks[1].starts_with(|ch: char| ch.is_numeric()));
+        let address = typed && numbered;
+        let numbers = |t: &str| t.split(|ch: char| !ch.is_numeric()).filter(|d| !d.is_empty()).map(str::to_string).collect::<Vec<String>>();
+        let fits = if q.units.is_empty() {
+            // (a direction after the number is a side of the building: "7 East Wing")
+            let side = key.split(' ').any(|w| self.data.lookup(w).iter().any(|e| e.class == data::Class::Directional));
+            toks.first().map_or(false, |t| t.chars().all(|ch| ch.is_numeric())) && !side
+        } else {
+            let units: Vec<String> = q.units.iter().flat_map(|u| numbers(u)).collect();
+            let own = numbers(part);
+            !own.is_empty() && own.iter().all(|d| units.contains(d))
+        };
+        words >= 2 && !last_number && !address && fits
     }
 
     /// The text holds the part's words in a row.
@@ -1581,7 +1604,7 @@ impl Matcher {
                     // address's is at most asked about for a caller with a unit, and a short part
                     // is asked about for a caller with none. A row with the caller's own unit still
                     // wins beside it.
-                    if let Some(n) = name.as_ref().filter(|n| c2.house != c.house && c2.units.is_empty() && !numbered_name(n) && !self.named_part(n) && !Self::postcode_number(n, c2) && !Self::caller_wrote(query, q, n)) {
+                    if let Some(n) = name.as_ref().filter(|n| c2.house != c.house && c2.units.is_empty() && !numbered_name(n) && !self.named_part(n, q) && !Self::postcode_number(n, c2) && !Self::caller_wrote(query, q, n)) {
                         let digits = |t: &str| t.split(|ch: char| !ch.is_numeric()).filter(|d| !d.is_empty()).map(str::to_string).collect::<Vec<String>>();
                         let house: String = c2.house.as_deref().map(|h| h.chars().filter(|ch| ch.is_numeric()).collect()).unwrap_or_default();
                         let other = digits(n).iter().any(|d| *d != house);
@@ -3150,10 +3173,12 @@ impl Matcher {
         // read as that address from here on (a row that only looks like the caller's place is still
         // checked against the listing as written)
         let as_written = cs.clone();
+        let mut rewritten = vec![false; cs.len()];
         for i in 0..cs.len() {
             if let (Verdict::Same, Some((c2, _))) = (verdicts[i].0, &calts[i]) {
                 if self.compare_parsed(&q, &cs[i], Mode::Query).0 != Verdict::Same && self.compare_parsed(&q, c2, Mode::Query).0 == Verdict::Same {
                     cs[i] = c2.clone();
+                    rewritten[i] = true;
                 }
             }
         }
@@ -3299,9 +3324,10 @@ impl Matcher {
             }
             return (Pick::Ambiguous(place.clone()), Explained::ambiguous(place, vec!["place_unconfirmed"], reports));
         }
-        // prefer the listing with the caller's own number over a range holding it, the listing
-        // without a business name, then the most complete one
-        let best = clusters[0].iter().copied().min_by_key(|&i| (cs[i].units != q.units, ranged[i], cs[i].business.len(), usize::MAX - cs[i].localities.len())).unwrap();
+        // prefer the listing with the caller's own number over a range holding it, a listing that is
+        // the caller's place as written over one read without its leading name, the listing without
+        // a business name, then the most complete one
+        let best = clusters[0].iter().copied().min_by_key(|&i| (cs[i].units != q.units, ranged[i], rewritten[i], cs[i].business.len(), usize::MAX - cs[i].localities.len())).unwrap();
         // a row read across scripts: its street or town is written in another script than the caller's
         let across = |i: usize| {
             let (c, qq) = (&cs[i], &q);

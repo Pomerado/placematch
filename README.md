@@ -110,7 +110,9 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
   leading part with a number is at most asked about when that number is not the address's and
   the caller gave a unit, or when the part is three words or fewer and the caller gave none,
   unless it reads as a place's name (two words or more with the number not last, such as "24
-  Hour Sample", and no street address of its own); a row
+  Hour Sample", and no street address of its own) that cannot be another unit: for a caller
+  with a unit, its numbers are that unit's; for a caller with none, it opens with its number and
+  names no side ("7 East Wing" is asked about); a row
   with the caller's own unit is still taken beside it. A distance the row opens with ("0.2 mi")
   is left out before the row is read; a whole number right before the address ("5M, 350 Example
   Ave") is an apartment, not a distance.
@@ -225,11 +227,11 @@ Held-out split: 76,722 cases from 62 countries, 11 scripts. Cells are accuracy /
 | | PlaceMatch | libpostal baseline | both agree |
 |---|---|---|---|
 | all cases | 92.0% / 0.32% | 75.9% / 1.87% | 74.6% / 0.03% |
-| one candidate (`pair`) | 93.0% / 0.12% | 79.3% / 0.44% | 77.4% / 0.00% |
+| one candidate (`pair`) | 92.9% / 0.12% | 79.3% / 0.44% | 77.4% / 0.00% |
 | 2 to 8 candidates (`pick`) | 90.7% / 0.58% | 71.3% / 3.81% | 70.7% / 0.06% |
 | government and open-data addresses | 96.0% / 0.05% | 82.6% / 1.28% | 80.7% / 0.00% |
 | OpenStreetMap addresses and listings | 90.4% / 0.42% | 73.2% / 2.11% | 72.1% / 0.04% |
-| Latin script | 94.5% / 0.32% | 81.1% / 1.34% | 79.1% / 0.03% |
+| Latin script | 94.5% / 0.32% | 81.1% / 1.34% | 79.0% / 0.03% |
 | other scripts | 87.5% / 0.31% | 66.6% / 2.83% | 66.6% / 0.04% |
 | no commas | 84.4% / 0.28% | 76.0% / 1.89% | 70.2% / 0.03% |
 | transliterated | 58.5% / 0.25% | 35.2% / 0.25% | 35.1% / 0.00% |
