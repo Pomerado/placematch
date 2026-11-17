@@ -1,14 +1,24 @@
-//! placematch-bench: predictions (default) or latency mode (--latency) over benchmark JSONL on stdin.
-use placematch::{Matcher, Pick, Verdict};
+//! placematch-bench: predictions (default; `--explained` answers with `pick_explained` for every
+//! case) or latency mode (--latency) over benchmark JSONL on stdin.
+use placematch::{Matcher, Outcome, Pick, PickOptions, Row, Verdict};
 use serde_json::{json, Value};
 use std::io::{BufRead, Write};
 use std::time::Instant;
 
-fn predict(m: &Matcher, case: &Value) -> Value {
+fn predict(m: &Matcher, case: &Value, explained: bool) -> Value {
     let id = case["id"].clone();
     let q = case["query"].as_str().unwrap_or("");
     let cc = case["country"].as_str();
     let cands: Vec<&str> = case["candidates"].as_array().map(|a| a.iter().filter_map(|x| x.as_str()).collect()).unwrap_or_default();
+    if explained {
+        let rows: Vec<Row> = cands.iter().map(|&t| Row::from(t)).collect();
+        let e = m.pick_explained(q, &rows, &PickOptions { country: cc });
+        return match e.outcome {
+            Outcome::Match => json!({"id": id, "outcome": "match", "index": e.index}),
+            Outcome::None => json!({"id": id, "outcome": "none", "index": null}),
+            Outcome::Ambiguous => json!({"id": id, "outcome": "ambiguous", "index": null, "reasons": e.reasons}),
+        };
+    }
     if case["task"] == "pair" {
         let (v, _) = m.compare(q, cands.first().copied().unwrap_or(""), cc);
         return if v == Verdict::Same { json!({"id": id, "outcome": "match", "index": 0}) } else { json!({"id": id, "outcome": "none", "index": null}) };
@@ -98,10 +108,11 @@ fn main() {
         eprintln!("pick_calls_per_s_one_core={:.0} compare_calls_per_s_one_core={:.0}", picks_per_s, cmps_per_s);
         return;
     }
+    let explained = args.iter().any(|a| a == "--explained");
     let out = std::io::stdout();
     let mut w = std::io::BufWriter::new(out.lock());
     for c in &cases {
-        writeln!(w, "{}", predict(&m, c)).unwrap();
+        writeln!(w, "{}", predict(&m, c, explained)).unwrap();
     }
     eprintln!("init_ms={:.2} cases={} total_ms={:.1}", init.as_secs_f64() * 1e3, cases.len(), t0.elapsed().as_secs_f64() * 1e3);
 }

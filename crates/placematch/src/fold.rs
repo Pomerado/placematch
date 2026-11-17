@@ -349,3 +349,24 @@ mod tests {
         assert_eq!(cjk_numerals("三丁目十二番"), "3丁目12番");
     }
 }
+
+/// Traditional, Japanese and simplified forms of Han characters common in place names, as
+/// (form, canonical) pairs read two characters at a time. Two Han names are the same name only when
+/// their characters agree up to these forms: 臺南 and 台南 are one city, while 福州 and 抚州 read
+/// alike and are two.
+const HAN_VARIANTS: &str = "臺台灣湾縣县県县區区鄉乡鎮镇號号樓楼門门東东興兴華华國国廣广広广豐丰豊丰龍龙雲云陽阳島岛嶺岭蘇苏濟济寧宁遼辽黃黄長长鳳凤雞鸡義义園园圍围橋桥莊庄灘滩衛卫營营實实実实壽寿会会會会開开關关関关漢汉陝陕貴贵慶庆蘭兰嶼屿澤泽沢泽爾尔爐炉臨临從从運运達达遠远連连鄭郑陳陈陸陆隴陇雙双頭头馬马魯鲁鹽盐麗丽齊齐龜龟為为無无熱热溫温湯汤滄沧濱滨浜滨瀋沈烏乌煙烟獅狮環环產产畢毕當当發发盤盘礦矿碼码禮礼種种穀谷窯窑範范築筑紅红紹绍經经綏绥維维綿绵線线羅罗聖圣舊旧蓮莲藍蓝蘆芦處处衝冲裝装覺觉觀观許许譚谭費费賀贺資资賓宾趙赵車车軍军輝辉農农邊边辺边鄒邹醫医鈴铃銀银鋪铺錦锦鍾钟鐵铁鉄铁閘闸閩闽間间陰阴階阶際际雜杂離离靈灵韓韩順顺須须頓顿領领額额風风飛飞館馆驛驿駅驿鯉鲤鳴鸣鴻鸿鵝鹅鶴鹤鷹鹰麥麦齋斋斎斋櫻樱桜樱圓圆円圆黒黑萬万廠厂務务學学校校溝沟灣湾瀾澜潁颍滬沪漁渔滸浒澗涧濰潍灣湾黨党鄧邓劉刘楊杨葉叶蔣蒋薛薛謝谢鍋锅陽阳靜静韶韶項项顏颜餘余魚鱼鳥鸟麻麻黎黎";
+
+/// A Han name with its characters in one form ("臺南市" and "台南市" give the same text).
+pub fn han_canon(s: &str) -> String {
+    static MAP: std::sync::OnceLock<std::collections::HashMap<char, char>> = std::sync::OnceLock::new();
+    let map = MAP.get_or_init(|| {
+        let v: Vec<char> = HAN_VARIANTS.chars().collect();
+        v.chunks(2).filter(|p| p.len() == 2).map(|p| (p[0], p[1])).collect()
+    });
+    s.chars().map(|c| map.get(&c).copied().unwrap_or(c)).collect()
+}
+
+/// The text is all Han characters (at least one).
+pub fn all_han(s: &str) -> bool {
+    !s.is_empty() && s.chars().all(|c| matches!(c as u32, 0x3400..=0x4DBF | 0x4E00..=0x9FFF | 0xF900..=0xFAFF | 0x20000..=0x2FA1F) || c == '〇')
+}

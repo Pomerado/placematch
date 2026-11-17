@@ -12,4 +12,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: rustup toolchain install stable --profile minimal --target wasm32-unknown-unknown && rustup default stable
       - run: cargo test --release
-      - run: cargo build --profile wasm --target wasm32-unknown-unknown -p placematch-wasm
+      - run: tools/build-js.sh
+      - run: node --test js/placematch.test.mjs
+      - run: tools/check-package.sh

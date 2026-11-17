@@ -55,7 +55,8 @@ fn main() {
         let (k, v) = line.split_once(':').unwrap();
         c2l.insert(k.trim().to_string(), v.trim().to_string());
     }
-    let mut regions: std::collections::BTreeMap<String, Vec<String>> = Default::default();
+    // regions as groups of names of one region ("y:" from OpenCage, "a:" from libaddressinput)
+    let mut groups: std::collections::BTreeMap<String, Vec<Vec<String>>> = Default::default();
     let mut cur = String::new();
     for line in fs::read_to_string(data.join("state_codes.yaml")).unwrap().lines() {
         if line.trim_start().starts_with('#') || line.trim().is_empty() { continue; }
@@ -64,9 +65,9 @@ fn main() {
         let (k, v) = match t.split_once(':') { Some(x) => x, None => continue };
         let v = v.trim().trim_matches('"').trim_matches('\'');
         if indent == 0 { cur = k.trim().to_string(); continue; }
-        let e = regions.entry(cur.clone()).or_default();
-        if indent <= 4 { e.push(k.trim().to_string()); }
-        if !v.is_empty() { e.push(v.to_string()); }
+        let g = groups.entry(cur.clone()).or_default();
+        if indent <= 4 { g.push(vec![k.trim().to_string()]); }
+        if !v.is_empty() { if let Some(last) = g.last_mut() { last.push(v.to_string()); } }
     }
     let mut ccs = std::collections::BTreeSet::new();
     ccs.extend(c2l.keys().cloned());
@@ -79,15 +80,27 @@ fn main() {
         if let Some(z) = j["zip"].as_str() { zips.insert(cc.clone(), z.to_string()); }
         // the English country name, without notes such as "(Rep.)"
         if let Some(n) = j["name"].as_str() { cnames.insert(cc.clone(), n.split('(').next().unwrap_or("").trim().to_string()); }
-        let r = regions.entry(cc.clone()).or_default();
-        for f in ["sub_keys", "sub_names", "sub_lnames", "sub_isoids"] {
-            if let Some(s) = j[f].as_str() { r.extend(s.split('~').map(|x| x.to_string())); }
+        // the four lists name the same regions in the same order
+        let lists: Vec<Vec<String>> = ["sub_keys", "sub_names", "sub_lnames", "sub_isoids"].iter().map(|f| j[*f].as_str().map(|s| s.split('~').map(|x| x.to_string()).collect()).unwrap_or_default()).collect();
+        let n = lists[0].len();
+        let g = groups.entry(format!("a:{}", cc)).or_default();
+        for i in 0..n {
+            g.push(lists.iter().filter_map(|l| l.get(i)).filter(|x| !x.is_empty()).cloned().collect());
         }
         ccs.insert(cc);
     }
     for cc in ccs {
-        let names: Vec<String> = regions.get(&cc).cloned().unwrap_or_default().into_iter().filter(|s| !s.is_empty() && !s.contains('\t')).collect();
-        out.push_str(&format!("C\t{}\t{}\t{}\t{}\t{}\n", cc, c2l.get(&cc).cloned().unwrap_or_default(), zips.get(&cc).cloned().unwrap_or_default(), names.join("~"), cnames.get(&cc).cloned().unwrap_or_default()));
+        let clean = |s: &String| !s.is_empty() && !s.contains('\t') && !s.contains('~') && !s.contains('|');
+        let mut gs: Vec<String> = Vec::new();
+        for (fam, key) in [("a", format!("a:{}", cc)), ("y", cc.clone())] {
+            for g in groups.get(&key).into_iter().flatten() {
+                let names: Vec<&String> = g.iter().filter(|s| clean(s)).collect();
+                if !names.is_empty() {
+                    gs.push(format!("{}:{}", fam, names.iter().map(|s| s.as_str()).collect::<Vec<_>>().join("|")));
+                }
+            }
+        }
+        out.push_str(&format!("C\t{}\t{}\t{}\t{}\t{}\n", cc, c2l.get(&cc).cloned().unwrap_or_default(), zips.get(&cc).cloned().unwrap_or_default(), gs.join("~"), cnames.get(&cc).cloned().unwrap_or_default()));
     }
     let dst = Path::new(&env::var("OUT_DIR").unwrap()).join("placematch-data.txt");
     let d = data::Data::build_from_raw(&out);

@@ -1,10 +1,17 @@
 //! Plain C-ABI WASM wrapper (no wasm-bindgen). Strings in and out as UTF-8 in linear memory.
 //! JS: am_alloc(n) -> ptr; write bytes; am_pick(q_ptr, q_len, cands_ptr, cands_len, cc_ptr, cc_len)
 //! where candidates are joined with '\u{1}'. Result: >=0 index, -1 none, -2 ambiguous.
-use placematch::{Matcher, Pick, Verdict};
+//! am_pick_explained(q, cands, cc, flags) takes one byte per row in `flags` ('1': the site
+//! categorized the row) and returns a pointer to the answer's JSON; am_out_len() is its length.
+//! The picker checks (am_is_control, am_shows_typed_text, am_in_area, am_same_but_postcode) take
+//! the query, the row and a third text and return 1 or 0.
+use placematch::{Matcher, Pick, PickOptions, Row, Verdict};
 use std::cell::RefCell;
 
-thread_local! { static M: RefCell<Option<Matcher>> = const { RefCell::new(None) }; }
+thread_local! {
+    static M: RefCell<Option<Matcher>> = const { RefCell::new(None) };
+    static OUT: RefCell<Vec<u8>> = const { RefCell::new(Vec::new()) };
+}
 
 #[no_mangle]
 pub extern "C" fn am_alloc(n: usize) -> *mut u8 {
@@ -54,4 +61,53 @@ pub unsafe extern "C" fn am_compare(qp: *const u8, ql: usize, cp: *const u8, cl:
         Verdict::Different => 0,
         Verdict::Unknown => 2,
     })
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn am_pick_explained(qp: *const u8, ql: usize, cp: *const u8, cl: usize, ccp: *const u8, ccl: usize, fp: *const u8, fl: usize) -> *const u8 {
+    am_init();
+    let flags = std::slice::from_raw_parts(fp, fl);
+    let rows: Vec<Row> = s(cp, cl).split('\u{1}').enumerate().map(|(i, text)| Row { text, categorized: flags.get(i) == Some(&b'1') }).collect();
+    let country = if ccl == 0 { None } else { Some(s(ccp, ccl)) };
+    let json = M.with(|m| m.borrow().as_ref().unwrap().pick_explained(s(qp, ql), &rows, &PickOptions { country }).to_json());
+    OUT.with(|o| {
+        *o.borrow_mut() = json.into_bytes();
+        o.borrow().as_ptr()
+    })
+}
+
+/// Length of the last answer `am_pick_explained` wrote.
+#[no_mangle]
+pub extern "C" fn am_out_len() -> usize {
+    OUT.with(|o| o.borrow().len())
+}
+
+/// The four picker checks: `am_is_control`, `am_shows_typed_text` (the third text is the least
+/// number of words, in decimal), `am_in_area` and `am_same_but_postcode` (the third text is the
+/// country). Each returns 1 for yes and 0 for no.
+fn check(qp: *const u8, ql: usize, rp: *const u8, rl: usize, xp: *const u8, xl: usize, f: impl Fn(&Matcher, &str, &str, Option<&str>) -> bool) -> i32 {
+    am_init();
+    let (q, r) = unsafe { (s(qp, ql), s(rp, rl)) };
+    let x = if xl == 0 { None } else { Some(unsafe { s(xp, xl) }) };
+    M.with(|m| f(m.borrow().as_ref().unwrap(), q, r, x) as i32)
+}
+
+#[no_mangle]
+pub extern "C" fn am_is_control(qp: *const u8, ql: usize, rp: *const u8, rl: usize, xp: *const u8, xl: usize) -> i32 {
+    check(qp, ql, rp, rl, xp, xl, |m, q, r, _| m.is_control(q, r))
+}
+
+#[no_mangle]
+pub extern "C" fn am_shows_typed_text(qp: *const u8, ql: usize, rp: *const u8, rl: usize, xp: *const u8, xl: usize) -> i32 {
+    check(qp, ql, rp, rl, xp, xl, |m, q, r, n| m.shows_typed_text(q, r, n.and_then(|n| n.parse().ok()).unwrap_or(1)))
+}
+
+#[no_mangle]
+pub extern "C" fn am_in_area(qp: *const u8, ql: usize, rp: *const u8, rl: usize, xp: *const u8, xl: usize) -> i32 {
+    check(qp, ql, rp, rl, xp, xl, |m, q, r, cc| m.in_area(q, r, cc))
+}
+
+#[no_mangle]
+pub extern "C" fn am_same_but_postcode(qp: *const u8, ql: usize, rp: *const u8, rl: usize, xp: *const u8, xl: usize) -> i32 {
+    check(qp, ql, rp, rl, xp, xl, |m, q, r, cc| m.same_but_postcode(q, r, cc))
 }

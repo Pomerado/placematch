@@ -1,5 +1,5 @@
 //! Hand-written fictional cases (tests/cases.jsonl): every one must get its expected outcome.
-use placematch::{Matcher, Pick, Verdict};
+use placematch::{Matcher, Outcome, Pick, PickOptions, Row, Verdict};
 use serde_json::Value;
 
 #[test]
@@ -10,6 +10,14 @@ fn fixture_cases() {
 /// Places named without a house number (tests/place-names.jsonl): the core answer for each, with
 /// the picker's answer for its mode alongside (a picker asks where PlaceMatch says none and rows
 /// were offered, and a read may take an in-area row).
+/// Cases that must never match a wrong place (tests/wrong-place.jsonl): branches on two streets,
+/// another town or region, spellings of other cities, another state, controls; plus the places that
+/// must still match beside them.
+#[test]
+fn wrong_place_cases() {
+    run_cases(include_str!("../../../tests/wrong-place.jsonl"));
+}
+
 #[test]
 fn place_name_cases() {
     run_cases(include_str!("../../../tests/place-names.jsonl"));
@@ -31,11 +39,19 @@ fn run_cases(text: &str) {
         } else {
             match m.pick(q, &cands, cc) {
                 Pick::Match(i) => expected == "match" && accept.contains(&i),
-                Pick::None => expected == "none",
-                Pick::Ambiguous(_) => expected == "ambiguous",
+                // "not_match": the case asks or says none, never a place
+                Pick::None => expected == "none" || expected == "not_match",
+                Pick::Ambiguous(_) => expected == "ambiguous" || expected == "not_match",
             }
         };
-        if !ok {
+        // a case may also name the notes its answer carries ("unit_not_listed") and the row a read
+        // may take (`prefer_on_read`, given the case's `categorized` rows)
+        let categorized: Vec<bool> = c.get("categorized").map_or(vec![false; cands.len()], |v| v.as_array().unwrap().iter().map(|x| x.as_bool().unwrap()).collect());
+        let rows: Vec<Row> = cands.iter().zip(&categorized).map(|(&text, &categorized)| Row { text, categorized }).collect();
+        let e = m.pick_explained(q, &rows, &PickOptions { country: cc });
+        let notes_ok = c.get("notes").map_or(true, |want| want.as_array().unwrap().iter().map(|x| x.as_str().unwrap()).collect::<Vec<_>>() == e.notes);
+        let prefer_ok = c.get("prefer_on_read").map_or(true, |want| want.as_u64().map(|i| i as usize) == e.prefer_on_read);
+        if !ok || !notes_ok || !prefer_ok {
             failures.push(c["id"].as_str().unwrap().to_string());
         }
     }
@@ -64,8 +80,9 @@ fn readme_example() {
 }
 
 /// The picker built on PlaceMatch, as the place-name cases describe it: a write asks when PlaceMatch
-/// finds no place among usable rows; a read that finds none takes the site's first usable row when
-/// it is in the caller's area, and otherwise refuses. Controls are never usable.
+/// finds no place among usable rows; a read takes the row PlaceMatch prefers on a read (the
+/// categorized venue beside a same-name pin), else, for a named place, the site's first usable row
+/// when it is in the caller's area, and otherwise refuses. Controls are never usable.
 #[test]
 fn place_name_picker_modes() {
     let m = Matcher::new();
@@ -74,12 +91,16 @@ fn place_name_picker_modes() {
         let c: Value = serde_json::from_str(line).unwrap();
         let q = c["query"].as_str().unwrap();
         let cands: Vec<&str> = c["candidates"].as_array().unwrap().iter().map(|x| x.as_str().unwrap()).collect();
+        let categorized: Vec<bool> = c.get("categorized").map_or(vec![false; cands.len()], |v| v.as_array().unwrap().iter().map(|x| x.as_bool().unwrap()).collect());
+        let rows: Vec<Row> = cands.iter().zip(&categorized).map(|(&text, &categorized)| Row { text, categorized }).collect();
         let usable: Vec<usize> = (0..cands.len()).filter(|&i| !m.is_control(q, cands[i])).collect();
         let read = c["mode"] == "read";
         let named = !q.split(',').next().unwrap().chars().any(|ch| ch.is_ascii_digit());
-        let answer: (&str, Option<usize>) = match m.pick(q, &cands, Some("US")) {
-            Pick::Match(i) => ("match", Some(i)),
+        let e = m.pick_explained(q, &rows, &PickOptions { country: Some("US") });
+        let answer: (&str, Option<usize>) = match e.outcome {
+            Outcome::Match => ("match", e.index),
             _ if usable.is_empty() => ("none", None),
+            _ if read && e.prefer_on_read.is_some() => ("match", e.prefer_on_read),
             // a read of a named place takes the site's first usable row in the caller's area, unless
             // that row shows the typed text after words of its own
             _ if read && named => match usable.first().filter(|&&i| !m.shows_typed_text(q, cands[i], 1) && m.in_area(q, cands[i], Some("US"))) {
@@ -96,11 +117,32 @@ fn place_name_picker_modes() {
         let want = c["picker"].as_str().unwrap();
         let accept: Vec<usize> = c["picker_accept"].as_array().unwrap().iter().map(|x| x.as_u64().unwrap() as usize).collect();
         let ok = answer.0 == want && (want != "match" || answer.1.map_or(false, |i| accept.contains(&i)));
-        // two answers are proposals that differ from the earlier picker on purpose (see the notes)
-        let proposal = c["proposal"].as_bool().unwrap_or(false);
-        if ok == proposal {
+        if !ok {
             failures.push(format!("{} {:?}", c["id"].as_str().unwrap(), answer));
         }
     }
     assert!(failures.is_empty(), "picker answers differ: {:?}", failures);
+}
+
+/// Rows come from websites: a page of long rows with many parts, at the JavaScript caps, still
+/// answers quickly. The bound is generous; such a page once took over 20 seconds.
+#[test]
+fn long_rows_answer_quickly() {
+    let m = Matcher::new();
+    let bound = std::time::Duration::from_secs(if cfg!(debug_assertions) { 30 } else { 3 });
+    for (unit, country) in [("UK, ", Some("US")), ("東京都", Some("US")), ("Example Park, ", None), ("a ", None)] {
+        let text = unit.repeat(512 / unit.chars().count().max(1)).chars().take(512).collect::<String>();
+        // identical rows, and rows that differ
+        let distinct: Vec<String> = (0..100).map(|i| format!("{} {}", i, text).chars().take(512).collect()).collect();
+        let rows: Vec<&str> = vec![text.as_str(); 100];
+        let others: Vec<&str> = distinct.iter().map(|t| t.as_str()).collect();
+        let start = std::time::Instant::now();
+        m.pick(&text, &others, country);
+        assert!(start.elapsed() < bound, "{:?}, distinct rows: {:?}", unit, start.elapsed());
+        let start = std::time::Instant::now();
+        m.pick(&text, &rows, country);
+        let explained: Vec<Row> = rows.iter().map(|&t| Row::from(t)).collect();
+        m.pick_explained(&text, &explained, &PickOptions { country });
+        assert!(start.elapsed() < bound, "{:?}: {:?}", unit, start.elapsed());
+    }
 }

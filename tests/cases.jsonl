@@ -17,7 +17,7 @@
 {"id":"f17","country":"CL","task":"pair","query":"Pasaje 12 1694, Puerto Ejemplo","candidates":["Pasaje 12 1695, Puerto Ejemplo"],"expected":"none","accept":[],"same":[],"tags":["neg_number"]}
 {"id":"f18","country":"PL","task":"pair","query":"ul. Cmentarna 22, Lublin","candidates":["Cmentarna 22, 59-300 Lubin"],"expected":"none","accept":[],"same":[],"tags":["neg_city"]}
 {"id":"f19","country":"LT","task":"pair","query":"Liepų g. 7, Ąžuolų k.","candidates":["Liepų g. 7, LT-38293 Ąžuolų k."],"expected":"match","accept":[0],"same":[],"tags":["postcode_prefix"]}
-{"id":"f20","country":"NO","task":"pair","query":"Fjellveien 4, Flat H0201, 1474 Eksempel","candidates":["Fjellveien 4, 1474 Eksempel"],"expected":"match","accept":[0],"same":[],"tags":["unit_dropped_c"]}
+{"id":"f20","country":"NO","task":"pair","query":"Fjellveien 4, Flat H0201, 1474 Eksempel","candidates":["Fjellveien 4, 1474 Eksempel"],"expected":"match","accept":[0],"same":[],"tags":["unit_dropped_c"],"notes":["unit_not_listed"]}
 {"id":"f21","country":"NO","task":"pair","query":"Fjellveien 4, 1474 Eksempel","candidates":["Fjellveien 4, Flat H0201, 1474 Eksempel"],"expected":"none","accept":[],"same":[],"tags":["neg_unit_added"]}
 {"id":"f22","country":"IT","task":"pair","query":"V. Garibaldi 10, Interno A, Esempio","candidates":["Via Garibaldi 10, Int. B, Esempio"],"expected":"none","accept":[],"same":[],"tags":["neg_unit"]}
 {"id":"f23","country":"NL","task":"pair","query":"Kerkstr. 15, 1234AB Voorbeeld","candidates":["Kerkstraat 15, 1234AB Voorbeeld, Nederland"],"expected":"match","accept":[0],"same":[],"tags":["abbrev"]}
@@ -68,8 +68,8 @@
 {"id":"f68","country":"TW","task":"pair","query":"高雄市中山一路100號","candidates":["高雄市中山二路100號"],"expected":"none","accept":[],"same":[],"tags":["neg_street_name"]}
 {"id":"f69","country":"TW","task":"pair","query":"No. 100, Nanjing West Road, Taipei","candidates":["台北市南京東路100號"],"expected":"none","accept":[],"same":[],"tags":["translit","neg_street_name"]}
 {"id":"f70","country":"TW","task":"pair","query":"No. 100, Nanjing West Road, Taipei","candidates":["台北市南京西路100號"],"expected":"match","accept":[0],"same":[],"tags":["translit","reading"]}
-{"id":"f71","country":"KR","task":"pair","query":"16 Gyeongwon-daero 1418beon-gil, Incheon","candidates":["인천광역시 경원대로1418번길 16"],"expected":"match","accept":[0],"same":[],"tags":["translit","kr_road"]}
-{"id":"f72","country":"KR","task":"pair","query":"16 Gyeongwon-daero 1418beon-gil, Incheon","candidates":["인천광역시 경원대로1419번길 16"],"expected":"none","accept":[],"same":[],"tags":["translit","neg_street_name"]}
+{"id":"f71","country":"KR","task":"pair","query":"16 Yeje-daero 1418beon-gil, Incheon","candidates":["인천광역시 예제대로1418번길 16"],"expected":"match","accept":[0],"same":[],"tags":["translit","kr_road"]}
+{"id":"f72","country":"KR","task":"pair","query":"16 Yeje-daero 1418beon-gil, Incheon","candidates":["인천광역시 예제대로1419번길 16"],"expected":"none","accept":[],"same":[],"tags":["translit","neg_street_name"]}
 {"id":"f73","country":"TH","task":"pair","query":"41 Phetkasem Road","candidates":["41 ถนนเพชรเกษม"],"expected":"match","accept":[0],"same":[],"tags":["translit","reading"]}
 {"id":"f74","country":"TH","task":"pair","query":"41 Sukhumvit Road","candidates":["41 ถนนเพชรเกษม"],"expected":"none","accept":[],"same":[],"tags":["translit","neg_street_name"]}
 {"id":"f75","country":"US","task":"pair","query":"1 S Example Rd, Exampleton, CA","candidates":["1 N Example Rd, Exampleton, CA"],"expected":"none","accept":[],"same":[],"tags":["neg_direction"]}
@@ -78,5 +78,5 @@
 {"id":"f78","country":"TR","task":"pair","query":"1244. Sokak 6 Ornekkoy","candidates":["1244. Sokak 6, Ornekkoy, Türkiye"],"expected":"match","accept":[0],"same":[],"tags":["no_commas","numbered_street"]}
 {"id":"f79","country":"BG","task":"pick","query":"Ornek 6","candidates":["Grand 2009 Ltd, Ornek 6, Townone","Ornek 6, 2700 Towntwo"],"expected":"ambiguous","accept":[],"same":[0,1],"tags":["amb_city","business"]}
 {"id":"f80","country":"RO","task":"pair","query":"Strada Exemplu 12, Bukarest","candidates":["Strada Exemplu 12, 010011 București"],"expected":"match","accept":[0],"same":[],"tags":["exonym"]}
-{"id":"f81","country":"DE","task":"pair","query":"Friedrichstraße 43, Berlin","candidates":["Friedrichstr. 43, 10117 Berlin, Germany"],"expected":"match","accept":[0],"same":[],"tags":["postcode_dropped","abbrev"]}
-{"id":"f82","country":"IT","task":"pair","query":"Via del Corso 12, Rome","candidates":["Via del Corso, 12, 00186 Roma RM, Italia"],"expected":"match","accept":[0],"same":[],"tags":["exonym"]}
+{"id":"f81","country":"DE","task":"pair","query":"Beispielstraße 43, Berlin","candidates":["Beispielstr. 43, 10117 Berlin, Germany"],"expected":"match","accept":[0],"same":[],"tags":["postcode_dropped","abbrev"]}
+{"id":"f82","country":"IT","task":"pair","query":"Via Esempio 12, Rome","candidates":["Via Esempio, 12, 00100 Roma RM, Italia"],"expected":"match","accept":[0],"same":[],"tags":["exonym"]}

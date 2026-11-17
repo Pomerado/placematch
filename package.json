@@ -1,0 +1,30 @@
+{
+  "name": "@pomerado/placematch",
+  "version": "0.1.0",
+  "description": "Decide whether an address someone wrote is the same place as one a website lists, in any script",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "repository": { "type": "git", "url": "git+https://github.com/Pomerado/placematch.git" },
+  "engines": { "node": ">=18" },
+  "exports": {
+    ".": { "types": "./js/index.d.ts", "default": "./js/index.mjs" },
+    "./loader": { "types": "./js/placematch.d.ts", "default": "./js/placematch.mjs" },
+    "./placematch.wasm": "./js/placematch.wasm",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "js/index.mjs",
+    "js/index.d.ts",
+    "js/placematch.mjs",
+    "js/placematch.d.ts",
+    "js/placematch.wasm",
+    "LICENSE",
+    "LICENSE-UNICODE",
+    "NOTICE"
+  ],
+  "scripts": {
+    "build": "tools/build-js.sh",
+    "test": "node --test js/placematch.test.mjs"
+  }
+}
