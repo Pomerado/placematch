@@ -3262,10 +3262,10 @@ impl Matcher {
         let named = |t: &Text| q.localities.iter().any(|u| text_eq(self, u, t, false) == Tri::Yes);
         let kept = |i: usize| cs[i].localities.iter().filter(|t| named(t)).count();
         let added = |i: usize| cs[i].localities.len() - kept(i);
-        // a row whose town opens with the caller's town and goes on ("Exampleton-North" for
-        // "Exampleton") may be the caller's town with a district, or another town: when every row
-        // of the caller's place adds a place the caller did not write, the rows are asked about,
-        // so such a row is never passed over unseen
+        // the same address in a town that opens with the caller's town and goes on
+        // ("Exampleton-North" or "Exampleton Beach" for "Exampleton") may be the caller's town
+        // with a district, or another town: when every row of the caller's place adds a place the
+        // caller did not write, the rows are asked about, so such a row is never passed over unseen
         let opens_town = |i: usize| {
             let (Some(qc), Some(rc)) = (&q.city, &cs[i].city) else {
                 return false;
@@ -3274,7 +3274,7 @@ impl Matcher {
             let first = self.data.exonyms.get(first).map_or(first, |c| c.as_str());
             rc.toks.len() >= 2 && qc.toks.len() == 1 && !first.is_empty() && first == qc.key
         };
-        let opening: Vec<usize> = (0..cs.len()).filter(|&i| verdicts[i].0 != Verdict::Same && opens_town(i)).collect();
+        let opening: Vec<usize> = (0..cs.len()).filter(|&i| verdicts[i].0 != Verdict::Same && verdicts[i].1 == ["city"] && opens_town(i)).collect();
         if !opening.is_empty() && same.iter().all(|&i| added(i) > 0) {
             let mut ids: Vec<usize> = same.iter().chain(&opening).copied().collect();
             ids.sort();

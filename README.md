@@ -119,10 +119,11 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
 - A business listing at the address is the same place as the plain address.
 - A part of two numbers and no words ("30 18, Exampleton") gives the place two numbers: when both
   sides give the second one, another second number is another place.
-- A town written with a hyphenated part ("Exampleton-North" for "Exampleton") is not the caller's
-  town: it may be a district or another town ("Baden-Baden" for "Baden"). When every row that is
-  the caller's place adds a place the caller did not write, such a row beside them is asked about
-  with them (`place_unconfirmed`).
+- A longer town name that opens with the caller's town and continues ("Exampleton-North" or
+  "Exampleton Beach" for "Exampleton") is not the caller's town: it may be a district or another
+  town ("Baden-Baden" for "Baden"). A row with the caller's address in such a town, differing by
+  the town alone, is asked about beside the rows of the caller's place when every one of those
+  adds a place the caller did not write (`place_unconfirmed`).
 - Among rows of the caller's place, PlaceMatch takes the one that keeps the most of the caller's
   own place names, then the one that adds the fewest the caller did not write: a row that adds a
   town or district is not taken over the same address without it.
