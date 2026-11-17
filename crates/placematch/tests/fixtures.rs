@@ -132,7 +132,13 @@ fn long_rows_answer_quickly() {
     let bound = std::time::Duration::from_secs(if cfg!(debug_assertions) { 30 } else { 3 });
     for (unit, country) in [("UK, ", Some("US")), ("東京都", Some("US")), ("Example Park, ", None), ("a ", None)] {
         let text = unit.repeat(512 / unit.chars().count().max(1)).chars().take(512).collect::<String>();
+        // identical rows, and rows that differ
+        let distinct: Vec<String> = (0..100).map(|i| format!("{} {}", i, text).chars().take(512).collect()).collect();
         let rows: Vec<&str> = vec![text.as_str(); 100];
+        let others: Vec<&str> = distinct.iter().map(|t| t.as_str()).collect();
+        let start = std::time::Instant::now();
+        m.pick(&text, &others, country);
+        assert!(start.elapsed() < bound, "{:?}, distinct rows: {:?}", unit, start.elapsed());
         let start = std::time::Instant::now();
         m.pick(&text, &rows, country);
         let explained: Vec<Row> = rows.iter().map(|&t| Row::from(t)).collect();

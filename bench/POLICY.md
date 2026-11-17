@@ -51,8 +51,10 @@ building name. A row must still confirm where the caller's place is:
   digits (`Kansas City 64100` is in Missouri, not Kansas);
 - with no country given or shown by the texts, a row that leaves out a place the caller named
   does not confirm it;
-- a state comes only from the state part or code, never from a town named like a state
-  (`Washington, PA` is not `Washington, DC`; `Nevada, MO` is not `Nevada, IA`);
+- a state comes only from the state part or code, or from a state written after the town with
+  no comma (`Exampleton IL`, `Exampleton New York`, in the US, Canada and Australia), never from a
+  town named like a state (`Washington, PA` is not `Washington, DC`; `Nevada, MO` is not
+  `Nevada, IA`);
 - a two-letter code after the town is the state, never the town (`Exampleton, NE`);
 - a country the caller gives, or writes (`London, United Kingdom`), is never crossed: a row that
   shows another country is another place, on every path. A row shows a country by its name, a
@@ -60,8 +62,9 @@ building name. A row must still confirm where the caller's place is:
   writes, a state or province named in full after the town where only other countries have it
   (`London, Ontario` for the United Kingdom), or a two-letter state code after the town that only
   other countries use (`Paris, TX` for France). For a caller in the US, Canada, the United Kingdom
-  or Australia, whose postcodes are written in one form, a row's postcode of another form shows
-  another country (`Vancouver 98660` for Canada). `UK`, `U.K.`, `US`, `U.S.` and `USA` written as
+  or Australia, whose postcodes are written in one form, a row's postcode of digits in another
+  form shows another country (`Vancouver 98660` for Canada; the United Kingdom's forms include
+  Ireland's, and a ZIP+4 may be written without its hyphen). `UK`, `U.K.`, `US`, `U.S.` and `USA` written as
   the last part are the United Kingdom and the United States. A postcode or state does not tell
   Ireland, the United Kingdom and the Crown Dependencies apart (Northern Ireland is written both
   ways); a row that names the other of them as its country is still another place. When the row

@@ -90,7 +90,8 @@ pub enum Outcome {
 ///   caller's town or street, or (with no country given) adds a place the caller did not name
 ///   ("CA" may be California or Canada); a row giving the caller's town in another script whose
 ///   reading several towns share; or, only when no row is the caller's place, a row at the caller's
-///   number and street that leaves out the caller's town, or the state the caller gave;
+///   number and street that leaves out the caller's town, or the state the caller gave; or a row
+///   (or a caller's text) too long to read whole that lost a number or unit word (see `MAX_PARTS`);
 /// - and, only when no row is the caller's place, the near rows: they add a unit the caller did not
 ///   give (`unit_not_given`), show another postcode at the caller's number, street and town
 ///   (`postcode_differs`), list the caller's street without a house number (`number_not_listed`), or
@@ -281,52 +282,35 @@ const POSTAL_CODE_COUNTRIES: &[&str] = &["US", "CA", "AU"];
 
 /// The most comma parts, and characters, of a text that are read: an address has far fewer, and a
 /// site's row, which the caller does not control, may have many, while matching time grows with
-/// them. A longer text is read as its first parts (`KEPT_FIRST_PARTS`) or characters
-/// (`KEPT_FIRST_CHARS`) and its last ones, where the street and the town, region, postcode and
-/// country are written.
-const MAX_PARTS: usize = 12;
-const KEPT_FIRST_PARTS: usize = 3;
-const MAX_CHARS: usize = 192;
-const KEPT_FIRST_CHARS: usize = 64;
+/// them. A longer text first loses middle parts that hold no number and no unit word (a facility's
+/// wing or department), keeping its first part and last `KEPT_LAST_PARTS` (the town, region,
+/// postcode and country); one still too long keeps its first parts (`KEPT_FIRST_PARTS`) or
+/// characters (`KEPT_FIRST_CHARS`) and its last ones (see `Matcher::bound`).
+const MAX_PARTS: usize = 16;
+const KEPT_FIRST_PARTS: usize = 4;
+const KEPT_LAST_PARTS: usize = 5;
+const MAX_CHARS: usize = 256;
+const KEPT_FIRST_CHARS: usize = 96;
 
 /// The most distinct rows of one name or address that are compared with each other to tell whether
 /// they are one place (pairs grow with the square of the rows); more are asked about.
 const MAX_COMPARED_ROWS: usize = 16;
 
-/// The number of distinct texts.
+/// A text as it is read: folded, with its spaces collapsed ("10  Main St" and "10 main st" are one).
+fn text_key(t: &str) -> String {
+    fold::fold(t).split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+/// The number of distinct texts (see `text_key`).
 fn distinct_texts<'a>(texts: impl Iterator<Item = &'a str>) -> usize {
-    let mut seen: Vec<&str> = Vec::new();
+    let mut seen: Vec<String> = Vec::new();
     for t in texts {
-        if !seen.contains(&t) {
-            seen.push(t);
+        let k = text_key(t);
+        if !seen.contains(&k) {
+            seen.push(k);
         }
     }
     seen.len()
-}
-
-/// `text` with no more than `MAX_PARTS` comma parts and about `MAX_CHARS` characters (see there).
-fn bounded(text: &str) -> std::borrow::Cow<'_, str> {
-    let n = text.split(',').count();
-    let mut t = std::borrow::Cow::Borrowed(text);
-    if n > MAX_PARTS {
-        let parts: Vec<&str> = text.split(',').collect();
-        let kept: Vec<&str> = parts[..KEPT_FIRST_PARTS].iter().chain(&parts[n - (MAX_PARTS - KEPT_FIRST_PARTS)..]).copied().collect();
-        t = std::borrow::Cow::Owned(kept.join(","));
-    }
-    let chars = t.chars().count();
-    if chars <= MAX_CHARS {
-        return t;
-    }
-    // cut between words where the text has them
-    let at = |k: usize| t.char_indices().nth(k).map_or(t.len(), |(b, _)| b);
-    let gap = |c: char| c.is_whitespace() || c == ',';
-    let head_end = at(KEPT_FIRST_CHARS);
-    let head = &t[..head_end];
-    let head = head.rfind(gap).filter(|&b| b > head_end / 2).map_or(head, |b| &head[..b]);
-    let tail_start = at(chars - (MAX_CHARS - KEPT_FIRST_CHARS));
-    let tail = &t[tail_start..];
-    let tail = tail.find(gap).filter(|&b| b < tail.len() / 2).map_or(tail, |b| &tail[b..]);
-    std::borrow::Cow::Owned(format!("{}, {}", head.trim_end_matches(gap), tail.trim_start_matches(gap)))
 }
 
 /// Countries whose postcodes are written in their one form, so a postcode of another form is
@@ -698,6 +682,99 @@ impl Matcher {
         Matcher { data: data::Data::deserialize(EMBEDDED), cjk: token::CjkRules::new() }
     }
 
+    /// `text` with no more than `MAX_PARTS` comma parts and about `MAX_CHARS` characters (see
+    /// there), and whether the text cut away held a number or a unit word: a row that lost one may
+    /// be another unit or building, so it is never matched, only asked about.
+    fn bound<'t>(&self, text: &'t str) -> (std::borrow::Cow<'t, str>, bool) {
+        use std::borrow::Cow;
+        // a Han, kana or Hangul character is read as a word of its own, so it counts twice
+        let weight = |c: char| if c >= '\u{2E80}' { 2 } else { 1 };
+        let count = |t: &str| t.chars().map(weight).sum::<usize>();
+        let parts: Vec<&str> = text.split(',').collect();
+        if parts.len() <= MAX_PARTS && count(text) <= MAX_CHARS {
+            return (Cow::Borrowed(text), false);
+        }
+        // a number, or a unit, level, entrance or PO box word
+        let telling = |t: &str| {
+            t.chars().any(|c| c.is_numeric())
+                || data::phrase_key(t).split(' ').any(|w| self.data.lookup(w).iter().any(|e| matches!(e.class, data::Class::UnitNum | data::Class::UnitAlone | data::Class::LevelNum | data::Class::LevelAlone | data::Class::Staircase | data::Class::Entrance | data::Class::PoBox)))
+        };
+        let n = parts.len();
+        let mut keep = vec![true; n];
+        let mut len = count(text);
+        let mut left = n;
+        for i in 1..n.saturating_sub(KEPT_LAST_PARTS) {
+            if left <= MAX_PARTS && len <= MAX_CHARS {
+                break;
+            }
+            if !telling(parts[i]) {
+                keep[i] = false;
+                left -= 1;
+                len -= count(parts[i]) + 1;
+            }
+        }
+        let mut kept: Vec<&str> = (0..n).filter(|&i| keep[i]).map(|i| parts[i]).collect();
+        let mut lost = false;
+        if kept.len() > MAX_PARTS {
+            let k = kept.len();
+            lost |= kept[KEPT_FIRST_PARTS..k - (MAX_PARTS - KEPT_FIRST_PARTS)].iter().any(|t| telling(t));
+            kept = kept[..KEPT_FIRST_PARTS].iter().chain(&kept[k - (MAX_PARTS - KEPT_FIRST_PARTS)..]).copied().collect();
+        }
+        let t = kept.join(",");
+        let chars = count(&t);
+        if chars <= MAX_CHARS {
+            return (Cow::Owned(t), lost);
+        }
+        // cut between words where the text has them
+        // the byte offset where the first `k` counted characters end
+        let at = |k: usize| {
+            let mut w = 0;
+            t.char_indices().find(|&(_, c)| {
+                w += weight(c);
+                w > k
+            }).map_or(t.len(), |(b, _)| b)
+        };
+        let gap = |c: char| c.is_whitespace() || c == ',';
+        let head_end = at(KEPT_FIRST_CHARS);
+        let head = &t[..head_end];
+        let head = head.rfind(gap).filter(|&b| b > head_end / 2).map_or(head, |b| &head[..b]);
+        let tail_start = at(chars - (MAX_CHARS - KEPT_FIRST_CHARS));
+        let tail = &t[tail_start..];
+        let tail = tail.find(gap).filter(|&b| b < tail.len() / 2).map_or(tail, |b| &tail[b..]);
+        let start = tail.as_ptr() as usize - t.as_ptr() as usize;
+        lost |= telling(&t[head.len()..start]);
+        (Cow::Owned(format!("{}, {}", head.trim_end_matches(gap), tail.trim_start_matches(gap))), lost)
+    }
+
+    /// A match on a row (or a caller's text) that lost a number or unit word to `bound` is asked
+    /// about instead, unless another row of the place lost none.
+    fn unless_cut(p: Pick, e: Explained, lost: &[bool], query_lost: bool) -> (Pick, Explained) {
+        let Pick::Match(i) = p else {
+            return (p, e);
+        };
+        if !query_lost && !lost[i] {
+            return (p, e);
+        }
+        if !query_lost {
+            if let Some(&j) = e.same.iter().find(|&&j| !lost[j]) {
+                let mut e = e;
+                e.index = Some(j);
+                return (Pick::Match(j), e);
+            }
+        }
+        let mut rows = e.rows;
+        for &j in &e.same {
+            if query_lost || lost[j] {
+                rows[j].verdict = Verdict::Unknown;
+                if !rows[j].reasons.contains(&"place_unconfirmed") {
+                    rows[j].reasons.push("place_unconfirmed");
+                }
+            }
+        }
+        let same = if e.same.is_empty() { vec![i] } else { e.same };
+        (Pick::Ambiguous(same.clone()), Explained::ambiguous(same, vec!["place_unconfirmed"], rows))
+    }
+
     /// A country hint as one of the data's codes: any case, "UK" for the United Kingdom; `None` for
     /// a code the data does not know, which is read as no hint.
     fn country_code(&self, hint: Option<&str>) -> Option<&str> {
@@ -727,8 +804,8 @@ impl Matcher {
     /// `None`: the texts are read with no country, which asks more often and never guesses (and asks
     /// when rows of two countries would each be the place, see `across_countries`).
     pub fn infer_country(&self, query: &str, rows: &[&str]) -> Option<String> {
-        let query = &*bounded(query);
-        let rows: Vec<std::borrow::Cow<str>> = rows.iter().map(|r| bounded(r)).collect();
+        let query = &*self.bound(query).0;
+        let rows: Vec<std::borrow::Cow<str>> = rows.iter().map(|r| self.bound(r).0).collect();
         let rows: Vec<&str> = rows.iter().map(|r| &**r).collect();
         let rows = rows.as_slice();
         let q = self.country_evidence(query);
@@ -791,10 +868,15 @@ impl Matcher {
             // a row that also shows the caller's country is left to the comparison
             return !e.iter().any(|y| ours(y));
         }
-        // a postcode of a form the caller's country never writes ("Vancouver 98660" in Canada), in a
-        // country whose form is followed (`STRICT_POSTCODE_COUNTRIES`)
-        if let (true, Some(form), Some(p)) = (STRICT_POSTCODE_COUNTRIES.contains(&cc), home.zip(), parse::parse(&self.ctx(None), row).postcode) {
-            if !Self::postcode_as_written_fits(form, row, &p) {
+        // a postcode of digits in a form the caller's country never writes ("Vancouver 98660" in
+        // Canada), in a country whose form is followed (`STRICT_POSTCODE_COUNTRIES`); the United
+        // Kingdom's forms include Ireland's and the Crown Dependencies', and a ZIP+4 may lose its
+        // hyphen. A postcode with letters is left to `country_evidence`.
+        if let (true, Some(p)) = (STRICT_POSTCODE_COUNTRIES.contains(&cc), parse::parse(&self.ctx(None), row).postcode) {
+            let group: &[&str] = if cc == "GB" { &["GB", "IE", "JE", "GG", "IM"] } else { std::slice::from_ref(&cc) };
+            let fits = |c: &&str| self.data.countries.get(*c).and_then(|co| co.zip()).map_or(false, |form| Self::postcode_as_written_fits(form, row, &p));
+            let zip9 = cc == "US" && p.len() == 9 && p.chars().all(|c| c.is_ascii_digit());
+            if home.zip().is_some() && p.chars().all(|c| c.is_ascii_digit()) && !group.iter().any(fits) && !zip9 {
                 return true;
             }
         }
@@ -994,6 +1076,30 @@ impl Matcher {
         out
     }
 
+    /// `a` writes a region after its town with no comma ("Exampleton IL"), and `b` shows only other
+    /// regions: in its own part, after its town, or by its ZIP code.
+    fn town_region_differs(&self, a: &Components, b: &Components) -> bool {
+        let Some(co) = a.cc.as_deref().and_then(|cc| self.data.countries.get(cc)) else {
+            // with no country: another code of a country that has the caller's ("IL" and "MO")
+            let Some(k) = a.town_region.as_deref() else {
+                return false;
+            };
+            let theirs: Vec<&str> = b.town_region.iter().map(|t| t.as_str()).chain(b.localities.iter().skip(1).map(|t| t.key.as_str())).collect();
+            return POSTAL_CODE_COUNTRIES.iter().filter_map(|cc| self.data.countries.get(*cc)).any(|co| {
+                let ids = co.region_ids(k);
+                let shown: Vec<u16> = theirs.iter().flat_map(|t| co.region_ids(t)).collect();
+                !ids.is_empty() && !shown.is_empty() && !shown.iter().any(|r| ids.contains(r))
+            });
+        };
+        let Some(ids) = a.town_region.as_deref().map(|k| co.region_ids(k)) else {
+            return false;
+        };
+        let mut theirs: Vec<u16> = self.region_ids(b, false).iter().map(|r| r.0).collect();
+        theirs.extend(b.town_region.as_deref().map(|k| co.region_ids(k)).unwrap_or_default());
+        theirs.extend(self.zip_states(b));
+        !ids.is_empty() && !theirs.is_empty() && !theirs.iter().any(|r| ids.contains(r))
+    }
+
     /// The text names in full (four letters or more) a region of some country and of none in `cc`.
     fn names_region_elsewhere(&self, text: &str, cc: &str) -> bool {
         let Some(home) = self.data.countries.get(cc) else {
@@ -1175,8 +1281,17 @@ impl Matcher {
 
     /// Is the candidate the same place as the query? Returns the verdict and the reasons.
     pub fn compare(&self, query: &str, candidate: &str, country: Option<&str>) -> (Verdict, Vec<&'static str>) {
+        let ((query, ql), (candidate, cl)) = (self.bound(query), self.bound(candidate));
+        match self.compare_whole(&query, &candidate, country) {
+            // a text that lost a number or unit word may be another unit or building
+            (Verdict::Same, _) if ql || cl => (Verdict::Unknown, vec!["place_unconfirmed"]),
+            v => v,
+        }
+    }
+
+    /// `compare` on texts within `MAX_PARTS` and `MAX_CHARS`.
+    fn compare_whole(&self, query: &str, candidate: &str, country: Option<&str>) -> (Verdict, Vec<&'static str>) {
         let country = self.country_code(country);
-        let (query, candidate) = (&*bounded(query), &*bounded(candidate));
         // a site's control ("See more results for <text>") is never a place
         if self.is_control(query, candidate) {
             return (Verdict::Different, vec!["control"]);
@@ -1298,8 +1413,11 @@ impl Matcher {
         let states = q.cc.as_deref().map_or(false, |cc| POSTAL_CODE_COUNTRIES.contains(&cc));
         // a ZIP code of the caller's state confirms the state ("Exampleton 93600" for "Exampleton,
         // CA"); one of another state is another place, told apart before this
-        let zip_confirms = q.postcode.is_none() && self.region_ids(q, false).iter().any(|r| self.zip_states(c).contains(&r.0));
-        if states && (!self.region_ids(q, false).is_empty() || q.postcode.is_some()) && self.region_ids(c, false).is_empty() && !zip_confirms {
+        let town_region_ids: Vec<u16> = q.town_region.as_deref().and_then(|k| q.cc.as_deref().and_then(|cc| self.data.countries.get(cc)).map(|co| co.region_ids(k))).unwrap_or_default();
+        let zip_confirms = q.postcode.is_none() && (self.region_ids(q, false).iter().any(|r| self.zip_states(c).contains(&r.0)) || town_region_ids.iter().any(|r| self.zip_states(c).contains(r)));
+        // a state written after the town with no comma ("Exampleton IL") is given too
+        let town_region = q.town_region.is_some() && c.town_region != q.town_region;
+        if states && (!self.region_ids(q, false).is_empty() || q.postcode.is_some() || town_region) && self.region_ids(c, false).is_empty() && !zip_confirms && !(c.town_region.is_some() && c.town_region == q.town_region) {
             return Some("region_not_listed");
         }
         let shown = |t: &Text| c.localities.iter().any(|u| u.key == t.key || text_eq(self, t, u, false) == Tri::Yes) || in_street(c);
@@ -1310,6 +1428,13 @@ impl Matcher {
         }
         if q.cc.is_none() && q.localities.iter().any(|t| !q.countries.contains(&t.key) && !shown(t)) {
             return Some("region_not_listed");
+        }
+        // with no country, a state code after the caller's town ("Exampleton IL") that the row does
+        // not show
+        if let (None, Some(k)) = (q.cc.as_deref(), q.town_region.as_deref()) {
+            if c.town_region.as_deref() != Some(k) && !c.localities.iter().any(|t| t.key == k) {
+                return Some("region_not_listed");
+            }
         }
         None
     }
@@ -1468,7 +1593,7 @@ impl Matcher {
             }
         }
         // another state, province or country ("IL" and "Missouri", "Jiangsu" and "福建省")
-        if self.regions_differ(q, c) {
+        if self.regions_differ(q, c) || self.town_region_differs(q, c) || self.town_region_differs(c, q) {
             return (Verdict::Different, vec!["region"]);
         }
         if self.countries_differ(q, c) || self.crosses_hint(c) != self.crosses_hint(q) {
@@ -1733,7 +1858,11 @@ impl Matcher {
     /// (one postal area); and in a city that repeats street names across its districts (Berlin,
     /// Hamburg, London, Vienna, Budapest, Prague) both must name the same district.
     pub fn same_but_postcode(&self, query: &str, row: &str, country: Option<&str>) -> bool {
-        let (query, row) = (&*bounded(query), &*bounded(row));
+        let ((query, ql), (row, rl)) = (self.bound(query), self.bound(row));
+        if ql || rl {
+            return false;
+        }
+        let (query, row) = (&*query, &*row);
         let ctx = self.ctx(country);
         self.postcode_only_differs(&parse::parse(&ctx, query), &parse::parse(&ctx, row))
     }
@@ -1748,7 +1877,16 @@ impl Matcher {
         }
         let key = |p: &str| -> Vec<char> { p.chars().filter(|ch| ch.is_alphanumeric()).flat_map(|ch| ch.to_lowercase()).collect() };
         let (a, b) = (key(a), key(b));
-        if a.len() != b.len() || a.len() < 3 || a[..a.len() - 2] != b[..b.len() - 2] {
+        // a United Kingdom postcode's outward code is its district ("W1D" of "W1D 1AN"); one street
+        // name is not repeated within a district
+        let outward = |p: &[char]| -> Option<String> {
+            let s: String = p.iter().collect();
+            static GB: std::sync::OnceLock<regex_lite::Regex> = std::sync::OnceLock::new();
+            let gb = GB.get_or_init(|| regex_lite::Regex::new(r"^[a-z]{1,2}\d[a-z\d]?\d[a-z]{2}$").unwrap());
+            (p.len() >= 5 && gb.is_match(&s)).then(|| s[..s.len() - 3].to_string())
+        };
+        let one_district = matches!((outward(&a), outward(&b)), (Some(x), Some(y)) if x == y);
+        if !one_district && (a.len() != b.len() || a.len() < 3 || a[..a.len() - 2] != b[..b.len() - 2]) {
             return false;
         }
         let (Some(qc), Some(cc)) = (&q.city, &c.city) else {
@@ -1762,7 +1900,7 @@ impl Matcher {
         if !all_named(&qt, &ct) || !all_named(&ct, &qt) {
             return false;
         }
-        if REPEATED_STREET_CITIES.contains(&qc.key.as_str()) && qt.len() < 2 {
+        if REPEATED_STREET_CITIES.contains(&qc.key.as_str()) && qt.len() < 2 && !one_district {
             return false;
         }
         let (mut q, mut c) = (q.clone(), c.clone());
@@ -2176,14 +2314,20 @@ impl Matcher {
         // `MAX_COMPARED_ROWS` are not compared with each other, but asked about
         let one_place = |a: &Components, b: &Components| matches!(self.area_fit(a, b, true), Area::Fits { .. }) && matches!(self.area_fit(b, a, true), Area::Fits { .. }) && self.streets_agree(a, b);
         let crowded = distinct_texts(exact.iter().map(|e| e.0).chain(variant.iter().copied()).map(|i| rows[i].text)) > MAX_COMPARED_ROWS;
-        let towns_apart = crowded || exact.iter().any(|a| exact.iter().any(|b| a.0 != b.0 && rows[a.0].text != rows[b.0].text && !one_place(&a.2, &b.2)));
+        // rows of one text are one place: each text is compared once
+        let keys: Vec<String> = rows.iter().map(|r| text_key(r.text)).collect();
+        let first_of_text = |i: usize| keys.iter().position(|k| *k == keys[i]) == Some(i);
+        let towns_apart = crowded || {
+            let reps: Vec<&(usize, bool, Components)> = exact.iter().filter(|e| first_of_text(e.0)).collect();
+            reps.iter().any(|a| reps.iter().any(|b| a.0 != b.0 && !one_place(&a.2, &b.2)))
+        };
         if towns_apart || !variant.is_empty() || !unconfirmed.is_empty() {
             let (pick, mut e) = asked(&exact, if towns_apart { vec!["several_places"] } else { vec![] }, reports);
             // the venue the site categorized, beside a same-name row it did not (or the reverse), when
             // the rows name one town (and one region, when the caller gave no area), the caller's area
             // in full when the caller gave one, and no longer-name row may be another place named
             // after the caller's
-            let areas: Vec<(bool, &Components)> = exact.iter().map(|x| (x.1, &x.2)).chain(variant_area.iter().map(|x| (x.0, &x.1))).collect();
+            let areas: Vec<(bool, &Components)> = exact.iter().filter(|x| first_of_text(x.0)).map(|x| (x.1, &x.2)).chain(variant.iter().zip(&variant_area).filter(|(&i, _)| first_of_text(i)).map(|(_, x)| (x.0, &x.1))).collect();
             let has_town = |x: &Components| !self.towns(x).is_empty();
             let caller_area = qa.postcode.is_some() || !qa.localities.is_empty() || !qa.regions.is_empty();
             let one_region = |a: &Components, b: &Components| caller_area || (!self.region_ids(a, true).is_empty() && self.region_ids(a, true).iter().any(|r| self.region_ids(b, true).iter().any(|x| x.0 == r.0)));
@@ -2552,7 +2696,11 @@ impl Matcher {
     /// and either the caller's postcode or each town and region the caller gave. A picker that must
     /// read something can take such a row when no row is the caller's place.
     pub fn in_area(&self, query: &str, row: &str, country: Option<&str>) -> bool {
-        let (query, row) = (&*bounded(query), &*bounded(row));
+        let ((query, ql), (row, rl)) = (self.bound(query), self.bound(row));
+        if ql || rl {
+            return false;
+        }
+        let (query, row) = (&*query, &*row);
         let ctx = self.ctx(country);
         let rest = |s: &str| -> String { s.splitn(2, ',').nth(1).unwrap_or("").to_string() };
         let (qr, rr) = (rest(query), rest(row));
@@ -2585,15 +2733,18 @@ impl Matcher {
     /// place show another postcode or leave out the house number, and it reads a listing's
     /// house-number range where one is meant (see `RANGE_COUNTRIES`).
     pub fn pick_explained(&self, query: &str, rows: &[Row], options: &PickOptions) -> Explained {
-        let query = &*bounded(query);
-        let cut: Vec<std::borrow::Cow<str>> = rows.iter().map(|r| bounded(r.text)).collect();
-        let rows: Vec<Row> = rows.iter().zip(&cut).map(|(r, t)| Row { text: t, categorized: r.categorized }).collect();
+        let (query, query_lost) = self.bound(query);
+        let query = &*query;
+        let cut: Vec<(std::borrow::Cow<str>, bool)> = rows.iter().map(|r| self.bound(r.text)).collect();
+        let lost: Vec<bool> = cut.iter().map(|c| c.1).collect();
+        let rows: Vec<Row> = rows.iter().zip(&cut).map(|(r, t)| Row { text: &t.0, categorized: r.categorized }).collect();
         let rows = rows.as_slice();
         let texts: Vec<&str> = rows.iter().map(|r| r.text).collect();
         let given = self.country_code(options.country);
         let inferred = if given.is_none() { self.infer_country(query, &texts) } else { None };
         let country = given.or(inferred.as_deref());
-        let mut e = self.decide_home(query, rows, country, inferred.is_some(), true).1;
+        let (p, e) = self.decide_home(query, rows, country, inferred.is_some(), true);
+        let mut e = Self::unless_cut(p, e, &lost, query_lost).1;
         e.unit = self.unit_as_written(query, country);
         e.inferred_country = inferred;
         e
@@ -2601,13 +2752,16 @@ impl Matcher {
 
     /// Choose the candidate that is the same place as the query.
     pub fn pick<S: AsRef<str>>(&self, query: &str, candidates: &[S], country: Option<&str>) -> Pick {
-        let query = &*bounded(query);
-        let cut: Vec<std::borrow::Cow<str>> = candidates.iter().map(|c| bounded(c.as_ref())).collect();
-        let rows: Vec<Row> = cut.iter().map(|c| Row::from(&**c)).collect();
+        let (query, query_lost) = self.bound(query);
+        let query = &*query;
+        let cut: Vec<(std::borrow::Cow<str>, bool)> = candidates.iter().map(|c| self.bound(c.as_ref())).collect();
+        let lost: Vec<bool> = cut.iter().map(|c| c.1).collect();
+        let rows: Vec<Row> = cut.iter().map(|c| Row::from(&*c.0)).collect();
         let texts: Vec<&str> = rows.iter().map(|r| r.text).collect();
         let country = self.country_code(country);
         let inferred = if country.is_none() { self.infer_country(query, &texts) } else { None };
-        self.decide_home(query, &rows, country.or(inferred.as_deref()), inferred.is_some(), false).0
+        let (p, e) = self.decide_home(query, &rows, country.or(inferred.as_deref()), inferred.is_some(), false);
+        Self::unless_cut(p, e, &lost, query_lost).0
     }
 
     /// `pick`'s answer and `pick_explained`'s; `ranges`: read listings' house-number ranges.
@@ -2693,22 +2847,30 @@ impl Matcher {
         if distinct_texts(same.iter().map(|&i| candidates[i])) > MAX_COMPARED_ROWS {
             return (Pick::Ambiguous(same.clone()), Explained::ambiguous(same, vec!["several_places"], reports));
         }
-        // cluster into distinct places
+        // cluster into distinct places; rows of one text are one place, so each cluster is compared
+        // through one row of each of its texts
+        let keys: Vec<String> = candidates.iter().map(|t| text_key(t)).collect();
         let mut clusters: Vec<Vec<usize>> = Vec::new();
+        let mut reps: Vec<Vec<usize>> = Vec::new();
         for &i in &same {
             let mut placed = false;
-            for cl in clusters.iter_mut() {
+            for (cl, rp) in clusters.iter_mut().zip(reps.iter_mut()) {
                 // two different listed ranges holding the caller's number are two claims, not one place
                 let ranges_differ = |j: usize| ranged[i] && ranged[j] && listed_house[i] != listed_house[j];
-                let one = |j: usize| candidates[i] == candidates[j] || (self.compare_parsed(&cs[i], &cs[j], Mode::Peer).0 != Verdict::Different && self.compare_parsed(&cs[j], &cs[i], Mode::Peer).0 != Verdict::Different);
-                if cl.iter().all(|&j| !ranges_differ(j) && one(j)) {
+                let one = |j: usize| self.compare_parsed(&cs[i], &cs[j], Mode::Peer).0 != Verdict::Different && self.compare_parsed(&cs[j], &cs[i], Mode::Peer).0 != Verdict::Different;
+                let known = rp.iter().any(|&j| keys[j] == keys[i] && !ranges_differ(j));
+                if known || rp.iter().all(|&j| !ranges_differ(j) && one(j)) {
                     cl.push(i);
+                    if !known {
+                        rp.push(i);
+                    }
                     placed = true;
                     break;
                 }
             }
             if !placed {
                 clusters.push(vec![i]);
+                reps.push(vec![i]);
             }
         }
         if clusters.len() > 1 {

@@ -49,7 +49,8 @@ assert_eq!(e.notes, vec!["unit_not_listed"]); // type the unit into the site's o
 - `reasons`, for `ambiguous`: `several_places` (two places fit), `place_name_variant` (a row holds
   the caller's place name with other words, so it may be the place), and, when no row is the place,
   the near rows: `unit_not_given` (a unit the caller did not give), `postcode_differs` (the caller's
-  number, street and town under another postcode), `number_not_listed` (the caller's street with no
+  number, street and town under another postcode in the same area; for a UK postcode, the same
+  district, such as "W1D"), `number_not_listed` (the caller's street with no
   house number) and `number_range` (a house-number range holding the caller's number, with no
   postcode on both sides to confirm it).
 - `notes`, for a match: `unit_not_listed` when the row at `index` leaves out the unit the caller
@@ -107,12 +108,13 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
 - The town must be right: a shared district or region name does not make two towns one. A row
   that names no town, or (in the US, Canada and Australia) neither a state nor a postcode where the
   caller gave one, does not confirm the caller's place; a US ZIP code confirms or contradicts a state
-  by its first three digits. A state comes from its own part or code,
-  never from a town named like a state ("Washington, PA" is not "Washington, DC").
+  by its first three digits. A state comes from its own part or code, or is written after the town
+  with no comma ("Exampleton IL", "Exampleton New York"), never from a town named like a state
+  ("Washington, PA" is not "Washington, DC").
 - A country the caller gives or writes is never crossed: a row that shows another country is another
   place ("Paris, TX 75460" is not in France; "London, ON N6A 1A1" is not in the United Kingdom), and
-  so is, for a caller in the US, Canada, the UK or Australia, a row whose postcode is not of that
-  country's form ("Vancouver 98660" is not in Canada).
+  so is, for a caller in the US, Canada, the UK or Australia, a row whose postcode of digits is not of
+  that country's form ("Vancouver 98660" is not in Canada).
 - Spellings that mean the same thing agree: abbreviations, diacritics, case and punctuation,
   component order (number before or after the street), joined or split compound names, native
   digits, Japanese block addresses, transliteration, and a one-letter typo in a long name.
@@ -244,9 +246,12 @@ const e = m.pickExplained("example center", [
 `pickExplained` returns the fields above in snake case (`prefer_on_read`, `cross_script`); `options`
 may be left out or `null`. `pick` and `compare` are there too. Every call takes a query and rows of
 at most 512 characters each (JavaScript string length) and at most 100 rows (`LIMITS`); longer input
-throws a `RangeError` and is never cut. Within the limits, every text is read as at most 12 comma
-parts and 192 characters (its first parts and its last ones), and more than 16 different rows of one
-place are asked about rather than compared with each other, so a page of long rows answers quickly. `@pomerado/placematch/loader` exports `load(bytes)` for other
+throws a `RangeError` and is never cut. Within the limits, every text is read as at most 16 comma
+parts and 256 characters (a Han, kana or Hangul character counts twice): a longer one first loses
+middle parts that hold no number and no unit word, then keeps its first parts and its last ones. A
+row that loses a number or unit word that way is asked about, never matched. More than 16 different
+rows of one place are asked about rather than compared with each other, so a page of long rows
+answers quickly. `@pomerado/placematch/loader` exports `load(bytes)` for other
 runtimes, and `@pomerado/placematch/placematch.wasm` is the module. `js/placematch.d.ts` has the
 types.
 

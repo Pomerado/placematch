@@ -307,6 +307,21 @@ fn the_json_form_carries_every_field() {
 /// `pick` answers as `pick_explained` does wherever it should: the same row on a match, the same
 /// rows on an ambiguous answer, and `none` (or the rows with an added unit) where `pick_explained`
 /// asks only about near rows. Ranges are read by `pick_explained` alone.
+/// In a city whose street names repeat, another postcode in the caller's district ("W1D") may be a
+/// mistyped postcode, so it asks; one in another district is another street of the name.
+#[test]
+fn a_postcode_in_the_callers_district_asks() {
+    let m = Matcher::new();
+    let ask = |row: &str| m.pick_explained("1 Example St, London W1D 1AN", &[Row::from(row)], &PickOptions { country: Some("GB") });
+    for row in ["1 Example St, London W1D 2HP", "1 Example St, London W1D 1BB"] {
+        let e = ask(row);
+        assert_eq!((e.outcome, e.reasons.clone()), (Outcome::Ambiguous, vec!["postcode_differs"]), "{}", row);
+    }
+    for row in ["1 Example St, London W1F 1AA", "1 Example St, London SW1A 1AA"] {
+        assert_eq!(ask(row).outcome, Outcome::None, "{}", row);
+    }
+}
+
 #[test]
 fn pick_agrees_with_pick_explained() {
     let m = Matcher::new();

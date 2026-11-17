@@ -59,6 +59,9 @@ pub struct Components {
     pub cc: Option<String>,
     /// the hint was read from the texts, not given by the caller
     pub cc_inferred: bool,
+    /// a region of the country written at the end of the town's part, with no comma
+    /// ("Exampleton IL", "Exampleton New York"): its key
+    pub town_region: Option<String>,
 }
 
 pub struct Ctx<'a> {
@@ -1156,14 +1159,34 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
             if is_country && is_region && country.map_or(false, |c| !c.names.contains(&key)) {
                 is_country = false;
             }
-            // strip region tokens at the end of a locality ("Springfield IL")
+            // strip a region's words at the end of a locality ("Springfield IL", "Springfield New
+            // York"), keeping it as the town's region
             let mut text_words = words.clone();
+            // with no country, a state code in capitals after the town, of a country that writes
+            // states after the town ("Exampleton IL")
+            if country.is_none() && !is_region && !is_country && g.len() > 1 {
+                let last = *g.last().unwrap();
+                let code = ascii_key(&toks[last].s);
+                let capital = code.len() == 2 && text.contains(&format!(" {}", code.to_uppercase()));
+                if capital && ["US", "CA", "AU"].iter().any(|cc| data.countries.get(*cc).map_or(false, |co| co.regions.contains_key(&code))) {
+                    text_words.retain(|&k| k != last);
+                    c.town_region = Some(code);
+                }
+            }
             if !is_region && !is_country && text_words.len() > 1 {
-                if let Some(c) = country {
-                    let lastk = *text_words.last().unwrap();
-                    if c.regions.contains_key(&ascii_key(&toks[lastk].s)) {
-                        c.regions.get(&ascii_key(&toks[lastk].s));
-                        text_words.pop();
+                if let Some(co) = country {
+                    // where states follow the town (the United States, Canada, Australia), a state's
+                    // name of two or three words too, kept as the town's region
+                    let states = matches!(ctx.cc, Some("US" | "CA" | "AU"));
+                    for l in (1..=(if states { 3 } else { 1 }).min(text_words.len() - 1)).rev() {
+                        let tail: String = text_words[text_words.len() - l..].iter().map(|&k| ascii_key(&toks[k].s)).collect();
+                        if co.regions.contains_key(&tail) && (l == 1 || tail.len() >= 6) {
+                            text_words.truncate(text_words.len() - l);
+                            if states {
+                                c.town_region = Some(tail);
+                            }
+                            break;
+                        }
                     }
                 }
             }
