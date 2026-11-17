@@ -181,6 +181,19 @@ fn ordinal_digits(s: &str) -> String {
     }
 }
 
+/// An English ordinal word in a street's name, as its number ("Fifth" for "5th"), where streets
+/// are written in English or the country is not known.
+fn english_ordinal(ctx: &Ctx, s: &str) -> String {
+    const WORDS: [&str; 20] = [
+        "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth", "eleventh", "twelfth", "thirteenth", "fourteenth", "fifteenth", "sixteenth", "seventeenth", "eighteenth", "nineteenth", "twentieth",
+    ];
+    let english = matches!(ctx.cc, None | Some("US" | "CA" | "GB" | "IE" | "AU" | "NZ"));
+    match WORDS.iter().position(|w| *w == s) {
+        Some(i) if english => (i + 1).to_string(),
+        _ => s.to_string(),
+    }
+}
+
 fn norm_number(s: &str) -> String {
     let mut out = String::new();
     for c in s.chars() {
@@ -792,7 +805,22 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
             let next_is_dirlike = span_at(nxt).map_or(false, |s| s.has(Class::Directional)) && !last_in_seg;
             let number_first_here = matches!(ctx.cc, Some("US" | "CA" | "GB" | "IE" | "AU" | "NZ" | "ZA" | "SG" | "IN" | "PH" | "MY"));
             let lead = (0..h).all(|q| toks[q].seg != toks[h].seg || used[q]);
-            if (is_bis && matches!(t.as_str(), "bis" | "ter" | "quater")) || (single && last_in_seg) || (single && lead && !number_first_here && !next_is_dirlike && !toks[nxt].abbr && !span_at(nxt).map_or(false, |s| s.has(Class::StreetType) || s.has(Class::Title) || s.has(Class::Synonym))) || (single && !next_is_dirlike && nxt + 1 < n && span_at(nxt + 1).map_or(false, |s| s.has(Class::UnitNum))) {
+            // where the number comes first, a lone Latin letter between it and a street of two words
+            // or more is the number's suffix ("12 A Example St" is "12A Example St"; in "12 A St" and
+            // "12 N Example St" the letter is the street's)
+            let typed = |q: usize| span_at(q).map_or(false, |s| s.has(Class::StreetType) || s.has(Class::Directional));
+            let spaced = matches!(ctx.cc, Some("US" | "CA" | "GB" | "IE" | "AU" | "NZ"))
+                && text.contains(&format!("{} {} ", toks[h].s, t.to_uppercase()))
+                && lead
+                && single
+                && t.is_ascii()
+                && !typed(nxt)
+                && nxt + 2 < n
+                && toks[nxt + 1].seg == toks[nxt].seg
+                && toks[nxt + 2].seg == toks[nxt].seg
+                && !toks[nxt + 1].num
+                && !typed(nxt + 1);
+            if spaced || (is_bis && matches!(t.as_str(), "bis" | "ter" | "quater")) || (single && last_in_seg) || (single && lead && !number_first_here && !next_is_dirlike && !toks[nxt].abbr && !span_at(nxt).map_or(false, |s| s.has(Class::StreetType) || s.has(Class::Title) || s.has(Class::Synonym))) || (single && !next_is_dirlike && nxt + 1 < n && span_at(nxt + 1).map_or(false, |s| s.has(Class::UnitNum))) {
                 hn.push_str(&crate::fold::ascii_key(t));
                 used[nxt] = true;
             }
@@ -1025,7 +1053,7 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
                     consumed = sp.len;
                 }
             }
-            let surface: String = name_idx[q..q + consumed].iter().map(|&x| ordinal_digits(&ascii_key(&toks[x].s))).collect();
+            let surface: String = name_idx[q..q + consumed].iter().map(|&x| english_ordinal(ctx, &ordinal_digits(&ascii_key(&toks[x].s)))).collect();
             canons.sort();
             canons.dedup();
             toks_out.push((surface, canons));
@@ -1294,6 +1322,18 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
     // regions double as localities (city-states, cantons named like their capital) after real ones
     c.localities.extend(region_texts);
     c.city = c.localities.first().cloned();
+    // with no country and no commas, a street read to the end ("1 Example St Exampleton IL": "St"
+    // may begin a town, "IL" may be a word) still ends in a state code in capitals: keep it as the
+    // town's region, so it is compared as "1 Example St, Exampleton IL" would be
+    if ctx.cc.is_none() && c.town_region.is_none() && c.localities.is_empty() && !text.contains(',') && c.house.is_some() {
+        let words: Vec<&str> = text.split_whitespace().collect();
+        let last = words.last().copied().unwrap_or("");
+        let code = last.to_ascii_lowercase();
+        let state = ["US", "CA", "AU"].iter().any(|cc| ctx.data.countries.get(*cc).map_or(false, |co| co.regions.contains_key(&code)));
+        if words.len() >= 4 && last.len() == 2 && last.chars().all(|ch| ch.is_ascii_uppercase()) && state {
+            c.town_region = Some(code);
+        }
+    }
     c
 }
 

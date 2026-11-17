@@ -107,9 +107,13 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
 - A business listing at the address is the same place as the plain address.
 - The town must be right: a shared district or region name does not make two towns one. A row
   that names no town does not confirm the caller's place. In the US, Canada and Australia, a row
-  that leaves out only the state, with its town in a part of its own and no postcode or other
-  country shown, is taken; the risk left is a same-named town in another state on a site that
-  shows neither state nor postcode. A US ZIP code confirms or contradicts a state
+  that leaves out only the state, with the caller's town spelled the same, in a part of its own or
+  right after the caller's street, and no postcode or other country shown, is taken; the risk left
+  is a same-named town in another state on a site that shows neither state nor postcode. It is
+  asked about when it also leaves out the caller's postcode (unless it is a place's listing by
+  name, street and town, as sites show places), when the same address is listed in another state
+  beside it, or when the caller's town is spelled another way (`town_spelled_differently`). A US
+  ZIP code confirms or contradicts a state
   by its first three digits. A state comes from its own part or code, or is written after the town
   with no comma ("Exampleton IL", "Exampleton New York"), never from a town named like a state
   ("Washington, PA" is not "Washington, DC").
@@ -119,7 +123,9 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
   that country's form ("Vancouver 98660" is not in Canada).
 - Spellings that mean the same thing agree: abbreviations, diacritics, case and punctuation,
   component order (number before or after the street), joined or split compound names, native
-  digits, Japanese block addresses, transliteration, and a one-letter typo in a long name.
+  digits, Japanese block addresses, transliteration, and a one-letter typo in a long name; an
+  English ordinal word and its number ("Fifth Ave" and "5th Ave"); a house number's letter with a
+  space or without ("12 A Example St" and "12A Example St").
 
 Wrong picks are the costly error, so PlaceMatch prefers `ambiguous` or `none` whenever a
 candidate could be a different place.
@@ -168,11 +174,16 @@ name decides:
 
 A town typed alone ("Munich") is compared as a town, in its other languages too ("München").
 
+A place's name with a postcode alone ("Example Center, 94000") is the name with the postcode as
+its area. Rows of the very same name in one town are one place, except that a row the site
+categorized beside one it did not (a pin dropped under the venue's own name) asks
+(`several_places`); `prefer_on_read` then names the categorized row as below.
+
 When a row has exactly the caller's name and another holds the name in a longer form (a pin dropped
 under the name next to the venue under its official name), the answer is `ambiguous`. A row may say
 that the site shows it with a category of its own (`Row { text, categorized: true }`, a venue type
-such as "Convention center"). When the caller gave a town or postcode, every such row holds it in
-full and exactly one of them is categorized, `prefer_on_read` names that one: a picker reading the
+such as "Convention center"). When the caller gave a town or postcode, every such row fits it,
+exactly one of them is categorized and that one holds it in full, `prefer_on_read` names it: a picker reading the
 site may take it, and a write still asks. So does a categorized longer-name row that holds the
 caller's area in full when the exact name appears only outside it. With no area from the caller,
 a read asks as a write does. The longer row is preferred only when its name ends with the caller's name and the

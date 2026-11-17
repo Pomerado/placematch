@@ -441,6 +441,30 @@ fn a_zip_code_outside_the_callers_state_is_another_place() {
     let e = explain(&m, "1 Example St, Exampleton, CA", &["1 Example St, Exampleton 93600"]);
     assert_eq!((e.outcome, e.index), (Outcome::Match, Some(0)));
     // a row that leaves out only the state, with nothing that contradicts the caller, is taken
-    let e = explain(&m, "1 Example St, Exampleton, IL 60000", &["1 Example St, Exampleton"]);
+    let e = explain(&m, "1 Example St, Exampleton, IL", &["1 Example St, Exampleton"]);
     assert_eq!((e.outcome, e.index), (Outcome::Match, Some(0)));
+    // one that leaves out the caller's ZIP code too confirms neither, and asks
+    let e = explain(&m, "1 Example St, Exampleton, IL 60000", &["1 Example St, Exampleton"]);
+    assert_eq!((e.outcome, e.reasons), (Outcome::Ambiguous, vec!["place_unconfirmed"]));
+    // so does one beside the same address in another state, which it may be
+    for rows in [["1 Example St, Exampleton", "1 Example St, Exampleton, WI"], ["1 Example St, Exampleton, WI", "1 Example St, Exampleton"]] {
+        let e = explain(&m, "1 Example St, Exampleton, IL", &rows);
+        assert_eq!(e.outcome, Outcome::Ambiguous, "{:?}", rows);
+    }
+}
+
+/// A town named like its region ("New York, NY", "Washington, DC") is a town in that region, for
+/// `in_area` too: the venue in the city fits the caller's area, and a row in another town does not.
+#[test]
+fn a_town_named_like_its_state_is_the_callers_area() {
+    let m = Matcher::new();
+    let us = Some("US");
+    assert!(m.in_area("Example Center, New York, NY", "Jane Q. Example Convention Center, 429 Sample Ave, New York, NY 10001, USA", us));
+    assert!(m.in_area("Example Center, New York, NY", "Example Center, New York, NY, USA", us));
+    assert!(m.in_area("Example Center, Washington, DC", "Jane Q. Example Convention Center, 5 Sample Ave NW, Washington, DC 20001, USA", us));
+    assert!(!m.in_area("Example Center, New York, NY", "Jane Q. Example Center, 5 Sample Ave, Albany, NY 12207, USA", us));
+    assert!(!m.in_area("Example Center, Washington, DC", "Jane Q. Example Center, 5 Sample Ave, Seattle, WA 98101, USA", us));
+    assert!(!m.in_area("Example Center, New York, NY", "Example Center, Otherton, NY, USA", us));
+    // a ZIP code alone is an area too
+    assert!(m.in_area("Example Tower, 94133", "Example Tower, 5 Sample St, Exampleton, CA 94133, USA", us));
 }

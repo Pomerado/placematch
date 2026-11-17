@@ -1077,6 +1077,21 @@ impl Matcher {
         out
     }
 
+    /// The caller gave a state, every row of the place leaves it out (no state, no postcode), and
+    /// another row is the same address in another state.
+    fn state_left_out_beside_another(&self, q: &Components, cs: &[Components], place: &[usize], verdicts: &[(Verdict, Vec<&'static str>)]) -> bool {
+        let states = q.cc.as_deref().map_or(false, |cc| POSTAL_CODE_COUNTRIES.contains(&cc));
+        if !states || (self.region_ids(q, false).is_empty() && q.town_region.is_none()) {
+            return false;
+        }
+        let silent = |c: &Components| self.region_ids(c, false).is_empty() && c.town_region.is_none() && c.postcode.is_none();
+        if !place.iter().all(|&i| silent(&cs[i])) {
+            return false;
+        }
+        let one = |a: &Components, b: &Components| self.compare_parsed(a, b, Mode::Peer).0 != Verdict::Different && self.compare_parsed(b, a, Mode::Peer).0 != Verdict::Different;
+        (0..cs.len()).any(|j| verdicts[j].0 == Verdict::Different && matches!(verdicts[j].1.as_slice(), ["region"] | ["postcode"]) && place.iter().all(|&i| one(&cs[i], &cs[j])))
+    }
+
     /// The text names a country that has no region of the code `k` ("Jakarta ID, Indonesia").
     fn country_without(&self, x: &Components, k: &str) -> bool {
         let keys: Vec<&String> = x.countries.iter().chain(x.localities.iter().map(|t| &t.key)).collect();
@@ -1417,7 +1432,8 @@ impl Matcher {
     /// and the row none ("12 Example St, USA", "Exampleton Mall, 1 Example St"), or, where towns
     /// share names across states (`POSTAL_CODE_COUNTRIES`), the caller gives a state or postcode
     /// and the row shows a postcode or country but no state ("1 Example St, Exampleton 60000, USA"
-    /// for "..., Exampleton, IL 60100"); a row that leaves out only the state is taken; with no
+    /// for "..., Exampleton, IL 60100"), or leaves out both the state and the caller's postcode;
+    /// a row that leaves out only the state is taken; with no
     /// country to tell a town from a state, the caller gives a place, or a postcode, the row does
     /// not. The same postcode on both sides confirms it.
     fn area_unconfirmed(&self, q: &Components, c: &Components) -> Option<&'static str> {
@@ -1442,8 +1458,22 @@ impl Matcher {
         // a row that leaves out only the state, and shows no postcode or country, is taken: nothing
         // in it contradicts the caller (a same-named town in another state is the risk left)
         let own_country = |x: &Components| self.countries_named(x).iter().all(|k| Some(*k) == q.cc.as_deref());
-        // (its town in a part of its own: in "1 Example St St Exampleton", "St" may begin the town)
-        let row_silent = towns(c) > 0 && c.parts >= 2 && c.postcode.is_none() && own_country(c) && c.town_region.is_none();
+        // Its town is in a part of its own, or follows the caller's street word for word with no
+        // comma ("1 Example St Exampleton"; in "1 Example St St Exampleton", "St" may begin the
+        // town). A caller's postcode the row leaves out too is a second part of the address it
+        // does not confirm, unless the row is a place's listing ("Example Building, 1 Example Bldg,
+        // Example City"), which sites show by name, street and town alone.
+        // (the caller's text may run its town on into its street too: "1 Example St Exampleton, IL")
+        let runs = |x: &Components| -> [String; 2] {
+            let town = x.city.as_ref().filter(|t| !x.regions.contains(&t.key)).map_or("", |t| t.key.as_str());
+            let word = if x.street_type_first { "" } else { x.street_type_word.as_str() };
+            [format!("{}{}{}", x.street.key, word, town), format!("{}{}", x.street.key, town)]
+        };
+        let (rc, rq) = (runs(c), runs(q));
+        let run_on = rc[0] == rq[0] || rc[1] == rq[1];
+        let own_part = c.parts >= 2 || (!q.street.key.is_empty() && ((c.street.key == q.street.key && c.street_type == q.street_type) || run_on));
+        let postcode_too = q.postcode.is_some() && c.business.is_empty();
+        let row_silent = towns(c) > 0 && own_part && !postcode_too && c.postcode.is_none() && own_country(c) && c.town_region.is_none();
         if states && !row_silent && (!self.region_ids(q, false).is_empty() || q.postcode.is_some() || town_region) && self.region_ids(c, false).is_empty() && !zip_confirms && !(c.town_region.is_some() && c.town_region == q.town_region) {
             return Some("region_not_listed");
         }
@@ -1650,6 +1680,10 @@ impl Matcher {
             }
             let mut any_yes = false;
             let mut any_unknown = false;
+            // a town that matches only within a typo ("Exampletn" for "Exampleton"), where towns
+            // share names across states (a romanized town keeps its allowance: "Backa" for "Bačka")
+            let mut misspelled = false;
+            let spelling = q.cc.as_deref().map_or(false, |cc| POSTAL_CODE_COUNTRIES.contains(&cc));
             // a town matching only the other side's region counts when that side named no other town;
             // when the town side gave just that one name ("Valparaíso" vs "San Antonio, Valparaíso") it
             // may be the town or the region: not settled
@@ -1677,6 +1711,7 @@ impl Matcher {
                 match text_eq(self, a, b, typo_town) {
                     Tri::Yes if region == 1 => {}
                     Tri::Yes if region == 2 => any_unknown = true,
+                    Tri::Yes if spelling && typo_town && text_eq(self, a, b, false) != Tri::Yes => misspelled = true,
                     Tri::Yes => any_yes = true,
                     Tri::Unknown => any_unknown = true,
                     Tri::No => {}
@@ -1704,7 +1739,11 @@ impl Matcher {
                 }
             }
             if !any_yes {
-                if any_unknown {
+                // the caller's town spelled another way may be the row's or another town: ask
+                if misspelled && !any_unknown {
+                    unknown = true;
+                    reasons.push("town_spelled_differently");
+                } else if any_unknown {
                     unknown = true;
                     reasons.push("city_not_comparable");
                 } else {
@@ -1773,6 +1812,24 @@ impl Matcher {
             Some(h) if words[0].0.starts_with(h.as_str()) && words[0].0.len() > h.len() && !query.split(',').skip(1).any(|p| p.chars().any(|ch| ch.is_ascii_digit()) && p.split_whitespace().any(|w| w.chars().all(|ch| ch.is_ascii_digit()) && w.len() < 4)) => Some(words),
             _ => None,
         }
+    }
+
+    /// A text of a name with no digits and then a lone number of four or more digits, after a
+    /// comma or not: the name, a comma and the number read as a postcode ("1 Example St, Exampleton"
+    /// is no such text).
+    fn name_and_postcode(query: &str) -> Option<String> {
+        let parts: Vec<&str> = query.split(',').map(|p| p.trim()).filter(|p| !p.is_empty()).collect();
+        let (name, code) = match parts.as_slice() {
+            [name, code] => (name.to_string(), code.to_string()),
+            [one] => {
+                let (name, code) = one.rsplit_once(' ')?;
+                (name.trim().to_string(), code.to_string())
+            }
+            _ => return None,
+        };
+        let postcode = code.len() >= 4 && code.chars().all(|ch| ch.is_ascii_digit());
+        let named = name.chars().any(|ch| ch.is_alphabetic()) && !name.chars().any(|ch| ch.is_ascii_digit());
+        (postcode && named).then(|| format!("{}, {}", name, code))
     }
 
     /// How a row's first part relates to the caller's place name: 2 the same name, 1 a variant
@@ -2375,14 +2432,29 @@ impl Matcher {
             // asks)
             let areas: Vec<(bool, &Components)> = exact.iter().filter(|x| first_of_text(x.0)).map(|x| (x.1, &x.2)).chain(variant.iter().zip(&variant_area).filter(|(&i, _)| first_of_text(i)).map(|(_, x)| (x.0, &x.1))).collect();
             let has_town = |x: &Components| !self.towns(x).is_empty();
-            let one_town = !crowded && caller_area && areas.iter().all(|(full, a)| has_town(a) && *full);
+            let one_town = !crowded && caller_area && areas.iter().all(|(_, a)| has_town(a));
+            // the venue holds the caller's area in full; the other rows fit it, if not in full (a pin
+            // with no postcode for "Example Center, 94000")
+            let full_at = |i: usize| exact.iter().find(|x| x.0 == i).map(|x| x.1).or_else(|| variant.iter().position(|&v| v == i).map(|k| variant_area[k].0)).unwrap_or(false);
             if !towns_apart && unconfirmed.is_empty() && one_town && !named_after_any {
                 if let Pick::Ambiguous(ids) = &pick {
                     let categorized: Vec<usize> = ids.iter().copied().filter(|&i| rows[i].categorized).collect();
-                    if categorized.len() == 1 {
+                    if categorized.len() == 1 && full_at(categorized[0]) {
                         e.prefer_on_read = Some(categorized[0]);
                     }
                 }
+            }
+            return (pick, e);
+        }
+        // a row of the caller's exact name the site categorized beside one it did not (a map pin
+        // dropped under the venue's own name): they may be two places, so a write asks; a read may
+        // take the categorized one when the caller gave a town or postcode it holds in full
+        let distinct: Vec<&(usize, bool, Components)> = exact.iter().filter(|x| first_of_text(x.0)).collect();
+        let venues: Vec<&&(usize, bool, Components)> = distinct.iter().filter(|x| rows[x.0].categorized).collect();
+        if !venues.is_empty() && venues.len() < distinct.len() {
+            let (pick, mut e) = asked(&exact, vec!["several_places"], reports);
+            if caller_area && venues.len() == 1 && venues[0].1 {
+                e.prefer_on_read = Some(venues[0].0);
             }
             return (pick, e);
         }
@@ -2760,7 +2832,9 @@ impl Matcher {
             return false;
         }
         // with no town given, the caller's first part (the place, or a town) must be in the row
-        if qa.localities.iter().all(|t| qa.regions.contains(&t.key) || self.data.is_country_name(&t.key)) {
+        // ("New York, NY" and "Washington, DC" name a town: a town named like its region, with the
+        // region after it)
+        if self.towns(&qa).iter().all(|t| self.data.is_country_name(&t.key)) {
             let name: Vec<String> = self.name_words(query.split(',').next().unwrap_or("")).into_iter().map(|w| w.0).collect();
             let r: Vec<String> = self.name_words(&rr).into_iter().map(|w| w.0).collect();
             if name.is_empty() || !r.windows(name.len()).any(|w| w == &name[..]) {
@@ -2817,6 +2891,26 @@ impl Matcher {
         if let Some(name) = self.place_name(query, &q) {
             return self.named_decide(&ctx, query, &name, rows);
         }
+        // a place's name and a postcode alone ("Example Center, 94000", "Example Center 94000") is
+        // the name with the postcode as its area, not a house number
+        // (read as a street address first: "Example River Rd 15202" may be a number after its
+        // street, so the name reading is used only when the address reading takes no row and the
+        // name reading finds one)
+        let named_postcode = Self::name_and_postcode(query).and_then(|named| {
+            let area = Self::area_parse(&ctx, named.splitn(2, ',').nth(1).unwrap_or(""));
+            let name = self.name_words(named.split(',').next().unwrap_or(""));
+            (area.postcode.is_some() && q.po_box.is_none() && q.units.is_empty() && !name.is_empty()).then(|| self.named_decide(&ctx, &named, &name, rows))
+        });
+        let street = self.decide_street(query, &ctx, &q, rows, ranges);
+        match named_postcode {
+            Some(named) if !matches!(street.0, Pick::Match(_)) && !matches!(named.0, Pick::None) => named,
+            _ => street,
+        }
+    }
+
+    /// `decide_read` for a street address.
+    fn decide_street(&self, query: &str, ctx: &Ctx, q: &Components, rows: &[Row], ranges: bool) -> (Pick, Explained) {
+        let (ctx, q) = (ctx, q.clone());
         let candidates: Vec<&str> = rows.iter().map(|r| r.text).collect();
         let mut cs: Vec<Components> = candidates.iter().map(|c| parse::parse(&ctx, c)).collect();
         let alts: Vec<Components> = Self::comma_free_readings(query).iter().map(|a| parse::parse(&ctx, a)).collect();
@@ -2874,7 +2968,7 @@ impl Matcher {
                     (_, ["candidate_adds_unit"]) => "unit_not_given",
                     (Verdict::Unknown, ["candidate_has_no_house_number"]) => "number_not_listed",
                     (Verdict::Unknown, ["number_range"]) => "number_range",
-                    (Verdict::Unknown, ["town_not_listed"] | ["region_not_listed"]) => "place_unconfirmed",
+                    (Verdict::Unknown, ["town_not_listed"] | ["region_not_listed"] | ["town_spelled_differently"]) => "place_unconfirmed",
                     (Verdict::Different, ["postcode"]) if self.postcode_only_differs(&q, &cs[i]) => "postcode_differs",
                     _ => continue,
                 };
@@ -2949,6 +3043,14 @@ impl Matcher {
         place.sort();
         if self.has_shadow(&q, &cs, &clusters[0], &candidates) {
             return (Pick::Ambiguous(place.clone()), Explained::ambiguous(place, vec!["several_places"], reports));
+        }
+        // rows that leave out the caller's state, beside the same address in another state: they
+        // may be that row, so ask ("1 Example St, Exampleton" beside "..., Exampleton, WI")
+        if self.state_left_out_beside_another(&q, &cs, &place, &verdicts) {
+            for &i in &place {
+                reports[i].reasons.push("region_not_listed");
+            }
+            return (Pick::Ambiguous(place.clone()), Explained::ambiguous(place, vec!["place_unconfirmed"], reports));
         }
         // prefer the listing with the caller's own number over a range holding it, the listing
         // without a business name, then the most complete one
