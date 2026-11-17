@@ -25,10 +25,13 @@ test("pickExplained lists the place's rows and notes a unit the listing leaves o
 });
 
 test("a same-name pin beside a categorized venue asks; a read may take the venue", () => {
-  const e = m.pickExplained("example center", ["Example Center, Exampleton, NY, USA", { text: "Jane Q. Example Convention Center, 429 Sample Ave, Exampleton, NY 10001, USA", categorized: true }], { country: "US" });
+  const rows = ["Example Center, Exampleton, NY, USA", { text: "Jane Q. Example Convention Center, 429 Sample Ave, Exampleton, NY 10001, USA", categorized: true }];
+  const e = m.pickExplained("example center, exampleton, ny", rows, { country: "US" });
   assert.equal(e.outcome, "ambiguous");
   assert.deepEqual(e.reasons, ["place_name_variant"]);
   assert.equal(e.prefer_on_read, 1);
+  // with no area from the caller, a read asks too
+  assert.equal(m.pickExplained("example center", rows, { country: "US" }).prefer_on_read, null);
 });
 
 test("near rows ask with their reason", () => {

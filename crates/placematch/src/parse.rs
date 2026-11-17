@@ -62,6 +62,8 @@ pub struct Components {
     /// a region of the country written at the end of the town's part, with no comma
     /// ("Exampleton IL", "Exampleton New York"): its key
     pub town_region: Option<String>,
+    /// the number of comma parts with words in them
+    pub parts: usize,
 }
 
 pub struct Ctx<'a> {
@@ -380,7 +382,8 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
     let is_start = |k: usize| spans[k].as_ref().map_or(false, |s| s.start == k);
 
     let mut used = vec![false; n];
-    let mut c = Components { script, cc: ctx.cc.map(|x| x.to_string()), cc_inferred: ctx.inferred, ..Default::default() };
+    let parts = toks.iter().map(|t| t.seg).collect::<std::collections::BTreeSet<_>>().len();
+    let mut c = Components { script, cc: ctx.cc.map(|x| x.to_string()), cc_inferred: ctx.inferred, parts, ..Default::default() };
     let mut house_kw_next: Vec<usize> = Vec::new();
 
     // value token after a keyword span starting at k (skip "#", "no", ":" style tokens)
@@ -1162,18 +1165,24 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
             // strip a region's words at the end of a locality ("Springfield IL", "Springfield New
             // York"), keeping it as the town's region
             let mut text_words = words.clone();
-            // with no country, a state code in capitals after the town, of a country that writes
-            // states after the town ("Exampleton IL")
-            if country.is_none() && !is_region && !is_country && g.len() > 1 {
-                let last = *g.last().unwrap();
-                let code = ascii_key(&toks[last].s);
-                let capital = code.len() == 2 && text.contains(&format!(" {}", code.to_uppercase()));
-                if capital && ["US", "CA", "AU"].iter().any(|cc| data.countries.get(*cc).map_or(false, |co| co.regions.contains_key(&code))) {
-                    text_words.retain(|&k| k != last);
-                    c.town_region = Some(code);
-                }
+            // a state code in capitals as the last word of the town's part, of a country that writes
+            // states after the town ("Exampleton IL", "Exampleton ON"), even one that is also a
+            // short word ("ON", "IN", "OR"): with no country, or one of those countries given
+            let last = *g.last().unwrap();
+            let code = ascii_key(&toks[last].s);
+            let states_here = |cc: &str| data.countries.get(cc).map_or(false, |co| co.regions.contains_key(&code));
+            let code_country = match ctx.cc {
+                None => ["US", "CA", "AU"].iter().any(|cc| states_here(cc)),
+                Some(cc) => matches!(cc, "US" | "CA" | "AU") && states_here(cc),
+            };
+            // nothing but numbers (a postcode) after it, and written in capitals
+            let at_end = toks[last + 1..].iter().all(|t| t.s.chars().any(|ch| ch.is_ascii_digit()));
+            let capital = code.len() == 2 && text.contains(&format!(" {}", code.to_uppercase()));
+            if !is_region && !is_country && g.len() > 1 && code_country && at_end && capital && c.town_region.is_none() {
+                text_words.retain(|&k| k != last);
+                c.town_region = Some(code.clone());
             }
-            if !is_region && !is_country && text_words.len() > 1 {
+            if !is_region && !is_country && text_words.len() > 1 && c.town_region.is_none() {
                 if let Some(co) = country {
                     // where states follow the town (the United States, Canada, Australia), a state's
                     // name of two or three words too, kept as the town's region
@@ -1203,7 +1212,8 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
             }
             let mut tk: Vec<(String, Vec<u32>)> = text_words.iter().map(|&k| (ordinal_digits(&ascii_key(&toks[k].s)), Vec::new())).collect();
             let mut key: String = tk.iter().map(|t| t.0.as_str()).collect();
-            if let Some(canon) = data.exonyms.get(&key) {
+            // a country's name stays the country's ("Mexico" is not Mexico City)
+            if let (false, Some(canon)) = (is_country, data.exonyms.get(&key)) {
                 key = canon.clone();
                 tk = vec![(key.clone(), Vec::new())];
             }

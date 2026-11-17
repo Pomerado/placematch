@@ -166,18 +166,19 @@ const VENUE: &str = "Jane Q. Example Convention Center, 429 Sample Ave, Examplet
 fn a_same_name_pin_beside_a_categorized_venue_asks_and_a_read_may_take_the_venue() {
     let m = Matcher::new();
     let o = PickOptions { country: Some("US") };
-    let e = m.pick_explained("example center", &[Row::from(PIN), Row { text: VENUE, categorized: true }], &o);
+    let q = "example center, exampleton, ny";
+    let e = m.pick_explained(q, &[Row::from(PIN), Row { text: VENUE, categorized: true }], &o);
     assert_eq!((e.outcome, e.same.clone(), e.reasons.clone()), (Outcome::Ambiguous, vec![0, 1], vec!["place_name_variant"]));
     assert_eq!(e.prefer_on_read, Some(1));
     // the categorized one is preferred whichever it is
-    let e = m.pick_explained("example center", &[Row { text: PIN, categorized: true }, Row::from(VENUE)], &o);
+    let e = m.pick_explained(q, &[Row { text: PIN, categorized: true }, Row::from(VENUE)], &o);
     assert_eq!(e.prefer_on_read, Some(0));
-    // in the caller's area, when the caller gave one
-    let e = m.pick_explained("example center, exampleton, ny", &[Row::from(PIN), Row { text: VENUE, categorized: true }], &o);
-    assert_eq!((e.outcome, e.prefer_on_read), (Outcome::Ambiguous, Some(1)));
+    // only when the caller gave a town or postcode: with no area, a read asks too
+    let e = m.pick_explained("example center", &[Row::from(PIN), Row { text: VENUE, categorized: true }], &o);
+    assert_eq!((e.outcome, e.prefer_on_read), (Outcome::Ambiguous, None));
     // both or neither categorized: nothing to prefer
     for (a, b) in [(false, false), (true, true)] {
-        let e = m.pick_explained("example center", &[Row { text: PIN, categorized: a }, Row { text: VENUE, categorized: b }], &o);
+        let e = m.pick_explained(q, &[Row { text: PIN, categorized: a }, Row { text: VENUE, categorized: b }], &o);
         assert_eq!((e.outcome, e.prefer_on_read), (Outcome::Ambiguous, None));
     }
     // two towns, or a row with no town of its own: the rows may be two places, so nothing to prefer
@@ -227,23 +228,40 @@ fn a_read_prefers_a_longer_name_only_when_it_ends_with_the_callers_name() {
     // given names and initials before the name are fine, and so is a type word the caller typed
     let e = m.pick_explained("example park, springfield, il", &[Row::from("Example Park, Springfield, IL"), Row { text: "Jane Q. Example Park, 5 Sample Rd, Springfield, IL 62701", categorized: true }], &o);
     assert_eq!((e.outcome, e.prefer_on_read), (Outcome::Ambiguous, Some(1)));
-    let e = m.pick_explained("example memorial hospital", &[Row::from("Example Memorial Hospital, Exampleton, NY"), Row { text: "Jane Q. Example Memorial Hospital, 5 Sample Rd, Exampleton, NY 10001", categorized: true }], &o);
+    let e = m.pick_explained("example memorial hospital, exampleton", &[Row::from("Example Memorial Hospital, Exampleton, NY"), Row { text: "Jane Q. Example Memorial Hospital, 5 Sample Rd, Exampleton, NY 10001", categorized: true }], &o);
     assert_eq!((e.outcome, e.prefer_on_read), (Outcome::Ambiguous, Some(1)));
 }
 
-/// With no area from the caller, the rows must state the same region as well as the same town:
-/// another state's Springfield is another place.
+/// A read takes the venue the site categorized over a same-name pin only when the caller
+/// gave a town or postcode and the venue holds it; with no area from the caller, a read asks.
 #[test]
-fn with_no_caller_area_a_read_preference_needs_the_same_region() {
+fn a_read_takes_the_venue_only_in_the_callers_area() {
     let m = Matcher::new();
     let o = PickOptions { country: Some("US") };
     let venue = Row { text: "Jane Q. Example Convention Center, 5 Sample Rd, Springfield, MO", categorized: true };
-    let e = m.pick_explained("example center", &[Row::from("Example Center, Springfield"), venue], &o);
-    assert_eq!((e.outcome, e.prefer_on_read), (Outcome::Ambiguous, None));
-    let e = m.pick_explained("example center", &[Row::from("Example Center, Springfield, MO"), venue], &o);
+    for pin in ["Example Center, Springfield", "Example Center, Springfield, MO", "Example Center, Springfield, IL"] {
+        let e = m.pick_explained("example center", &[Row::from(pin), venue], &o);
+        assert_eq!((e.outcome, e.prefer_on_read), (Outcome::Ambiguous, None), "{}", pin);
+    }
+    let e = m.pick_explained("example center, springfield, mo", &[Row::from("Example Center, Springfield, MO"), venue], &o);
     assert_eq!((e.outcome, e.prefer_on_read), (Outcome::Ambiguous, Some(1)));
-    let e = m.pick_explained("example center", &[Row::from("Example Center, Springfield, IL"), venue], &o);
+    // the exact name only in another town (a borough of its own), the venue in the caller's
+    let rows = [Row::from("Example Convention Center, Othertown, NY"), Row { text: "Jane Q. Example Convention Center, 429 Sample Ave, Exampleton, NY 10001", categorized: true }];
+    let e = m.pick_explained("example convention center, exampleton, ny", &rows, &o);
+    assert_eq!((e.outcome, e.prefer_on_read), (Outcome::Ambiguous, Some(1)));
+    let e = m.pick_explained("example convention center", &rows, &o);
     assert_eq!((e.outcome, e.prefer_on_read), (Outcome::Ambiguous, None));
+    // the exact name on a street of its own a mile away, the venue in the caller's town too
+    let pin = Row::from("Example Tower, 100 Other St, Exampleton, IL 60601");
+    let tower = Row { text: "Jane Q. Example Tower, 5 Sample Rd, Exampleton, IL 60602", categorized: true };
+    assert_eq!(m.pick_explained("example tower, exampleton, il", &[pin, tower], &o).prefer_on_read, Some(1));
+    assert_eq!(m.pick_explained("example tower, exampleton, il", &[tower, pin], &o).prefer_on_read, Some(0));
+    let e = m.pick_explained("example tower", &[pin, tower], &o);
+    assert_eq!((e.outcome, e.prefer_on_read), (Outcome::Ambiguous, None));
+    // known gap, accepted: a longer name with a word inside ("Example Dog Park") in the caller's
+    // town is taken on a read as if it were the caller's place under its full name
+    let e = m.pick_explained("example park, exampleton, il", &[Row::from("Example Park, Exampleton, IL"), Row { text: "Example Dog Park, 5 Sample Rd, Exampleton, IL 60602", categorized: true }], &o);
+    assert_eq!((e.outcome, e.prefer_on_read), (Outcome::Ambiguous, Some(1)));
 }
 
 /// A same-name row in another town beside a venue whose longer name ends in a place-type word is
@@ -422,7 +440,7 @@ fn a_zip_code_outside_the_callers_state_is_another_place() {
     assert_eq!(e.outcome, Outcome::None);
     let e = explain(&m, "1 Example St, Exampleton, CA", &["1 Example St, Exampleton 93600"]);
     assert_eq!((e.outcome, e.index), (Outcome::Match, Some(0)));
-    // a row with neither a state nor a ZIP code cannot confirm the caller's state
+    // a row that leaves out only the state, with nothing that contradicts the caller, is taken
     let e = explain(&m, "1 Example St, Exampleton, IL 60000", &["1 Example St, Exampleton"]);
-    assert_ne!(e.outcome, Outcome::Match);
+    assert_eq!((e.outcome, e.index), (Outcome::Match, Some(0)));
 }

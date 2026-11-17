@@ -45,10 +45,12 @@ building name. A row must still confirm where the caller's place is:
 
 - a row that names no town where the caller gave one (`12 Example St, USA`, `Exampleton Mall, 1
   Example St` for `..., Exampleton, IL`) is not the caller's place unless the postcodes agree;
-- where towns share names across states (the US, Canada, Australia), a row with neither a state
-  nor a postcode does not confirm the caller's state or postcode (`1 Example St, Exampleton` for
-  `..., Exampleton, IL 60000`); a US ZIP code confirms or contradicts a state by its first three
-  digits (`Kansas City 64100` is in Missouri, not Kansas);
+- where towns share names across states (the US, Canada, Australia), a row that leaves out only
+  the state, with its town in a part of its own and no postcode or other country shown, is taken
+  (`1 Example St, Exampleton` for `..., Exampleton, IL`; a same-named town in another state, on a
+  site that shows neither state nor postcode, is the risk left); a row that shows a postcode or
+  country but no state does not confirm the caller's state; a US ZIP code confirms or contradicts
+  a state by its first three digits (`Kansas City 64100` is in Missouri, not Kansas);
 - with no country given or shown by the texts, a row that leaves out a place the caller named
   does not confirm it;
 - a state comes only from the state part or code, or from a state written after the town with

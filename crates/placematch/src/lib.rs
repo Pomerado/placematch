@@ -133,8 +133,9 @@ pub struct Explained {
     /// "旭町").
     pub cross_script: bool,
     /// `ambiguous` between a same-name row and a row with the name in a longer form: the one row of
-    /// them the site categorized, when exactly one is and the rows name one town (the caller's, when
-    /// the caller gave an area). A read may take it; a write still asks.
+    /// them the site categorized, when exactly one is, the caller gave a town or postcode and every
+    /// such row holds it in full (or the exact name is only outside it). A read may take it; a write
+    /// still asks; with no area from the caller there is none.
     pub prefer_on_read: Option<usize>,
     /// Each row's verdict and reasons, by row index.
     pub rows: Vec<RowReport>,
@@ -1076,6 +1077,12 @@ impl Matcher {
         out
     }
 
+    /// The text names a country that has no region of the code `k` ("Jakarta ID, Indonesia").
+    fn country_without(&self, x: &Components, k: &str) -> bool {
+        let keys: Vec<&String> = x.countries.iter().chain(x.localities.iter().map(|t| &t.key)).collect();
+        self.data.countries.values().any(|co| keys.iter().any(|t| t.len() >= 3 && co.names.contains(*t)) && !co.regions.contains_key(k))
+    }
+
     /// `a` writes a region after its town with no comma ("Exampleton IL"), and `b` shows only other
     /// regions: in its own part, after its town, or by its ZIP code.
     fn town_region_differs(&self, a: &Components, b: &Components) -> bool {
@@ -1084,10 +1091,22 @@ impl Matcher {
             let Some(k) = a.town_region.as_deref() else {
                 return false;
             };
+            if self.country_without(a, k) || self.country_without(b, k) {
+                return false;
+            }
             let theirs: Vec<&str> = b.town_region.iter().map(|t| t.as_str()).chain(b.localities.iter().skip(1).map(|t| t.key.as_str())).collect();
-            return POSTAL_CODE_COUNTRIES.iter().filter_map(|cc| self.data.countries.get(*cc)).any(|co| {
+            return POSTAL_CODE_COUNTRIES.iter().any(|&cc| {
+                let Some(co) = self.data.countries.get(cc) else {
+                    return false;
+                };
                 let ids = co.region_ids(k);
-                let shown: Vec<u16> = theirs.iter().flat_map(|t| co.region_ids(t)).collect();
+                let mut shown: Vec<u16> = theirs.iter().flat_map(|t| co.region_ids(t)).collect();
+                // and, for a United States state, a row's ZIP code read as one
+                if cc == "US" && !ids.is_empty() {
+                    let mut us = b.clone();
+                    us.cc = Some("US".to_string());
+                    shown.extend(self.zip_states(&us));
+                }
                 !ids.is_empty() && !shown.is_empty() && !shown.iter().any(|r| ids.contains(r))
             });
         };
@@ -1135,14 +1154,16 @@ impl Matcher {
         // is a region of the country it names)
         let x = parse::parse(&self.ctx(None), text);
         let folded = fold::fold(text);
-        // "UK", "U.K.", "US", "U.S." or "USA" as the last part: the usual short names, though "UK" and
-        // "US" are region codes elsewhere too
+        // "UK", "U.K.", "US", "U.S.", "USA" or "MX" as the last part: the usual short names, though
+        // "UK" and "US" are region codes elsewhere too
         let parts = folded.split(',').count();
         if parts > 1 {
             let last: String = folded.rsplit(',').next().unwrap_or("").chars().filter(|c| c.is_alphanumeric()).collect();
             match last.as_str() {
                 "uk" => add("GB", &mut v),
                 "us" | "usa" => add("US", &mut v),
+                // no state or province of a country that writes them after the town
+                "mx" => add("MX", &mut v),
                 _ => {}
             }
         }
@@ -1395,7 +1416,8 @@ impl Matcher {
     /// A row that leaves out where the caller's place is cannot confirm it: the caller names a town
     /// and the row none ("12 Example St, USA", "Exampleton Mall, 1 Example St"), or, where towns
     /// share names across states (`POSTAL_CODE_COUNTRIES`), the caller gives a state or postcode
-    /// and the row neither ("1 Example St, Exampleton" for "..., Exampleton, IL 60000"); with no
+    /// and the row shows a postcode or country but no state ("1 Example St, Exampleton 60000, USA"
+    /// for "..., Exampleton, IL 60100"); a row that leaves out only the state is taken; with no
     /// country to tell a town from a state, the caller gives a place, or a postcode, the row does
     /// not. The same postcode on both sides confirms it.
     fn area_unconfirmed(&self, q: &Components, c: &Components) -> Option<&'static str> {
@@ -1417,7 +1439,12 @@ impl Matcher {
         let zip_confirms = q.postcode.is_none() && (self.region_ids(q, false).iter().any(|r| self.zip_states(c).contains(&r.0)) || town_region_ids.iter().any(|r| self.zip_states(c).contains(r)));
         // a state written after the town with no comma ("Exampleton IL") is given too
         let town_region = q.town_region.is_some() && c.town_region != q.town_region;
-        if states && (!self.region_ids(q, false).is_empty() || q.postcode.is_some() || town_region) && self.region_ids(c, false).is_empty() && !zip_confirms && !(c.town_region.is_some() && c.town_region == q.town_region) {
+        // a row that leaves out only the state, and shows no postcode or country, is taken: nothing
+        // in it contradicts the caller (a same-named town in another state is the risk left)
+        let own_country = |x: &Components| self.countries_named(x).iter().all(|k| Some(*k) == q.cc.as_deref());
+        // (its town in a part of its own: in "1 Example St St Exampleton", "St" may begin the town)
+        let row_silent = towns(c) > 0 && c.parts >= 2 && c.postcode.is_none() && own_country(c) && c.town_region.is_none();
+        if states && !row_silent && (!self.region_ids(q, false).is_empty() || q.postcode.is_some() || town_region) && self.region_ids(c, false).is_empty() && !zip_confirms && !(c.town_region.is_some() && c.town_region == q.town_region) {
             return Some("region_not_listed");
         }
         let shown = |t: &Text| c.localities.iter().any(|u| u.key == t.key || text_eq(self, t, u, false) == Tri::Yes) || in_street(c);
@@ -1432,7 +1459,9 @@ impl Matcher {
         // with no country, a state code after the caller's town ("Exampleton IL") that the row does
         // not show
         if let (None, Some(k)) = (q.cc.as_deref(), q.town_region.as_deref()) {
-            if c.town_region.as_deref() != Some(k) && !c.localities.iter().any(|t| t.key == k) {
+            // unless either text shows a country with no state of the code ("Berlin DE, Germany")
+            let elsewhere = self.country_without(q, k) || self.country_without(c, k);
+            if !elsewhere && c.town_region.as_deref() != Some(k) && !c.localities.iter().any(|t| t.key == k) {
                 return Some("region_not_listed");
             }
         }
@@ -2127,10 +2156,12 @@ impl Matcher {
                 return Area::Fail;
             }
         }
-        if self.regions_differ(qa, ca) || self.countries_differ(qa, ca) || (self.crosses_hint(ca) && !self.crosses_hint(qa)) || (self.foreign_code(ca) && !self.foreign_code(qa)) {
+        if self.regions_differ(qa, ca) || self.town_region_differs(qa, ca) || self.town_region_differs(ca, qa) || self.countries_differ(qa, ca) || (self.crosses_hint(ca) && !self.crosses_hint(qa)) || (self.foreign_code(ca) && !self.foreign_code(qa)) {
             return Area::Fail;
         }
-        let mut full = qa.postcode.is_none() || ca.postcode.is_some();
+        // a state written after the caller's town with no comma ("Exampleton IL") that the row
+        // leaves out: the row fits, not in full (see `area_unconfirmed`)
+        let mut full = (qa.postcode.is_none() || ca.postcode.is_some()) && (qa.town_region.is_none() || ca.town_region == qa.town_region || !self.region_ids(ca, true).is_empty());
         // a town named like a region, with no other region beside it ("Example Park, Texas",
         // "Example Park, Washington"): the row must name it as its town or its region
         if let Some(t) = qa.city.as_ref().filter(|t| qa.regions.contains(&t.key) && self.region_ids(qa, false).is_empty()) {
@@ -2219,6 +2250,8 @@ impl Matcher {
         let mut unconfirmed: Vec<usize> = Vec::new();
         // a longer-name row that may be another place named after the caller's
         let mut named_after_any = false;
+        // a row of the caller's exact name outside the caller's area
+        let mut exact_elsewhere = false;
         for (i, row) in rows.iter().enumerate() {
             let c = row.text;
             if self.is_control(query, c) {
@@ -2274,6 +2307,7 @@ impl Matcher {
             }
             match area {
                 Area::Fail => {
+                    exact_elsewhere |= rel == 2;
                     reports.push(report(Verdict::Different, vec!["area"]));
                     continue;
                 }
@@ -2307,8 +2341,20 @@ impl Matcher {
             }
             (Pick::Ambiguous(ids.clone()), Explained::ambiguous(ids, reasons, reports))
         };
+        // a read may take the venue the site categorized only when the caller gave a town or
+        // postcode and the venue holds it in full; with no area it asks
+        let caller_area = qa.postcode.is_some() || !self.towns(&qa).is_empty();
         if exact.is_empty() {
-            return if variant.is_empty() && unconfirmed.is_empty() { (Pick::None, Explained::none(reports)) } else { asked(&exact, vec![], reports) };
+            if variant.is_empty() && unconfirmed.is_empty() {
+                return (Pick::None, Explained::none(reports));
+            }
+            let (pick, mut e) = asked(&exact, vec![], reports);
+            // the exact name only outside the caller's area, beside one categorized longer-name row
+            // that holds it in full
+            if exact_elsewhere && caller_area && unconfirmed.is_empty() && !named_after_any && variant.len() == 1 && variant_area[0].0 && rows[variant[0]].categorized {
+                e.prefer_on_read = Some(variant[0]);
+            }
+            return (pick, e);
         }
         // same-name rows in two towns, or on two streets, are two places; more distinct rows than
         // `MAX_COMPARED_ROWS` are not compared with each other, but asked about
@@ -2324,14 +2370,12 @@ impl Matcher {
         if towns_apart || !variant.is_empty() || !unconfirmed.is_empty() {
             let (pick, mut e) = asked(&exact, if towns_apart { vec!["several_places"] } else { vec![] }, reports);
             // the venue the site categorized, beside a same-name row it did not (or the reverse), when
-            // the rows name one town (and one region, when the caller gave no area), the caller's area
-            // in full when the caller gave one, and no longer-name row may be another place named
-            // after the caller's
+            // the caller gave a town or postcode, every row holds the caller's area in full, and no
+            // longer-name row may be another place named after the caller's (a read with no area
+            // asks)
             let areas: Vec<(bool, &Components)> = exact.iter().filter(|x| first_of_text(x.0)).map(|x| (x.1, &x.2)).chain(variant.iter().zip(&variant_area).filter(|(&i, _)| first_of_text(i)).map(|(_, x)| (x.0, &x.1))).collect();
             let has_town = |x: &Components| !self.towns(x).is_empty();
-            let caller_area = qa.postcode.is_some() || !qa.localities.is_empty() || !qa.regions.is_empty();
-            let one_region = |a: &Components, b: &Components| caller_area || (!self.region_ids(a, true).is_empty() && self.region_ids(a, true).iter().any(|r| self.region_ids(b, true).iter().any(|x| x.0 == r.0)));
-            let one_town = !crowded && areas.iter().all(|(full, a)| has_town(a) && (*full || !caller_area) && areas.iter().all(|(_, b)| one_place(a, b) && one_region(a, b)));
+            let one_town = !crowded && caller_area && areas.iter().all(|(full, a)| has_town(a) && *full);
             if !towns_apart && unconfirmed.is_empty() && one_town && !named_after_any {
                 if let Pick::Ambiguous(ids) = &pick {
                     let categorized: Vec<usize> = ids.iter().copied().filter(|&i| rows[i].categorized).collect();

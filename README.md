@@ -106,8 +106,10 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
   candidates fit, the answer is `ambiguous`, so the caller can be asked which unit.
 - A business listing at the address is the same place as the plain address.
 - The town must be right: a shared district or region name does not make two towns one. A row
-  that names no town, or (in the US, Canada and Australia) neither a state nor a postcode where the
-  caller gave one, does not confirm the caller's place; a US ZIP code confirms or contradicts a state
+  that names no town does not confirm the caller's place. In the US, Canada and Australia, a row
+  that leaves out only the state, with its town in a part of its own and no postcode or other
+  country shown, is taken; the risk left is a same-named town in another state on a site that
+  shows neither state nor postcode. A US ZIP code confirms or contradicts a state
   by its first three digits. A state comes from its own part or code, or is written after the town
   with no comma ("Exampleton IL", "Exampleton New York"), never from a town named like a state
   ("Washington, PA" is not "Washington, DC").
@@ -169,10 +171,11 @@ A town typed alone ("Munich") is compared as a town, in its other languages too 
 When a row has exactly the caller's name and another holds the name in a longer form (a pin dropped
 under the name next to the venue under its official name), the answer is `ambiguous`. A row may say
 that the site shows it with a category of its own (`Row { text, categorized: true }`, a venue type
-such as "Convention center"). When exactly one of those rows is categorized, and the rows name one
-town (the caller's, when the caller gave an area), `prefer_on_read` names it: a picker reading the
-site may take it, and a write still asks. With no area from the caller, the rows must also state
-the same region. The longer row is preferred only when its name ends with the caller's name and the
+such as "Convention center"). When the caller gave a town or postcode, every such row holds it in
+full and exactly one of them is categorized, `prefer_on_read` names that one: a picker reading the
+site may take it, and a write still asks. So does a categorized longer-name row that holds the
+caller's area in full when the exact name appears only outside it. With no area from the caller,
+a read asks as a write does. The longer row is preferred only when its name ends with the caller's name and the
 words it adds before it are not compass, age or size words: "Jane Q. Example Convention Center" for
 "Example Center" may be preferred, but "The Example Park Hotel", "Jane Q. Example Park Suites" and
 "North Example Park" may be other places named after the caller's, so the answer stays `ambiguous`
@@ -236,7 +239,7 @@ a small loader that reads no network and no files but the module beside it:
 import { open } from "@pomerado/placematch";
 
 const m = await open();
-const e = m.pickExplained("example center", [
+const e = m.pickExplained("example center, exampleton, ny", [
   "Example Center, Exampleton, NY, USA",
   { text: "Jane Q. Example Convention Center, 429 Sample Ave, Exampleton, NY 10001, USA", categorized: true },
 ], { country: "US" });
