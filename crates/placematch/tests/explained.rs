@@ -496,8 +496,21 @@ fn a_town_written_with_a_hyphenated_part_asks_without_evidence() {
     let rows = [Row::from("Beispielweg 3, 12345 Exampleburg-Nord, Germany")];
     let e = m.pick_explained("Beispielweg 3, 12345 Exampleburg, Germany", &rows, &opts);
     assert_eq!((e.outcome, e.index), (Outcome::Match, Some(0)));
-    // a town the data knows by name is its own evidence
+    // a town that writes its districts after a hyphen by convention is its own evidence
     let rows = [Row::from("Beispielweg 3, Munich-Altstadt-Lehel, Germany")];
     let e = m.pick_explained("Beispielweg 3, Munich, Germany", &rows, &opts);
     assert_eq!((e.outcome, e.index), (Outcome::Match, Some(0)));
+}
+
+#[test]
+fn the_callers_town_as_written_wins_over_a_hyphenated_form() {
+    let m = Matcher::new();
+    let opts = PickOptions { country: Some("DE") };
+    let rows = [Row::from("Beispielweg 3, Berlin-Mitte, Germany"), Row::from("Beispielweg 3, Berlin, Germany")];
+    let e = m.pick_explained("Beispielweg 3, Berlin, Germany", &rows, &opts);
+    assert_eq!((e.outcome, e.index), (Outcome::Match, Some(1)));
+    let opts = PickOptions { country: Some("US") };
+    let rows = [Row::from("1 Example St, Dallas-Fort Worth, TX"), Row::from("1 Example St, Dallas, TX")];
+    let e = m.pick_explained("1 Example St, Dallas, TX", &rows, &opts);
+    assert_eq!((e.outcome, e.index), (Outcome::Match, Some(1)));
 }

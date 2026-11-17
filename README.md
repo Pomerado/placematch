@@ -118,14 +118,15 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
   Ave") is an apartment, not a distance.
 - A business listing at the address is the same place as the plain address.
 - A town written with a district after a hyphen ("München-Altstadt-Lehel", "Berlin-Mitte") is
-  the caller's town only with evidence: a town PlaceMatch knows by name, or the same postcode on
-  both sides. Otherwise the row is asked about (`place_unconfirmed`), since the name may be another
+  the caller's town only with evidence: a town that writes its districts so by convention (Berlin,
+  Hamburg, München, Köln, Wien, Nürnberg, Stuttgart), or the same postcode on both sides. Otherwise the row is asked about (`place_unconfirmed`), since the name may be another
   town's that opens with the caller's ("Baden-Baden" for "Baden"). A name joined by a word such
   as "en", "on", "sur" or "upon" ("Stoke-on-Trent"), one ending in a word such as "City", or one
   whose rest is a town of its own, is a name of its own.
 - Among rows of the caller's place, PlaceMatch takes the one that keeps the most of the caller's
   own place names, then the one that adds the fewest the caller did not write: a row that adds a
-  town or district is not taken over the same address without it.
+  town or district is not taken over the same address without it, and a row that names the
+  caller's town as written is taken over one that adds a district to it after a hyphen.
 - The town must be right: a shared district or region name does not make two towns one. A row
   that names no town does not confirm the caller's place. In the US, Canada and Australia, a row
   that leaves out only the state, with the caller's town spelled the same, in a part of its own or

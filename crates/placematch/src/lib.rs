@@ -1982,9 +1982,9 @@ impl Matcher {
                 }
             }
             // a town written with a district after a hyphen ("München-Altstadt-Lehel") is the
-            // caller's town only with evidence: a town the data knows by name, or the same postcode
-            // on both sides; otherwise it may be another town whose name opens with the caller's
-            // ("Baden-Baden" for "Baden"), and it is asked about
+            // caller's town only with evidence: a town that writes its districts so by convention,
+            // or the same postcode on both sides; otherwise it may be another town whose name opens
+            // with the caller's ("Baden-Baden" for "Baden"), and it is asked about
             let mut head_unconfirmed = false;
             if !any_yes {
                 // either side's place name opens with a place name the other side gives
@@ -3359,10 +3359,14 @@ impl Matcher {
         // a business name, then the most complete one
         // (the most complete: the most of the caller's own places, then the fewest the caller did
         // not name, so a row that adds a town or district is not taken over one that adds none)
+        // (then the row that names the caller's town as written over one that writes it with a
+        // district after a hyphen)
         let named = |t: &Text| q.localities.iter().any(|u| town_eq(self, u, t, false) == Tri::Yes);
+        let written = |t: &Text| q.localities.iter().any(|u| text_eq(self, u, t, false) == Tri::Yes);
         let kept = |i: usize| cs[i].localities.iter().filter(|t| named(t)).count();
         let added = |i: usize| cs[i].localities.len() - kept(i);
-        let best = clusters[0].iter().copied().min_by_key(|&i| (cs[i].units != q.units, ranged[i], rewritten[i], cs[i].business.len(), usize::MAX - kept(i), added(i))).unwrap();
+        let hyphened = |i: usize| kept(i) - cs[i].localities.iter().filter(|t| written(t)).count().min(kept(i));
+        let best = clusters[0].iter().copied().min_by_key(|&i| (cs[i].units != q.units, ranged[i], rewritten[i], cs[i].business.len(), usize::MAX - kept(i), added(i), hyphened(i))).unwrap();
         // a row read across scripts: its street or town is written in another script than the caller's
         let across = |i: usize| {
             let (c, qq) = (&cs[i], &q);
