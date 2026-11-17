@@ -59,6 +59,7 @@ export interface Explained {
 export interface PlaceMatch {
   timings: { compileMs: number; instantiateMs: number; initMs: number };
   memoryBytes(): number;
+  /** Takes no categories: a picker that knows which rows the site shows as venues should use `pickExplained`. */
   pick(query: string, candidates: string[], country?: string): { outcome: "match"; index: number } | { outcome: "none" | "ambiguous"; index: null };
   compare(query: string, candidate: string, country?: string): "same" | "different" | "unknown";
   pickExplained(query: string, rows: Row[], options?: { country?: string } | null): Explained;

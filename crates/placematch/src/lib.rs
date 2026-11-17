@@ -2868,7 +2868,8 @@ impl Matcher {
         e
     }
 
-    /// Choose the candidate that is the same place as the query.
+    /// Choose the candidate that is the same place as the query. It takes no categories, so a
+    /// picker that knows which rows the site shows as venues should use `pick_explained`.
     pub fn pick<S: AsRef<str>>(&self, query: &str, candidates: &[S], country: Option<&str>) -> Pick {
         let (query, query_lost) = self.bound(query);
         let query = &*query;

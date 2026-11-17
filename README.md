@@ -177,7 +177,8 @@ A town typed alone ("Munich") is compared as a town, in its other languages too 
 A place's name with a postcode alone ("Example Center, 94000") is the name with the postcode as
 its area. Rows of the very same name in one town are one place, except that a row the site
 categorized beside one it did not (a pin dropped under the venue's own name) asks
-(`several_places`); `prefer_on_read` then names the categorized row as below.
+(`several_places`); `prefer_on_read` then names the categorized row as below. `pick` takes no
+categories, so a picker that knows which rows the site shows as venues should use `pick_explained`.
 
 When a row has exactly the caller's name and another holds the name in a longer form (a pin dropped
 under the name next to the venue under its official name), the answer is `ambiguous`. A row may say
