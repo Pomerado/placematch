@@ -18,7 +18,7 @@ pub struct Text {
     /// a town's name the place's name opens with, joined to a district by a hyphen ("munchen" for
     /// "München-Altstadt-Lehel"): its key, or empty
     pub head: String,
-    /// `head` is a town the data knows by name
+    /// `head` is a town that writes its districts after a hyphen by convention
     pub head_known: bool,
 }
 
@@ -1429,7 +1429,7 @@ const NAME_JOINERS: &[&str] = &[
 
 /// The town a place's name opens with when it is written as the town and a district joined by
 /// hyphens ("München-Altstadt-Lehel", "Berlin-Mitte"): the first word's key, as its exonym's
-/// canonical form when it has one, and whether the data knows it as a town's name. Empty for a
+/// canonical form when it has one, and whether it is a town that writes its districts this way. Empty for a
 /// name not joined by a hyphen after its first word, a first word of fewer than four letters, a
 /// name joined by a word such as "on" or "sur" (one town's own name), one that goes on with an
 /// administrative word such as "City" (the area's name), or one whose rest is a town of its own
@@ -1464,8 +1464,12 @@ fn town_head(data: &Data, toks: &[crate::token::Tok], group: &[usize], words: &[
     if data.exonyms.contains_key(&tail) {
         return none;
     }
-    match data.exonyms.get(&key) {
-        Some(canon) => (canon.clone(), true),
-        None => (key, false),
-    }
+    let canon = data.exonyms.get(&key).cloned().unwrap_or_else(|| key.clone());
+    let known = HYPHEN_DISTRICT_TOWNS.contains(&key.as_str()) || HYPHEN_DISTRICT_TOWNS.contains(&canon.as_str());
+    (canon, known)
 }
+
+/// Towns that write a district after a hyphen by convention ("Berlin-Mitte", "München-Pasing"),
+/// in their own and English names: for them the form is evidence of a district. Any other town's
+/// name opening a hyphenated name may be another town's ("Mainz-Kastel" is in Wiesbaden).
+const HYPHEN_DISTRICT_TOWNS: &[&str] = &["berlin", "hamburg", "munchen", "munich", "koln", "cologne", "wien", "vienna", "nurnberg", "nuremberg", "stuttgart"];
