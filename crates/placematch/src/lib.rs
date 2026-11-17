@@ -613,19 +613,10 @@ fn text_eq(m: &Matcher, q: &Text, c: &Text, typo: bool) -> Tri {
     Tri::No
 }
 
-/// Two towns' names are one town's: as `text_eq` reads them, or one of them is the other's town
-/// with a district joined by a hyphen ("München-Altstadt-Lehel" for "München", "Munich").
-fn town_eq(m: &Matcher, a: &Text, b: &Text, typo: bool) -> Tri {
-    match text_eq(m, a, b, typo) {
-        Tri::No if (!b.head.is_empty() && b.head == a.key) || (!a.head.is_empty() && a.head == b.key) => Tri::Yes,
-        other => other,
-    }
-}
-
 /// Han administrative suffixes a romanization may translate or leave out ("台中市" / "Taichung").
 const HAN_ADMIN: &[char] = &['市', '区', '區', '県', '縣', '县', '府', '都', '省', '郡', '鎮', '镇', '鄉', '乡', '村', '町', '道'];
 /// Their romanized and English forms.
-pub(crate) const LATIN_ADMIN: &[&str] = &["shi", "ku", "ken", "fu", "to", "do", "gun", "son", "mura", "machi", "cho", "city", "district", "ward", "county", "prefecture", "province", "qu", "xian", "sheng", "zhen", "xiang", "town", "township", "village", "hsien", "hsiang", "chen", "shih", "chu", "cun"];
+const LATIN_ADMIN: &[&str] = &["shi", "ku", "ken", "fu", "to", "do", "gun", "son", "mura", "machi", "cho", "city", "district", "ward", "county", "prefecture", "province", "qu", "xian", "sheng", "zhen", "xiang", "town", "township", "village", "hsien", "hsiang", "chen", "shih", "chu", "cun"];
 
 /// One side is Han or Kana and the other a romanization that reads as it.
 fn reading_eq(q: &Text, c: &Text) -> bool {
@@ -1974,37 +1965,16 @@ impl Matcher {
                         }
                         let toks = qc.toks[keep.clone()].to_vec();
                         let key: String = toks.iter().map(|t| t.0.as_str()).collect();
-                        let t = Text { skel: fold::skeleton(&key), key, script: qc.script, abbr: qc.abbr.get(keep.clone()).map_or(vec![false; toks.len()], |a| a.to_vec()), toks, native: String::new(), head: String::new(), head_known: false };
+                        let t = Text { skel: fold::skeleton(&key), key, script: qc.script, abbr: qc.abbr.get(keep.clone()).map_or(vec![false; toks.len()], |a| a.to_vec()), toks, native: String::new() };
                         if c.localities.iter().any(|l| text_eq(self, &t, l, false) == Tri::Yes) {
                             any_yes = true;
                         }
                     }
                 }
             }
-            // a town written with a district after a hyphen ("München-Altstadt-Lehel") is the
-            // caller's town only with evidence: a town that writes its districts so by convention,
-            // or the same postcode on both sides; otherwise it may be another town whose name opens
-            // with the caller's ("Baden-Baden" for "Baden"), and it is asked about
-            let mut head_unconfirmed = false;
-            if !any_yes {
-                // either side's place name opens with a place name the other side gives
-                let opens = |t: &Text, u: &Text| !u.head.is_empty() && u.head == t.key;
-                let (qs, cs) = (std::iter::once(qc).chain(&q.localities), std::iter::once(cc).chain(&c.localities));
-                let hit = qs.clone().find_map(|a| cs.clone().find(|b| opens(a, b))).or_else(|| cs.clone().find_map(|b| qs.clone().find(|a| opens(b, a))));
-                if let Some(t) = hit {
-                    if same_code || t.head_known {
-                        any_yes = true;
-                    } else {
-                        head_unconfirmed = true;
-                    }
-                }
-            }
             if !any_yes {
                 // the caller's town spelled another way may be the row's or another town: ask
-                if head_unconfirmed {
-                    unknown = true;
-                    reasons.push("town_district_unconfirmed");
-                } else if misspelled && !any_unknown {
+                if misspelled && !any_unknown {
                     unknown = true;
                     reasons.push("town_spelled_differently");
                 } else if any_unknown {
@@ -2021,7 +1991,7 @@ impl Matcher {
                 let towns = |x: &Components| -> Vec<(Text, bool)> { x.localities.iter().filter(|t| !self.data.is_country_name(&t.key)).map(|t| (t.clone(), x.regions.contains(&t.key))).collect() };
                 let (qt, ct) = (towns(q), towns(c));
                 let unmatched = |a: &[(Text, bool)], b: &[(Text, bool)]| -> Vec<bool> {
-                    a.iter().filter(|(t, _)| !b.iter().any(|(u, _)| town_eq(self, t, u, typo) != Tri::No || within(&u.key, &t.key) || within(&t.key, &u.key))).map(|(_, r)| *r).collect()
+                    a.iter().filter(|(t, _)| !b.iter().any(|(u, _)| text_eq(self, t, u, typo) != Tri::No || within(&u.key, &t.key) || within(&t.key, &u.key))).map(|(_, r)| *r).collect()
                 };
                 let (uq, uc) = (unmatched(&qt, &ct), unmatched(&ct, &qt));
                 if uq.iter().any(|&rq| uc.iter().any(|&rc| !(rq && rc))) {
@@ -2866,7 +2836,7 @@ impl Matcher {
         }
         let mk = |toks: &[(String, Vec<u32>)], abbr: &[bool], sc: Option<Script>| -> Text {
             let key: String = toks.iter().map(|t| t.0.as_str()).collect();
-            Text { skel: fold::skeleton(&key), key, script: sc, toks: toks.to_vec(), abbr: abbr.to_vec(), native: String::new(), head: String::new(), head_known: false }
+            Text { skel: fold::skeleton(&key), key, script: sc, toks: toks.to_vec(), abbr: abbr.to_vec(), native: String::new() }
         };
         let head = mk(&x.street.toks[..k], &x.street.abbr[..k.min(x.street.abbr.len())], x.street.script);
         // the other side may carry its type inside the name ("reunalan" + "tie")
@@ -3257,7 +3227,7 @@ impl Matcher {
                     (_, ["candidate_adds_unit"] | ["leading_unit"]) => "unit_not_given",
                     (Verdict::Unknown, ["candidate_has_no_house_number"]) => "number_not_listed",
                     (Verdict::Unknown, ["number_range"]) => "number_range",
-                    (Verdict::Unknown, ["town_not_listed"] | ["region_not_listed"] | ["town_spelled_differently"] | ["town_district_unconfirmed"]) => "place_unconfirmed",
+                    (Verdict::Unknown, ["town_not_listed"] | ["region_not_listed"] | ["town_spelled_differently"]) => "place_unconfirmed",
                     (Verdict::Different, ["postcode"]) if self.postcode_only_differs(&q, &cs[i]) => "postcode_differs",
                     _ => continue,
                 };
@@ -3281,6 +3251,31 @@ impl Matcher {
                 reports[i].reasons.push("unit_not_given");
             }
             return (Pick::Ambiguous(ids.clone()), Explained::ambiguous(ids, vec!["several_places", "unit_not_given"], reports));
+        }
+        // the caller's place names a row keeps, and those it adds that the caller did not write
+        let named = |t: &Text| q.localities.iter().any(|u| text_eq(self, u, t, false) == Tri::Yes);
+        let kept = |i: usize| cs[i].localities.iter().filter(|t| named(t)).count();
+        let added = |i: usize| cs[i].localities.len() - kept(i);
+        // a row whose town opens with the caller's town and goes on ("Exampleton-North" for
+        // "Exampleton") may be the caller's town with a district, or another town: when every row
+        // of the caller's place adds a place the caller did not write, the rows are asked about,
+        // so such a row is never passed over unseen
+        let opens_town = |i: usize| {
+            let (Some(qc), Some(rc)) = (&q.city, &cs[i].city) else {
+                return false;
+            };
+            let first = rc.toks.first().map(|t| t.0.as_str()).unwrap_or("");
+            let first = self.data.exonyms.get(first).map_or(first, |c| c.as_str());
+            rc.toks.len() >= 2 && qc.toks.len() == 1 && !first.is_empty() && first == qc.key
+        };
+        let opening: Vec<usize> = (0..cs.len()).filter(|&i| verdicts[i].0 != Verdict::Same && opens_town(i)).collect();
+        if !opening.is_empty() && same.iter().all(|&i| added(i) > 0) {
+            let mut ids: Vec<usize> = same.iter().chain(&opening).copied().collect();
+            ids.sort();
+            for &i in &opening {
+                reports[i].reasons.push("place_unconfirmed");
+            }
+            return (Pick::Ambiguous(ids.clone()), Explained::ambiguous(ids, vec!["place_unconfirmed"], reports));
         }
         // more distinct rows of the caller's place than `MAX_COMPARED_ROWS` are not compared with
         // each other, but asked about
@@ -3357,16 +3352,9 @@ impl Matcher {
         // prefer the listing with the caller's own number over a range holding it, a listing that is
         // the caller's place as written over one read without its leading name, the listing without
         // a business name, then the most complete one
-        // (the most complete: the most of the caller's own places, then the fewest the caller did
-        // not name, so a row that adds a town or district is not taken over one that adds none)
-        // (then the row that names the caller's town as written over one that writes it with a
-        // district after a hyphen)
-        let named = |t: &Text| q.localities.iter().any(|u| town_eq(self, u, t, false) == Tri::Yes);
-        let written = |t: &Text| q.localities.iter().any(|u| text_eq(self, u, t, false) == Tri::Yes);
-        let kept = |i: usize| cs[i].localities.iter().filter(|t| named(t)).count();
-        let added = |i: usize| cs[i].localities.len() - kept(i);
-        let hyphened = |i: usize| kept(i) - cs[i].localities.iter().filter(|t| written(t)).count().min(kept(i));
-        let best = clusters[0].iter().copied().min_by_key(|&i| (cs[i].units != q.units, ranged[i], rewritten[i], cs[i].business.len(), usize::MAX - kept(i), added(i), hyphened(i))).unwrap();
+        // (the most complete: the most of the caller's own place names, then the fewest the caller
+        // did not name, so a row that adds a town or district is not taken over one that adds none)
+        let best = clusters[0].iter().copied().min_by_key(|&i| (cs[i].units != q.units, ranged[i], rewritten[i], cs[i].business.len(), usize::MAX - kept(i), added(i))).unwrap();
         // a row read across scripts: its street or town is written in another script than the caller's
         let across = |i: usize| {
             let (c, qq) = (&cs[i], &q);

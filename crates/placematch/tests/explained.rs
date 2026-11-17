@@ -343,7 +343,7 @@ fn a_postcode_in_the_callers_district_asks() {
 #[test]
 fn pick_agrees_with_pick_explained() {
     let m = Matcher::new();
-    let near = ["unit_not_given", "postcode_differs", "number_not_listed", "number_range", "place_unconfirmed"];
+    let near = ["unit_not_given", "postcode_differs", "number_not_listed", "number_range"];
     for text in [include_str!("../../../tests/cases.jsonl"), include_str!("../../../tests/place-names.jsonl")] {
         for line in text.lines().filter(|l| !l.trim().is_empty()) {
             let c: serde_json::Value = serde_json::from_str(line).unwrap();
@@ -484,25 +484,6 @@ fn rows_asked_about_may_each_be_the_place() {
 }
 
 #[test]
-fn a_town_written_with_a_hyphenated_part_asks_without_evidence() {
-    let m = Matcher::new();
-    let rows = [Row::from("Beispielweg 3, Exampleburg-Nord, Germany")];
-    let opts = PickOptions { country: Some("DE") };
-    // the part after the hyphen may be a district of the caller's town or make another town's name
-    let e = m.pick_explained("Beispielweg 3, Exampleburg, Germany", &rows, &opts);
-    assert_eq!((e.outcome, e.same.clone(), e.reasons.clone()), (Outcome::Ambiguous, vec![0], vec!["place_unconfirmed"]));
-    assert!(e.rows[0].reasons.contains(&"town_district_unconfirmed"));
-    // the same postcode on both sides confirms it
-    let rows = [Row::from("Beispielweg 3, 12345 Exampleburg-Nord, Germany")];
-    let e = m.pick_explained("Beispielweg 3, 12345 Exampleburg, Germany", &rows, &opts);
-    assert_eq!((e.outcome, e.index), (Outcome::Match, Some(0)));
-    // a town that writes its districts after a hyphen by convention is its own evidence
-    let rows = [Row::from("Beispielweg 3, Munich-Altstadt-Lehel, Germany")];
-    let e = m.pick_explained("Beispielweg 3, Munich, Germany", &rows, &opts);
-    assert_eq!((e.outcome, e.index), (Outcome::Match, Some(0)));
-}
-
-#[test]
 fn the_callers_town_as_written_wins_over_a_hyphenated_form() {
     let m = Matcher::new();
     let opts = PickOptions { country: Some("DE") };
@@ -512,5 +493,20 @@ fn the_callers_town_as_written_wins_over_a_hyphenated_form() {
     let opts = PickOptions { country: Some("US") };
     let rows = [Row::from("1 Example St, Dallas-Fort Worth, TX"), Row::from("1 Example St, Dallas, TX")];
     let e = m.pick_explained("1 Example St, Dallas, TX", &rows, &opts);
+    assert_eq!((e.outcome, e.index), (Outcome::Match, Some(1)));
+}
+
+#[test]
+fn a_row_that_adds_a_place_is_asked_about_beside_a_hyphenated_form_of_the_town() {
+    let m = Matcher::new();
+    let opts = PickOptions { country: Some("DE") };
+    // the hyphenated row may be the caller's town with a district; the other adds a place the
+    // caller did not write, so neither is taken
+    let rows = [Row::from("Beispielplatz 8, Munich-Altstadt-Lehel, Germany"), Row::from("Beispielplatz 8, Sampledorf, Munich, Germany")];
+    let e = m.pick_explained("Beispielplatz 8, Munich, Germany", &rows, &opts);
+    assert_eq!((e.outcome, e.same.clone(), e.reasons.clone()), (Outcome::Ambiguous, vec![0, 1], vec!["place_unconfirmed"]));
+    // a row that adds nothing is still taken
+    let rows = [Row::from("Beispielplatz 8, Munich-Altstadt-Lehel, Germany"), Row::from("Beispielplatz 8, Munich, Germany")];
+    let e = m.pick_explained("Beispielplatz 8, Munich, Germany", &rows, &opts);
     assert_eq!((e.outcome, e.index), (Outcome::Match, Some(1)));
 }
