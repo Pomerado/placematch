@@ -117,6 +117,8 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
   is left out before the row is read; a whole number right before the address ("5M, 350 Example
   Ave") is an apartment, not a distance.
 - A business listing at the address is the same place as the plain address.
+- A part of two numbers and no words ("30 18, Exampleton") gives the place two numbers: when both
+  sides give the second one, another second number is another place.
 - A longer town name that opens with the caller's town and continues ("Exampleton-North" or
   "Exampleton Beach" for "Exampleton") is not the caller's town: it may be a district or another
   town ("Baden-Baden" for "Baden"). A row with the caller's address in such a town, differing by

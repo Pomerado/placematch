@@ -64,6 +64,9 @@ pub struct Components {
     pub town_region: Option<String>,
     /// the number of comma parts with words in them
     pub parts: usize,
+    /// a second number written in the house number's part with no words ("18" in "30 18,
+    /// Exampleton"): when both sides give one, another is another place
+    pub second_number: Option<String>,
 }
 
 pub struct Ctx<'a> {
@@ -877,6 +880,13 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
             }
         }
         c.house = Some(hn.to_ascii_lowercase());
+        // a part of two numbers and no words ("30 18, Exampleton"): the second is the place's own
+        // number too, of a numbered street or a building, kept apart from the house number
+        let part: Vec<usize> = (0..n).filter(|&q| toks[q].seg == toks[h].seg).collect();
+        if !ctx.cjk_like(script) && part.len() == 2 && part[0] == h && toks[part[1]].num && !used[part[1]] && toks[part[1]].s.chars().all(|ch| ch.is_ascii_digit()) && toks[part[1]].s.len() <= 4 {
+            c.second_number = Some(norm_number(&toks[part[1]].s));
+            used[part[1]] = true;
+        }
         // CJK and Hangul: a bare number after the block number is a room ("1-2-3 405")
         if ctx.cjk_like(script) {
             for q in h + 1..n {
