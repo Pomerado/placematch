@@ -207,6 +207,39 @@ fn norm_number(s: &str) -> String {
     out.trim_matches('-').to_string()
 }
 
+/// Join a compass pair written with dots ("N.W.", "s. e.") into one word ("NW"), as it is written
+/// without them.
+fn join_dotted_compass(text: &str) -> std::borrow::Cow<'_, str> {
+    if !text.contains('.') {
+        return std::borrow::Cow::Borrowed(text);
+    }
+    let ch: Vec<char> = text.chars().collect();
+    let mut out = String::with_capacity(text.len());
+    let mut i = 0;
+    let mut changed = false;
+    while i < ch.len() {
+        let starts = i == 0 || !ch[i - 1].is_alphanumeric();
+        if starts && matches!(ch[i], 'N' | 'n' | 'S' | 's') && ch.get(i + 1) == Some(&'.') {
+            let mut j = i + 2;
+            while ch.get(j) == Some(&' ') {
+                j += 1;
+            }
+            let second = ch.get(j).copied();
+            let ends = ch.get(j + 2).map_or(true, |c| !c.is_alphanumeric());
+            if matches!(second, Some('E' | 'e' | 'W' | 'w')) && ch.get(j + 1) == Some(&'.') && ends {
+                out.push(ch[i]);
+                out.push(second.unwrap());
+                i = j + 2;
+                changed = true;
+                continue;
+            }
+        }
+        out.push(ch[i]);
+        i += 1;
+    }
+    if changed { std::borrow::Cow::Owned(out) } else { std::borrow::Cow::Borrowed(text) }
+}
+
 /// Drop a parenthesized article moved behind a name ("Constitución (de la)", "Nacional 110 (la)").
 fn drop_paren_articles(text: &str) -> std::borrow::Cow<'_, str> {
     if !text.contains('(') {
@@ -321,7 +354,8 @@ fn merge_korean_roads(toks: Vec<crate::token::Tok>) -> Vec<crate::token::Tok> {
 
 pub fn parse(ctx: &Ctx, text: &str) -> Components {
     let text = drop_paren_articles(text);
-    let text = text.as_ref();
+    let text = join_dotted_compass(text.as_ref()).into_owned();
+    let text = text.as_str();
     let mut folded = ctx.cjk.apply(&fold(text));
     if ctx.cc == Some("KR") {
         folded = ctx.cjk.korean_romanized(&folded);
@@ -651,7 +685,21 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
             let _ = first_word_seg;
             // "1016 Budapest, Dezső utca 11.": a later typed segment holds the house number
             let typed_after = !seg_has_type[seg] && (seg + 1..nseg).any(|s2| seg_has_type[s2] && (0..n).any(|q| toks[q].seg == s2 && toks[q].num && !used[q]));
-            if Some(seg) == first_numword_seg && first_num == Some(k) && !typed_before && !bare_before && !typed_after && !ctx.cjk_like(script) {
+            // a postcode right after a state or province code ends its part ("Exampleton, IL 60000"),
+            // where states are written before the postcode
+            let after_state = seg > 0
+                && k > 0
+                && toks[k - 1].seg == seg
+                && k + len == n.min((k..n).find(|&q| toks[q].seg != seg).unwrap_or(n))
+                && {
+                    let code = toks[k - 1].s.as_str();
+                    let states = |cc: &str| ctx.data.countries.get(cc).map_or(false, |co| co.regions.contains_key(code));
+                    code.len() <= 3 && match ctx.cc {
+                        None => ["US", "CA", "AU"].iter().any(|cc| states(cc)),
+                        Some(cc) => matches!(cc, "US" | "CA" | "AU") && states(cc),
+                    }
+                };
+            if Some(seg) == first_numword_seg && first_num == Some(k) && !typed_before && !bare_before && !typed_after && !ctx.cjk_like(script) && !after_state {
                 continue;
             }
             let seg_only_this = (0..n).filter(|&q| toks[q].seg == seg && !used[q]).count() == len;
@@ -1322,6 +1370,16 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
     // regions double as localities (city-states, cantons named like their capital) after real ones
     c.localities.extend(region_texts);
     c.city = c.localities.first().cloned();
+    // a ZIP+4 code alone ("60000-1234") is a postcode, not a house number
+    if matches!(ctx.cc, None | Some("US")) && c.street.is_empty() && c.localities.is_empty() && c.postcode.is_none() {
+        if let Some(h) = c.house.clone() {
+            let b = h.as_bytes();
+            if b.len() == 10 && b[5] == b'-' && b.iter().enumerate().all(|(i, x)| i == 5 || x.is_ascii_digit()) {
+                c.postcode = Some(h[..5].to_string());
+                c.house = None;
+            }
+        }
+    }
     // with no country and no commas, a street read to the end ("1 Example St Exampleton IL": "St"
     // may begin a town, "IL" may be a word) still ends in a state code in capitals: keep it as the
     // town's region, so it is compared as "1 Example St, Exampleton IL" would be
