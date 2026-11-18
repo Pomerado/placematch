@@ -116,7 +116,9 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
   with the caller's own unit is still taken beside it. A distance the row opens with ("0.2 mi")
   is left out before the row is read; a whole number right before the address ("5M, 350 Example
   Ave") is an apartment, not a distance.
-- A business listing at the address is the same place as the plain address.
+- A business listing at the address is the same place as the plain address, and so is a listing
+  named after the address itself ("12 Example St Parking, 12 Example St, ..."). A caller who types
+  only the address gets the plain address row, not one of the places named at that number.
 - A part of two numbers and no words ("30 18, Exampleton") gives the place two numbers: when both
   sides give the second one, another second number is another place.
 - A longer town name that opens with the caller's town and continues ("Exampleton-North" or

@@ -142,7 +142,11 @@ that is only the caller's own house number or postcode (`7, 7 Example St`) is no
 the caller wrote, so it is read as a possible unit too.
 
 Business listings count: `Cafe Luna, 10 Main St, Springfield` is the same place as
-`10 Main St, Springfield`.
+`10 Main St, Springfield`. So does a listing named after its own address (`10 Main St Parking,
+10 Main St, Springfield`) when the words after the address hold no number and no street, direction,
+unit, level or entrance word; `10 Main St North, 10 Main St` and `10 Main St Apt 4, 10 Main St` are
+not read that way. Among the rows of the caller's place, the address alone is taken over the
+listings named at it.
 
 Equivalent spellings: abbreviations, diacritics and their folds, case, punctuation, component
 order, native digits, Japanese `1丁目2番3号` and `1-2-3`, joined or split compound street names,
