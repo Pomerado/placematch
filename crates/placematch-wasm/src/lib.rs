@@ -3,9 +3,12 @@
 //! where candidates are joined with '\u{1}'. Result: >=0 index, -1 none, -2 ambiguous.
 //! am_pick_explained(q, cands, cc, flags) takes one byte per row in `flags` ('1': the site
 //! categorized the row) and returns a pointer to the answer's JSON; am_out_len() is its length.
+//! am_pick_explained_with(q, cands, cc, flags, rules) is am_pick_explained under optional rules:
+//! `rules` names them, comma separated ("district_may_differ"); "" is none. A name it does not know
+//! is refused: it returns a null pointer and am_out_len() is 0.
 //! The picker checks (am_is_control, am_shows_typed_text, am_in_area, am_same_but_postcode) take
 //! the query, the row and a third text and return 1 or 0.
-use placematch::{Matcher, Pick, PickOptions, Row, Verdict};
+use placematch::{Matcher, Pick, PickOptions, Row, Rules, Verdict};
 use std::cell::RefCell;
 
 thread_local! {
@@ -65,11 +68,31 @@ pub unsafe extern "C" fn am_compare(qp: *const u8, ql: usize, cp: *const u8, cl:
 
 #[no_mangle]
 pub unsafe extern "C" fn am_pick_explained(qp: *const u8, ql: usize, cp: *const u8, cl: usize, ccp: *const u8, ccl: usize, fp: *const u8, fl: usize) -> *const u8 {
+    pick_explained(qp, ql, cp, cl, ccp, ccl, fp, fl, &Rules::default())
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn am_pick_explained_with(qp: *const u8, ql: usize, cp: *const u8, cl: usize, ccp: *const u8, ccl: usize, fp: *const u8, fl: usize, rp: *const u8, rl: usize) -> *const u8 {
+    let mut rules = Rules::default();
+    for name in s(rp, rl).split(',').filter(|name| !name.is_empty()) {
+        match name {
+            "district_may_differ" => rules.district_may_differ = true,
+            _ => {
+                OUT.with(|o| o.borrow_mut().clear());
+                return std::ptr::null();
+            }
+        }
+    }
+    pick_explained(qp, ql, cp, cl, ccp, ccl, fp, fl, &rules)
+}
+
+#[allow(clippy::too_many_arguments)]
+unsafe fn pick_explained(qp: *const u8, ql: usize, cp: *const u8, cl: usize, ccp: *const u8, ccl: usize, fp: *const u8, fl: usize, rules: &Rules) -> *const u8 {
     am_init();
     let flags = std::slice::from_raw_parts(fp, fl);
     let rows: Vec<Row> = s(cp, cl).split('\u{1}').enumerate().map(|(i, text)| Row { text, categorized: flags.get(i) == Some(&b'1') }).collect();
     let country = if ccl == 0 { None } else { Some(s(ccp, ccl)) };
-    let json = M.with(|m| m.borrow().as_ref().unwrap().pick_explained(s(qp, ql), &rows, &PickOptions { country }).to_json());
+    let json = M.with(|m| m.borrow().as_ref().unwrap().pick_explained_with(s(qp, ql), &rows, &PickOptions { country }, rules).to_json());
     OUT.with(|o| {
         *o.borrow_mut() = json.into_bytes();
         o.borrow().as_ptr()
