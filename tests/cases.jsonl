@@ -150,3 +150,8 @@
 {"id":"f217","country":"DE","task":"pair","query":"10115","candidates":["10115 Beispielstadt, Germany"],"expected":"match","accept":[0],"same":[],"tags":["postcode_only","postcode_first"]}
 {"id":"f218","country":"US","task":"pick","query":"12 Example St, Exampleton, IL 62701","candidates":["62701 Exampleton, IL, USA"],"expected":"not_match","accept":[],"same":[],"tags":["postcode_first","street_query"]}
 {"id":"f219","country":"US","task":"pick","query":"62701","candidates":["62701 Exampleton, IL, USA","Exampleton, IL 62701, USA"],"expected":"match","accept":[0,1],"same":[],"tags":["postcode_only","postcode_first"]}
+{"id":"f220","country":"US","task":"pick","query":"62701","candidates":["62701, Example Grove, IL, USA","62701 Example Trail, Sampleton, CO, USA","62701 Example Court, Otherton, SC, USA"],"expected":"match","accept":[0],"same":[],"tags":["postcode_only","postcode_first","town_like_street"]}
+{"id":"f221","country":null,"task":"pick","query":"32999","candidates":["32999, Exampleville, FL, USA","32999 Example Code Place, Sampleton, FL, USA"],"expected":"match","accept":[0],"same":[],"tags":["postcode_only","postcode_first","town_like_street"]}
+{"id":"f222","country":"US","task":"pair","query":"92999","candidates":["92999, Sample Park, CA, USA"],"expected":"match","accept":[0],"same":[],"tags":["postcode_only","postcode_first","town_like_street"]}
+{"id":"f223","country":"US","task":"pick","query":"62702","candidates":["62701, Example Grove, IL, USA"],"expected":"none","accept":[],"same":[],"tags":["postcode_only","postcode_first","neg_postcode"]}
+{"id":"f224","country":"US","task":"pick","query":"62701","candidates":["62701, 12 Example Grove, IL, USA"],"expected":"not_match","accept":[],"same":[],"tags":["postcode_only","neg_number"]}

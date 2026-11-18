@@ -664,6 +664,11 @@ fn a_postal_code_given_alone_is_the_row_that_lists_that_code_before_its_town() {
     assert_eq!(explain(&m, "62701", &["62701 South Example Street, Sampleton, KS, USA"]).outcome, Outcome::None);
     // a caller who gave a street is not read as having given only the code
     assert_ne!(explain(&m, "12 Example St, Exampleton, IL 62701", &["62701 Exampleton, IL, USA"]).outcome, Outcome::Match);
+    // the code as a part of its own before a town named like a street ("Example Grove"): that town,
+    // while the rows that put a street right after the number stay houses
+    let e = explain(&m, "62701", &["62701, Example Grove, IL, USA", "62701 Example Trail, Sampleton, CO, USA"]);
+    assert_eq!((e.outcome, e.index, e.same.clone()), (Outcome::Match, Some(0), vec![0]));
+    assert_eq!(e.rows[1].verdict, Verdict::Different);
     // two listings of the code's area are one place
     let e = explain(&m, "62701", &["62701 Exampleton, IL, USA", "Exampleton, IL 62701, USA"]);
     assert_eq!((e.outcome, e.same.clone()), (Outcome::Match, vec![0, 1]));
