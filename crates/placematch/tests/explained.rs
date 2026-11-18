@@ -580,3 +580,25 @@ fn terminals_that_name_the_airport_after_a_dash_do_not_take_its_match() {
         }
     }
 }
+
+#[test]
+fn the_bare_address_is_taken_beside_places_named_at_it() {
+    let m = Matcher::new();
+    // a site lists the address alone and several places at its number, one named after the address
+    // itself; a caller who typed only the address gets the address, and every row is the place
+    let rows = [
+        "1 Sample Ridge Blvd, Exampleton, CA",
+        "Example Tower, 1 Sample Ridge Blvd, Exampleton, CA",
+        "1 Sample Ridge Blvd Parking, 1 Sample Ridge Blvd, Exampleton, CA",
+        "Sample Ridge Neighbors, 1 Sample Ridge Blvd, Exampleton, CA",
+    ];
+    let e = explain(&m, "1 Sample Ridge Blvd, Exampleton, CA 90001", &rows);
+    assert_eq!((e.outcome, e.index, e.same.clone()), (Outcome::Match, Some(0), vec![0, 1, 2, 3]));
+    assert!(e.reasons.is_empty() && e.notes.is_empty() && e.prefer_on_read.is_none());
+    // a part that adds a direction or a unit to the address is no place's name: it is still asked
+    // about, or loses to the address alone
+    let e = explain(&m, "1 Sample Ridge Blvd, Exampleton, CA 90001", &["1 Sample Ridge Blvd North, 1 Sample Ridge Blvd, Exampleton, CA", rows[0]]);
+    assert_eq!(e.outcome, Outcome::Ambiguous);
+    let e = explain(&m, "1 Sample Ridge Blvd, Exampleton, CA 90001", &["1 Sample Ridge Blvd Apt 4, 1 Sample Ridge Blvd, Exampleton, CA", rows[0]]);
+    assert_eq!((e.outcome, e.index, e.same.clone()), (Outcome::Match, Some(1), vec![1]));
+}
