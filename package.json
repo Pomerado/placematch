@@ -1,6 +1,6 @@
 {
   "name": "@pomerado/placematch",
-  "version": "0.1.0",
+  "version": "0.2.4",
   "description": "Decide whether an address someone wrote is the same place as one a website lists, in any script",
   "license": "MIT",
   "private": true,
