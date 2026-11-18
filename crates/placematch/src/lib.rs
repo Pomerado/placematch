@@ -63,6 +63,20 @@ impl<'a> From<&'a String> for Row<'a> {
     }
 }
 
+/// Optional matching rules for `Matcher::pick_explained_with`, each off by default.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Rules {
+    /// Outside the US and its territories, a row that writes the caller's town with a district after it
+    /// ("Exampleburg-Nord" for "Exampleburg") is the caller's town when both give one postcode.
+    /// Off, such a row is another town.
+    pub district_may_differ: bool,
+}
+
+thread_local! {
+    /// `Rules::district_may_differ` for the pick under way on this thread.
+    static DISTRICT_MAY_DIFFER: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+
 /// Options for `Matcher::pick_explained`.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct PickOptions<'a> {
@@ -1800,6 +1814,12 @@ impl Matcher {
                 return (Verdict::Different, vec!["house_number"]);
             }
         }
+        // an Irish postal district, when both sides give one ("Dublin 2" is not "Dublin 4")
+        if let (Some(a), Some(b)) = (&q.postal_district, &c.postal_district) {
+            if a != b {
+                return (Verdict::Different, vec!["city"]);
+            }
+        }
         // house number
         match (&q.house, &c.house) {
             (Some(a), Some(b)) => {
@@ -2006,6 +2026,48 @@ impl Matcher {
                     }
                 }
             }
+            // with `Rules::district_may_differ`, outside the US, a town written with its district
+            // after it ("München-Altstadt-Lehel") is the caller's town when its first word is that
+            // town and both give one postcode
+            let mut district_town = false;
+            // a Danish town written with its postal district's letters ("København V") or as its
+            // municipality ("Copenhagen Municipality") beside the town written another of those ways;
+            // two districts must still agree ("Odense S" is not "Odense NØ")
+            if !any_yes && !peer && q.cc.as_deref() == Some("DK") {
+                let last = |x: &Text| if x.toks.len() >= 2 { x.toks[x.toks.len() - 1].0.clone() } else { String::new() };
+                // only the towns whose postal districts carry letters ("Nykøbing M" is a town of its own)
+                let stem = |x: &Text| -> String {
+                    let joined: String = x.toks[..x.toks.len().saturating_sub(1)].iter().map(|t| t.0.as_str()).collect();
+                    self.data.exonyms.get(&joined).cloned().unwrap_or(joined)
+                };
+                let district = |x: &Text| DANISH_DISTRICTS.contains(&last(x).as_str()) && DANISH_DISTRICT_TOWNS.contains(&stem(x).as_str());
+                let tail = |x: &Text| district(x) || matches!(last(x).as_str(), "municipality" | "kommune");
+                let base = |x: &Text| -> Text {
+                    let n = if tail(x) { x.toks.len() - 1 } else { x.toks.len() };
+                    let joined: String = x.toks[..n].iter().map(|t| t.0.as_str()).collect();
+                    let key = self.data.exonyms.get(&joined).cloned().unwrap_or(joined);
+                    Text { skel: fold::skeleton(&key), toks: vec![(key.clone(), Vec::new())], key, script: x.script, abbr: vec![false], native: String::new() }
+                };
+                if (tail(qc) || tail(cc)) && !(district(qc) && district(cc)) && text_eq(self, &base(qc), &base(cc), false) == Tri::Yes {
+                    any_yes = true;
+                    district_town = true;
+                }
+            }
+            if !any_yes && !peer && same_code && q.cc.as_deref().map_or(false, |cc| !US_POSTAL.contains(&cc)) && DISTRICT_MAY_DIFFER.with(|cell| cell.get()) {
+                let head = |x: &Text| -> Option<Text> {
+                    if x.toks.len() < 2 {
+                        return None;
+                    }
+                    let first = x.toks[0].0.clone();
+                    let key = self.data.exonyms.get(&first).cloned().unwrap_or(first);
+                    Some(Text { skel: fold::skeleton(&key), toks: vec![(key.clone(), Vec::new())], key, script: x.script, abbr: vec![false], native: String::new() })
+                };
+                let town_first = |town: &Text, written: &Text| head(written).map_or(false, |h| text_eq(self, town, &h, false) == Tri::Yes);
+                if town_first(qc, cc) || town_first(cc, qc) {
+                    any_yes = true;
+                    district_town = true;
+                }
+            }
             if !any_yes {
                 // the caller's town spelled another way may be the row's or another town: ask
                 if misspelled && !any_unknown {
@@ -2017,7 +2079,7 @@ impl Matcher {
                 } else {
                     return (Verdict::Different, vec!["city"]);
                 }
-            } else if !peer {
+            } else if !peer && !district_town {
                 // the right area: a place name on each side that the other side does not have
                 // ("Santa Sofia" vs "Dovadola") is not settled by one shared word
                 // region names count too ("Port Louis" is a district and a town), but two different
@@ -3241,6 +3303,24 @@ impl Matcher {
     /// place show another postcode or leave out the house number, and it reads a listing's
     /// house-number range where one is meant (see `RANGE_COUNTRIES`).
     pub fn pick_explained(&self, query: &str, rows: &[Row], options: &PickOptions) -> Explained {
+        self.pick_explained_with(query, rows, options, &Rules::default())
+    }
+
+    /// `pick_explained` under optional `rules`, each off by default (see `Rules`).
+    pub fn pick_explained_with(&self, query: &str, rows: &[Row], options: &PickOptions, rules: &Rules) -> Explained {
+        /// Turns the rule off when the pick ends, a panic caught by its caller included.
+        struct Reset;
+        impl Drop for Reset {
+            fn drop(&mut self) {
+                DISTRICT_MAY_DIFFER.with(|cell| cell.set(false));
+            }
+        }
+        DISTRICT_MAY_DIFFER.with(|cell| cell.set(rules.district_may_differ));
+        let _reset = Reset;
+        self.pick_explained_inner(query, rows, options)
+    }
+
+    fn pick_explained_inner(&self, query: &str, rows: &[Row], options: &PickOptions) -> Explained {
         let (query, query_lost) = self.bound(query);
         let query = &*query;
         let cut: Vec<(std::borrow::Cow<str>, bool)> = rows.iter().map(|r| self.bound(r.text)).collect();
@@ -3523,3 +3603,15 @@ impl Matcher {
         (Pick::Match(best), e)
     }
 }
+
+/// A Danish postal district's letters after its town's name, as their ASCII keys ("Ø" is "o"):
+/// the same town when the other side leaves them out, or writes the town as its municipality.
+const DANISH_DISTRICTS: &[&str] = &["c", "k", "v", "n", "s", "o", "m", "nv", "no", "sv", "so"];
+
+/// The US and the territories its postal service serves: `Rules::district_may_differ` never
+/// applies there.
+const US_POSTAL: &[&str] = &["US", "PR", "GU", "VI", "AS", "MP", "UM"];
+
+/// The Danish towns whose postal districts are written with letters after the town's name, as
+/// their ASCII keys, before and after exonyms.
+const DANISH_DISTRICT_TOWNS: &[&str] = &["kobenhavn", "copenhagen", "frederiksberg", "aarhus", "arhus", "odense", "aalborg", "alborg", "esbjerg", "randers", "vejle"];

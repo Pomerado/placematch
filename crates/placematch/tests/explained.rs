@@ -1,6 +1,6 @@
 //! `pick_explained`: the outcome with the rows that are the caller's place, the reasons and notes a
 //! picker needs, and what a read may take. Addresses are made up.
-use placematch::{Explained, Matcher, Outcome, Pick, PickOptions, Row, Verdict};
+use placematch::{Explained, Matcher, Outcome, Pick, PickOptions, Row, Rules, Verdict};
 
 fn explain(m: &Matcher, query: &str, rows: &[&str]) -> Explained {
     let rows: Vec<Row> = rows.iter().map(|&t| Row::from(t)).collect();
@@ -601,4 +601,42 @@ fn the_bare_address_is_taken_beside_places_named_at_it() {
     assert_eq!(e.outcome, Outcome::Ambiguous);
     let e = explain(&m, "1 Sample Ridge Blvd, Exampleton, CA 90001", &["1 Sample Ridge Blvd Apt 4, 1 Sample Ridge Blvd, Exampleton, CA", rows[0]]);
     assert_eq!((e.outcome, e.index, e.same.clone()), (Outcome::Match, Some(1), vec![1]));
+}
+
+#[test]
+fn a_town_written_with_its_district_is_the_callers_town_only_under_the_district_rule() {
+    let m = Matcher::new();
+    let de = PickOptions { country: Some("DE") };
+    let on = Rules { district_may_differ: true };
+    let row = [Row::from("Beispielplatz 8, 80331 München-Altstadt-Lehel, Germany")];
+    // off by default: another town
+    let e = m.pick_explained("Beispielplatz 8, 80331 München, Germany", &row, &de);
+    assert_eq!(e.outcome, Outcome::None);
+    // on: the caller's town, written in English or as the site writes it
+    let e = m.pick_explained_with("Beispielplatz 8, 80331 München, Germany", &row, &de, &on);
+    assert_eq!((e.outcome, e.index), (Outcome::Match, Some(0)));
+    let e = m.pick_explained_with("Beispielplatz 8, 80331 Munich, Germany", &row, &de, &on);
+    assert_eq!((e.outcome, e.index), (Outcome::Match, Some(0)));
+    // on, but no postcode on one side, or another postcode: not settled by the town's first word
+    let e = m.pick_explained_with("Beispielplatz 8, München, Germany", &row, &de, &on);
+    assert_ne!(e.outcome, Outcome::Match);
+    let e = m.pick_explained_with("Beispielplatz 8, 80333 München, Germany", &row, &de, &on);
+    assert_ne!(e.outcome, Outcome::Match);
+    // on, a town that only starts the same way is another town
+    let row2 = [Row::from("Beispielweg 3, 12345 Exampleburgdorf, Germany")];
+    let e = m.pick_explained_with("Beispielweg 3, 12345 Exampleburg, Germany", &row2, &de, &on);
+    assert_ne!(e.outcome, Outcome::Match);
+    // on, never in the US
+    let us = PickOptions { country: Some("US") };
+    let row3 = [Row::from("1 Example St, Exampleton-North, IL 60601")];
+    let e = m.pick_explained_with("1 Example St, Exampleton, IL 60601", &row3, &us, &on);
+    assert_ne!(e.outcome, Outcome::Match);
+    // on, never in a US territory either
+    let pr = PickOptions { country: Some("PR") };
+    let row4 = [Row::from("1 Example St, Exampleton-Norte, PR 00901")];
+    let e = m.pick_explained_with("1 Example St, Exampleton, PR 00901", &row4, &pr, &on);
+    assert_ne!(e.outcome, Outcome::Match);
+    // the rule ends with its pick
+    let e = m.pick_explained("Beispielplatz 8, 80331 München, Germany", &row, &de);
+    assert_eq!(e.outcome, Outcome::None);
 }
