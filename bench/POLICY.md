@@ -63,7 +63,9 @@ building name. A row must still confirm where the caller's place is:
   area, and a row that names a street before the town is a house on that street, another place:
   a street with a type word (`62701 Example Street, Exampleton`; `62701, Example Trail, Sampleton,
   IL`) or a part followed by another town other than a county (`62701 Example, Sampleton, IL`); a
-  town of two words right after the number (`62701 New Exampleton, IL`) is the area;
+  town of two words right after the number (`62701 New Exampleton, IL`) is the area, and so is one
+  that ends in words that are also street types (`62701 Example Grove, IL`) unless a type word in it
+  has a word that is no type word after it (`62701 Example Road Sampleton, IL` is a house);
 - a state comes only from the state part or code, or from a state written after the town with
   no comma (`Exampleton IL`, `Exampleton New York`, in the US, Canada and Australia), never from a
   town named like a state (`Washington, PA` is not `Washington, DC`; `Nevada, MO` is not

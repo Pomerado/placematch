@@ -1611,7 +1611,17 @@ impl Matcher {
         // the code as a part of its own ("62701, Example Grove, IL, USA"): every part after it is
         // its area, a town named like a street included; a first part that holds a number is no town
         let first_numbered = town_part.chars().any(|ch| ch.is_numeric());
-        let mut area = if own_part && !first_numbered {
+        // the code written right before its town with no comma ("92999 Example Grove, CA, USA"): the
+        // part is the town unless a street-type word in it has a word that is no type word after it,
+        // a street then its town ("92999 Example Road Sampleton, CA, USA"); town names end in words
+        // that are also types ("Example Grove", "Sample Garden Grove", "Example Springs")
+        let typed_inside = || {
+            let key = data::phrase_key(town_part);
+            let typed: Vec<bool> = key.split(' ').filter(|w| !w.is_empty()).map(|w| self.data.lookup(w).iter().any(|e| e.class == data::Class::StreetType)).collect();
+            typed.iter().position(|&t| t).map_or(false, |i| typed[i + 1..].iter().any(|&t| !t))
+        };
+        let as_town = !first_numbered && (own_part || !typed_inside());
+        let mut area = if as_town {
             shape.house = None;
             shape.street = Text::default();
             shape.street_type.clear();
@@ -1627,6 +1637,7 @@ impl Matcher {
         area.postcode = Some(code.clone());
         // the code's own part, or the street part read in its place
         area.parts += usize::from(own_part && first_numbered);
+        area.parts -= usize::from(as_town && !own_part && area.parts > 1);
         Some(area)
     }
 
