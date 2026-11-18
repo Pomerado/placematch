@@ -62,7 +62,10 @@ export interface PlaceMatch {
   /** Takes no categories: a picker that knows which rows the site shows as venues should use `pickExplained`. */
   pick(query: string, candidates: string[], country?: string): { outcome: "match"; index: number } | { outcome: "none" | "ambiguous"; index: null };
   compare(query: string, candidate: string, country?: string): "same" | "different" | "unknown";
-  pickExplained(query: string, rows: Row[], options?: { country?: string } | null): Explained;
+  /** `rules` turns on optional rules, each off by default: `districtMayDiffer`, outside the US and
+   * its territories, takes a row that writes the caller's town with a district after it
+   * ("Exampleburg-Nord" for "Exampleburg") as the caller's town when both give one postcode. */
+  pickExplained(query: string, rows: Row[], options?: { country?: string; rules?: { districtMayDiffer?: boolean } } | null): Explained;
   /** The row is a site's control ("See more results for <text>", "Search "<text>""), never a place. */
   isControl(query: string, row: string): boolean;
   /** The row shows the caller's whole text (of two parts or more) after at least `minWords` (default

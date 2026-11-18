@@ -150,3 +150,18 @@ test("a call that traps replaces the module instance", async () => {
   // the same instance would answer 3; a fresh one starts its count again
   assert.deepEqual(f.pick("10 Example St", ["10 Example St"]), { outcome: "match", index: 1 });
 });
+
+test("pickExplained takes a town written with its district only under the district rule, never in the US", () => {
+  const row = ["Beispielweg 3, 12345 Exampleburg-Nord, Germany"];
+  const q = "Beispielweg 3, 12345 Exampleburg, Germany";
+  assert.equal(m.pickExplained(q, row, { country: "DE" }).outcome, "none");
+  assert.equal(m.pickExplained(q, row, { country: "DE", rules: { districtMayDiffer: false } }).outcome, "none");
+  const on = m.pickExplained(q, row, { country: "DE", rules: { districtMayDiffer: true } });
+  assert.deepEqual([on.outcome, on.index], ["match", 0]);
+  const us = ["1 Example St, Exampleton-North, IL 60601"];
+  const usQuery = "1 Example St, Exampleton, IL 60601";
+  assert.deepEqual(
+    m.pickExplained(usQuery, us, { country: "US", rules: { districtMayDiffer: true } }),
+    m.pickExplained(usQuery, us, { country: "US" }),
+  );
+});
