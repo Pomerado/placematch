@@ -213,6 +213,11 @@ A town typed alone ("Munich") is compared as a town, in its other languages too 
 whose first part names a venue by a place-type word the caller did not write ("Example Station,
 Munich"; "International Terminal, Example International Airport") is that venue, not the town.
 
+A postcode typed alone ("62701") is that postcode's area. A row that opens with the same postcode
+and then names only a town, region or country ("62701 Exampleton, IL, USA", "75001 Exampleville,
+France", as map services list a postcode's area) is that area, not a house number; a row that names
+a street after the number ("62701 Example Street, Exampleton") is a house on that street.
+
 A place's name with a postcode alone ("Example Center, 94000") is the name with the postcode as
 its area. Rows of the very same name in one town are one place, except that a row the site
 categorized beside one it did not (a pin dropped under the venue's own name) asks

@@ -58,6 +58,10 @@ building name. A row must still confirm where the caller's place is:
   a state by its first three digits (`Kansas City 64100` is in Missouri, not Kansas);
 - with no country given or shown by the texts, a row that leaves out a place the caller named
   does not confirm it;
+- a caller who gave only a postcode (`62701`) is that postcode's area: a row that opens with the
+  same postcode and then names only a town, region or country (`62701 Exampleton, IL, USA`) is that
+  area, and a row that names a street after the number (`62701 Example Street, Exampleton`) is a
+  house on that street, another place;
 - a state comes only from the state part or code, or from a state written after the town with
   no comma (`Exampleton IL`, `Exampleton New York`, in the US, Canada and Australia), never from a
   town named like a state (`Washington, PA` is not `Washington, DC`; `Nevada, MO` is not

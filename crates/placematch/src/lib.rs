@@ -1373,7 +1373,7 @@ impl Matcher {
         }
         // a listing that opens with the distance to it is compared without it
         let candidate = Self::without_distance(candidate);
-        let c = parse::parse(&ctx, &candidate);
+        let c = self.parse_row(&ctx, query, &q, &candidate);
         let alts: Vec<Components> = Self::comma_free_readings(query).iter().map(|a| parse::parse(&ctx, a)).collect();
         let calt = self.without_leading_name(&candidate).map(|(t, name)| (parse::parse(&ctx, &t), name));
         self.compare_any(query, &q, &alts, &c, calt.as_ref())
@@ -1563,6 +1563,45 @@ impl Matcher {
         let alone = |w: Option<&&str>| w.map_or(false, |w| w.trim_matches(|ch: char| !ch.is_alphanumeric()).eq_ignore_ascii_case(house));
         let typed = key.split(' ').any(|w| self.data.lookup(w).iter().any(|e| e.class == data::Class::StreetType));
         !((alone(raw.first()) || alone(raw.last())) && typed)
+    }
+
+    /// A listing read for the query `q`: as written, or, when the caller gave only a postal code and
+    /// the listing opens with that code before a town ("62701 Exampleton, IL, USA", "75001
+    /// Exampleville, France", as map services list a postal code's area), as that town under that
+    /// code (`postcode_area`).
+    fn parse_row(&self, ctx: &Ctx, query: &str, q: &Components, candidate: &str) -> Components {
+        self.postcode_area(ctx, query, q, candidate).unwrap_or_else(|| parse::parse(ctx, candidate))
+    }
+
+    /// A listing that opens with the postal code a caller gave alone, as written, and then names
+    /// only a town, region or country: that area under the code, not a house number on a street
+    /// named for the town. A listing that names a street, a unit, a PO box or another postal code
+    /// after the number ("62701 Example Street, Exampleton") is read as written, and so is every
+    /// listing for a caller who gave more than a postal code.
+    fn postcode_area(&self, ctx: &Ctx, query: &str, q: &Components, candidate: &str) -> Option<Components> {
+        let code = q.postcode.as_ref()?;
+        let only_code = q.house.is_none() && q.street.is_empty() && q.city.is_none() && q.localities.is_empty() && q.regions.is_empty() && q.units.is_empty() && q.po_box.is_none() && q.business.is_empty();
+        let written = query.trim();
+        if !only_code || written.is_empty() || !written.chars().all(|ch| ch.is_ascii_alphanumeric() || ch == ' ' || ch == '-') {
+            return None;
+        }
+        let listed = candidate.trim_start();
+        let head = listed.get(..written.len()).filter(|h| h.eq_ignore_ascii_case(written))?;
+        let rest = &listed[head.len()..];
+        // the code ends at a space or a comma: "627010 Exampleton" opens with another number
+        if !rest.is_empty() && !rest.starts_with([' ', ',']) {
+            return None;
+        }
+        let area_text = rest.trim_start_matches([' ', ',']);
+        let mut area = parse::parse(ctx, area_text);
+        let names_area = area.city.is_some() || !area.localities.is_empty() || !area.regions.is_empty();
+        let names_more = area.house.is_some() || !area.street.is_empty() || !area.units.is_empty() || area.po_box.is_some() || !area.business.is_empty() || area.second_number.is_some();
+        if !names_area || names_more || area.postcode.as_ref().map_or(false, |p| p != code) {
+            return None;
+        }
+        area.postcode = Some(code.clone());
+        area.parts += usize::from(rest.trim_start().starts_with(','));
+        Some(area)
     }
 
     /// The listing as compared: without the distance it may open with ("0.2 mi, Sample Cafe, 12
@@ -3385,7 +3424,7 @@ impl Matcher {
         let candidates: Vec<&str> = rows.iter().map(|r| r.text).collect();
         // each listing as compared, without a distance it opens with
         let compared: Vec<std::borrow::Cow<str>> = candidates.iter().map(|c| Self::without_distance(c)).collect();
-        let mut cs: Vec<Components> = compared.iter().map(|c| parse::parse(&ctx, c)).collect();
+        let mut cs: Vec<Components> = compared.iter().map(|c| self.parse_row(ctx, query, &q, c)).collect();
         let alts: Vec<Components> = Self::comma_free_readings(query).iter().map(|a| parse::parse(&ctx, a)).collect();
         let calts: Vec<Option<(Components, Option<String>)>> = compared.iter().map(|c| self.without_leading_name(c).map(|(t, name)| (parse::parse(&ctx, &t), name))).collect();
         // a site's control ("See more results for <text>") is never a place, nor a row to ask about
