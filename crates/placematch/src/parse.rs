@@ -67,6 +67,9 @@ pub struct Components {
     /// a second number written in the house number's part with no words ("18" in "30 18,
     /// Exampleton"): when both sides give one, another is another place
     pub second_number: Option<String>,
+    /// an Irish postal district's number written after its town ("2" in "Dublin 2", "6w" in
+    /// "Dublin 6W"): when both sides give one, another is another place
+    pub postal_district: Option<String>,
 }
 
 pub struct Ctx<'a> {
@@ -1173,7 +1176,10 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
         let long_num = nums.first().map_or(false, |&q| toks[q].s.chars().filter(|ch| ch.is_ascii_digit()).count() >= 4);
         // an Irish postal district is a town and its district number, not a unit ("Dublin 2", "Dublin 6W")
         let postal_district = ctx.cc == Some("IE") && nums.len() == 1 && words.len() == 1 && is_dublin_district(&toks[words[0]].s, &toks[nums[0]].s);
-        if nums.len() == 1 && words.len() == 1 && letters <= 6 && words[0] < nums[0] && more_after && !long_num && !postal_district {
+        if postal_district {
+            c.postal_district = Some(toks[nums[0]].s.trim().to_ascii_lowercase());
+            used[nums[0]] = true;
+        } else if nums.len() == 1 && words.len() == 1 && letters <= 6 && words[0] < nums[0] && more_after && !long_num {
             c.units.push(format!("u{}", norm_number(&toks[nums[0]].s)));
             c.unit_words.push(ks.iter().map(|&q| toks[q].s.as_str()).collect::<Vec<_>>().join(" "));
             for q in ks {

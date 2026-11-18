@@ -631,6 +631,11 @@ fn a_town_written_with_its_district_is_the_callers_town_only_under_the_district_
     let row3 = [Row::from("1 Example St, Exampleton-North, IL 60601")];
     let e = m.pick_explained_with("1 Example St, Exampleton, IL 60601", &row3, &us, &on);
     assert_ne!(e.outcome, Outcome::Match);
+    // on, never in a US territory either
+    let pr = PickOptions { country: Some("PR") };
+    let row4 = [Row::from("1 Example St, Exampleton-Norte, PR 00901")];
+    let e = m.pick_explained_with("1 Example St, Exampleton, PR 00901", &row4, &pr, &on);
+    assert_ne!(e.outcome, Outcome::Match);
     // the rule ends with its pick
     let e = m.pick_explained("Beispielplatz 8, 80331 München, Germany", &row, &de);
     assert_eq!(e.outcome, Outcome::None);
