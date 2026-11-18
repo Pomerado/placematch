@@ -3614,4 +3614,4 @@ const US_POSTAL: &[&str] = &["US", "PR", "GU", "VI", "AS", "MP", "UM"];
 
 /// The Danish towns whose postal districts are written with letters after the town's name, as
 /// their ASCII keys, before and after exonyms.
-const DANISH_DISTRICT_TOWNS: &[&str] = &["kobenhavn", "copenhagen", "frederiksberg", "aarhus", "arhus", "odense", "aalborg", "alborg", "esbjerg"];
+const DANISH_DISTRICT_TOWNS: &[&str] = &["kobenhavn", "copenhagen", "frederiksberg", "aarhus", "arhus", "odense", "aalborg", "alborg", "esbjerg", "randers", "vejle"];
