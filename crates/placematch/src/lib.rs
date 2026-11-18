@@ -293,6 +293,12 @@ const US_ZIP_PREFIXES: &[(u16, u16, &str)] = &[
     (969, 969, "gu mp as pw fm mh"), (970, 979, "or"), (980, 994, "wa"), (995, 999, "ak"),
 ];
 
+/// Street types that name only a way, never a place, each by the first word of its dictionary line:
+/// in a postcode's first part with no comma after the code, one makes that part a street ("92999
+/// Example Road Bay Point"); place-like types (grove, garden, springs, beach, park, valley, point,
+/// bay, hills) may end a town's name
+const THOROUGHFARES: &[&str] = &["street", "road", "avenue", "lane", "drive", "boulevard", "court", "circle", "way", "place", "terrace", "trail", "highway", "parkway", "pike", "freeway", "expressway", "turnpike", "crescent"];
+
 const POSTAL_CODE_COUNTRIES: &[&str] = &["US", "CA", "AU"];
 
 /// The most comma parts, and characters, of a text that are read: an address has far fewer, and a
@@ -1612,13 +1618,18 @@ impl Matcher {
         // its area, a town named like a street included; a first part that holds a number is no town
         let first_numbered = town_part.chars().any(|ch| ch.is_numeric());
         // the code written right before its town with no comma ("92999 Example Grove, CA, USA"): the
-        // part is the town unless a street-type word in it has a word that is no type word after it,
-        // a street then its town ("92999 Example Road Sampleton, CA, USA"); town names end in words
-        // that are also types ("Example Grove", "Sample Garden Grove", "Example Springs")
+        // part is the town unless it reads as a street, then maybe its town: a thoroughfare type in
+        // it ("92999 Example Road", "92999 Example Road Bay Point"), or another street-type word with
+        // a word that is no type word after it ("92999 Example Plaza Sampleton"); town names end in
+        // place-like words that are also types ("Example Grove", "Example Garden Grove", "Bay Point")
         let typed_inside = || {
             let key = data::phrase_key(town_part);
-            let typed: Vec<bool> = key.split(' ').filter(|w| !w.is_empty()).map(|w| self.data.lookup(w).iter().any(|e| e.class == data::Class::StreetType)).collect();
-            typed.iter().position(|&t| t).map_or(false, |i| typed[i + 1..].iter().any(|&t| !t))
+            let types = |w: &str| self.data.lookup(w).iter().filter(|e| e.class == data::Class::StreetType).map(|e| self.data.canon_keys[e.canon as usize].as_str()).collect::<Vec<_>>();
+            let words: Vec<Vec<&str>> = key.split(' ').filter(|w| !w.is_empty()).map(types).collect();
+            let ways: Vec<String> = THOROUGHFARES.iter().map(|t| data::concat_key(t)).collect();
+            // a lone letter is no thoroughfare here: postal districts end in one ("8000 Aarhus C")
+            let thoroughfare = key.split(' ').filter(|w| w.len() > 1).any(|w| types(w).iter().any(|k| ways.iter().any(|t| t == k)));
+            thoroughfare || words.iter().position(|t| !t.is_empty()).map_or(false, |i| words[i + 1..].iter().any(|t| t.is_empty()))
         };
         let as_town = !first_numbered && (own_part || !typed_inside());
         let mut area = if as_town {

@@ -223,10 +223,12 @@ that street, with or without commas: a street with a type word after the number 
 Street, Exampleton"; "62701, Example Trail, Sampleton, IL"), or any part followed by another town
 ("62701 Example, Sampleton, IL"). A street with no type word written before its town with no comma
 ("62701 Example Sampleton, IL") reads the same as a town of two words, and is taken as the area.
-A town written right after the postcode with no comma may end in words that are also street types
-("62701 Example Grove, IL, USA", "62701 Sample Garden Grove, IL"): it is the area unless a type word
-in it has a word that is no type word after it, which is a street then its town ("62701 Example
-Road Sampleton, IL, USA").
+A town written right after the postcode with no comma may end in place-like words that are also
+street types ("62701 Example Grove, IL, USA", "62701 Example Garden Grove, IL", "62701 Example Bay
+Point, IL"): it is the area unless it reads as a street, then maybe its town. That is a part with a
+thoroughfare type in it, such as Street, Road, Avenue, Lane, Drive, Court or Way ("62701 Example
+Road, IL"; "62701 Example Road Bay Point, IL, USA"), or with another type word that has a word that
+is no type word after it ("62701 Example Plaza Sampleton, IL, USA").
 
 A place's name with a postcode alone ("Example Center, 94000") is the name with the postcode as
 its area. Rows of the very same name in one town are one place, except that a row the site
