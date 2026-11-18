@@ -1593,14 +1593,28 @@ impl Matcher {
             return None;
         }
         let area_text = rest.trim_start_matches([' ', ',']);
-        let mut area = parse::parse(ctx, area_text);
+        // the code as a part of its own ("62701, Example Grove, IL, USA"): every part after it is
+        // its area, a town named like a street included, read as if a street came first
+        // (`area_parse`); a first part that holds a number is no town
+        let own_part = rest.trim_start().starts_with(',');
+        let first_numbered = area_text.split(',').next().map_or(false, |p| p.chars().any(|ch| ch.is_numeric()));
+        let mut area = if own_part && !first_numbered {
+            let mut a = parse::parse(ctx, &format!("1 Example St, {}", area_text));
+            a.house = None;
+            a.street = Text::default();
+            a.street_type.clear();
+            a
+        } else {
+            parse::parse(ctx, area_text)
+        };
         let names_area = area.city.is_some() || !area.localities.is_empty() || !area.regions.is_empty();
         let names_more = area.house.is_some() || !area.street.is_empty() || !area.units.is_empty() || area.po_box.is_some() || !area.business.is_empty() || area.second_number.is_some();
         if !names_area || names_more || area.postcode.as_ref().map_or(false, |p| p != code) {
             return None;
         }
         area.postcode = Some(code.clone());
-        area.parts += usize::from(rest.trim_start().starts_with(','));
+        // the code's own part, or the street part read in its place
+        area.parts += usize::from(own_part && first_numbered);
         Some(area)
     }
 

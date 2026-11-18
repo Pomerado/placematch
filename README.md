@@ -215,8 +215,10 @@ Munich"; "International Terminal, Example International Airport") is that venue,
 
 A postcode typed alone ("62701") is that postcode's area. A row that opens with the same postcode
 and then names only a town, region or country ("62701 Exampleton, IL, USA", "75001 Exampleville,
-France", as map services list a postcode's area) is that area, not a house number; a row that names
-a street after the number ("62701 Example Street, Exampleton") is a house on that street.
+France", as map services list a postcode's area) is that area, not a house number, and so is a row
+that writes the postcode as a part of its own before a town named like a street ("62701, Example
+Grove, IL, USA"); a row that names a street right after the number ("62701 Example Street,
+Exampleton") is a house on that street.
 
 A place's name with a postcode alone ("Example Center, 94000") is the name with the postcode as
 its area. Rows of the very same name in one town are one place, except that a row the site
