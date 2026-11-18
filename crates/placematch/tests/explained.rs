@@ -645,7 +645,7 @@ fn a_town_written_with_its_district_is_the_callers_town_only_under_the_district_
 fn a_postal_code_given_alone_is_the_row_that_lists_that_code_before_its_town() {
     let m = Matcher::new();
     // a map service lists a postal code's area as the code, then its town: no house number
-    let rows = ["62701 Exampleton, IL, USA", "62701 South Example Street, Sampleton, KS, USA", "62701 East 33rd Place, Otherton, OK, USA"];
+    let rows = ["62701 Exampleton, IL, USA", "62701 South Example Street, Sampleton, KS, USA", "62701 East 12th Place, Otherton, OK, USA"];
     let e = explain(&m, "62701", &rows);
     assert_eq!((e.outcome, e.index, e.same.clone()), (Outcome::Match, Some(0), vec![0]));
     // the rows that put a street after the number stay houses on that street
@@ -672,4 +672,26 @@ fn a_postal_code_given_alone_is_the_row_that_lists_that_code_before_its_town() {
     // two listings of the code's area are one place
     let e = explain(&m, "62701", &["62701 Exampleton, IL, USA", "Exampleton, IL 62701, USA"]);
     assert_eq!((e.outcome, e.same.clone()), (Outcome::Match, vec![0, 1]));
+}
+
+#[test]
+fn a_postal_code_given_alone_is_no_house_row_whose_street_and_town_follow_the_number() {
+    let m = Matcher::new();
+    // a street with no type word before its town, in one part or two, after the same number: a
+    // house there, not the code's area
+    for row in ["62701 Example Sampleton, IL, USA", "62701 Example, Sampleton, IL, USA"] {
+        let e = explain(&m, "62701", &[row, "62701 Sampleton, IL, USA"]);
+        assert_eq!((e.outcome, e.index, e.same.clone()), (Outcome::Match, Some(1), vec![1]), "{row}");
+        assert_eq!(e.rows[0].verdict, Verdict::Different, "{row}");
+    }
+    // the code as a part of its own before a street and then a town: a house on that street
+    for row in ["62701, Example Trail, Sampleton, IL, USA", "62701, Example Grove, Sampleton, IL, USA"] {
+        assert_eq!(explain(&m, "62701", &[row]).outcome, Outcome::None, "{row}");
+        assert_eq!(m.compare("62701", row, Some("US")).0, Verdict::Different, "{row}");
+    }
+    // the code's area itself still: a town with a state and country, a state code written onto
+    // the town, a town of several words where postal codes come before the town
+    assert_eq!(m.compare("62701", "62701, Example Grove, Illinois, 62701, United States", Some("US")).0, Verdict::Same);
+    assert_eq!(m.compare("2999", "2999 Sampleton NSW, Australia", Some("AU")).0, Verdict::Same);
+    assert_eq!(m.compare("60999", "60999 Beispielstadt am Main, Deutschland", Some("DE")).0, Verdict::Same);
 }
