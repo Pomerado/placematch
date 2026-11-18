@@ -1576,8 +1576,9 @@ impl Matcher {
     /// A listing that opens with the postal code a caller gave alone, as written, and then names
     /// only a town, region or country: that area under the code, not a house number on a street
     /// named for the town. A listing that names a street, a unit, a PO box or another postal code
-    /// after the number ("62701 Example Street, Exampleton") is read as written, and so is every
-    /// listing for a caller who gave more than a postal code.
+    /// after the number ("62701 Example Street, Exampleton"), or a town after its first part
+    /// ("62701, Example Trail, Sampleton, IL"), is read as written, and so is every listing for a
+    /// caller who gave more than a postal code.
     fn postcode_area(&self, ctx: &Ctx, query: &str, q: &Components, candidate: &str) -> Option<Components> {
         let code = q.postcode.as_ref()?;
         let only_code = q.house.is_none() && q.street.is_empty() && q.city.is_none() && q.localities.is_empty() && q.regions.is_empty() && q.units.is_empty() && q.po_box.is_none() && q.business.is_empty();
@@ -1593,17 +1594,28 @@ impl Matcher {
             return None;
         }
         let area_text = rest.trim_start_matches([' ', ',']);
-        // the code as a part of its own ("62701, Example Grove, IL, USA"): every part after it is
-        // its area, a town named like a street included, read as if a street came first
-        // (`area_parse`); a first part that holds a number is no town
+        let town_part = area_text.split(',').next().unwrap_or("");
         let own_part = rest.trim_start().starts_with(',');
-        let first_numbered = area_text.split(',').next().map_or(false, |p| p.chars().any(|ch| ch.is_numeric()));
+        // the parts after the code read as if a street came first, so the first is a place
+        // (`area_parse`), as the code's area would be
+        let mut shape = parse::parse(ctx, &format!("1 Example St, {}", area_text));
+        // only a region, a country or this code may follow the town's part: a town after it makes
+        // that part a street ("62701, Example Trail, Sampleton, IL"; "62701 Example, Sampleton, IL")
+        // (a county is no town: "62701, Exampleton, Example County, IL")
+        let county = |t: &Text| t.toks.len() >= 2 && t.toks.last().map_or(false, |w| matches!(w.0.as_str(), "county" | "parish" | "borough"));
+        let places: Vec<&Text> = shape.localities.iter().filter(|t| !shape.countries.contains(&t.key) && !county(t)).collect();
+        let towns = places.iter().filter(|t| !shape.regions.contains(&t.key)).count();
+        if places.len() > 2 || towns > 1 {
+            return None;
+        }
+        // the code as a part of its own ("62701, Example Grove, IL, USA"): every part after it is
+        // its area, a town named like a street included; a first part that holds a number is no town
+        let first_numbered = town_part.chars().any(|ch| ch.is_numeric());
         let mut area = if own_part && !first_numbered {
-            let mut a = parse::parse(ctx, &format!("1 Example St, {}", area_text));
-            a.house = None;
-            a.street = Text::default();
-            a.street_type.clear();
-            a
+            shape.house = None;
+            shape.street = Text::default();
+            shape.street_type.clear();
+            shape
         } else {
             parse::parse(ctx, area_text)
         };
