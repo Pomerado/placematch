@@ -640,3 +640,31 @@ fn a_town_written_with_its_district_is_the_callers_town_only_under_the_district_
     let e = m.pick_explained("Beispielplatz 8, 80331 München, Germany", &row, &de);
     assert_eq!(e.outcome, Outcome::None);
 }
+
+#[test]
+fn a_postal_code_given_alone_is_the_row_that_lists_that_code_before_its_town() {
+    let m = Matcher::new();
+    // a map service lists a postal code's area as the code, then its town: no house number
+    let rows = ["62701 Exampleton, IL, USA", "62701 South Example Street, Sampleton, KS, USA", "62701 East 33rd Place, Otherton, OK, USA"];
+    let e = explain(&m, "62701", &rows);
+    assert_eq!((e.outcome, e.index, e.same.clone()), (Outcome::Match, Some(0), vec![0]));
+    // the rows that put a street after the number stay houses on that street
+    assert_eq!(e.rows[1].verdict, Verdict::Different);
+    assert_eq!(e.rows[2].verdict, Verdict::Different);
+    // with no country given, read from the rows
+    let rows_given: Vec<Row> = rows.iter().map(|&t| Row::from(t)).collect();
+    let e = m.pick_explained("62701", &rows_given, &PickOptions { country: None });
+    assert_eq!((e.outcome, e.index), (Outcome::Match, Some(0)));
+    // the code as a part of its own, and in countries that write the code before the town
+    assert_eq!(m.compare("62701", "62701, Exampleton, IL", Some("US")).0, Verdict::Same);
+    assert_eq!(m.compare("75001", "75001 Exampleville, France", Some("FR")).0, Verdict::Same);
+    assert_eq!(m.compare("10115", "10115 Beispielstadt, Germany", Some("DE")).0, Verdict::Same);
+    // another code, or a street after the same number, is not the caller's place
+    assert_eq!(explain(&m, "62702", &["62701 Exampleton, IL, USA"]).outcome, Outcome::None);
+    assert_eq!(explain(&m, "62701", &["62701 South Example Street, Sampleton, KS, USA"]).outcome, Outcome::None);
+    // a caller who gave a street is not read as having given only the code
+    assert_ne!(explain(&m, "12 Example St, Exampleton, IL 62701", &["62701 Exampleton, IL, USA"]).outcome, Outcome::Match);
+    // two listings of the code's area are one place
+    let e = explain(&m, "62701", &["62701 Exampleton, IL, USA", "Exampleton, IL 62701, USA"]);
+    assert_eq!((e.outcome, e.same.clone()), (Outcome::Match, vec![0, 1]));
+}
