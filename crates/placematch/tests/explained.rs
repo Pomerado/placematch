@@ -675,22 +675,23 @@ fn a_postal_code_given_alone_is_the_row_that_lists_that_code_before_its_town() {
 }
 
 #[test]
-fn a_postal_code_given_alone_is_no_house_row_whose_street_and_town_follow_the_number() {
+fn a_postal_code_given_alone_is_no_row_whose_first_part_comes_before_another_town() {
     let m = Matcher::new();
-    // a street with no type word before its town, in one part or two, after the same number: a
-    // house there, not the code's area
-    for row in ["62701 Example Sampleton, IL, USA", "62701 Example, Sampleton, IL, USA"] {
-        let e = explain(&m, "62701", &[row, "62701 Sampleton, IL, USA"]);
-        assert_eq!((e.outcome, e.index, e.same.clone()), (Outcome::Match, Some(1), vec![1]), "{row}");
-        assert_eq!(e.rows[0].verdict, Verdict::Different, "{row}");
-    }
+    // a part followed by another town after the same number: a street there, not the code's area
+    let e = explain(&m, "62701", &["62701 Example, Sampleton, IL, USA", "62701 Sampleton, IL, USA"]);
+    assert_eq!((e.outcome, e.index, e.same.clone()), (Outcome::Match, Some(1), vec![1]));
+    assert_eq!(e.rows[0].verdict, Verdict::Different);
     // the code as a part of its own before a street and then a town: a house on that street
     for row in ["62701, Example Trail, Sampleton, IL, USA", "62701, Example Grove, Sampleton, IL, USA"] {
         assert_eq!(explain(&m, "62701", &[row]).outcome, Outcome::None, "{row}");
         assert_eq!(m.compare("62701", row, Some("US")).0, Verdict::Different, "{row}");
     }
-    // the code's area itself still: a town with a state and country, a state code written onto
-    // the town, a town of several words where postal codes come before the town
+    // the code's area itself still: a town of several words written right after the code, a town
+    // with its county, a town with a state and country, a state code written onto the town, a
+    // town of several words where postal codes come before the town
+    let e = explain(&m, "62701", &["62701 Example Road Sampleton, CO, USA", "62701 New Exampleton, IL, USA"]);
+    assert_eq!((e.outcome, e.index), (Outcome::Match, Some(1)));
+    assert_eq!(m.compare("62701", "62701, Exampleton, Example County, IL, USA", Some("US")).0, Verdict::Same);
     assert_eq!(m.compare("62701", "62701, Example Grove, Illinois, 62701, United States", Some("US")).0, Verdict::Same);
     assert_eq!(m.compare("2999", "2999 Sampleton NSW, Australia", Some("AU")).0, Verdict::Same);
     assert_eq!(m.compare("60999", "60999 Beispielstadt am Main, Deutschland", Some("DE")).0, Verdict::Same);

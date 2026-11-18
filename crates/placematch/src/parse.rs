@@ -358,11 +358,6 @@ fn merge_korean_roads(toks: Vec<crate::token::Tok>) -> Vec<crate::token::Tok> {
     out.into_iter().map(|x| x.0).collect()
 }
 
-/// Countries whose addresses write the house number before the street ("12 Example St").
-pub fn number_first(cc: Option<&str>) -> bool {
-    matches!(cc, Some("US" | "CA" | "GB" | "IE" | "AU" | "NZ" | "ZA" | "SG" | "IN" | "FR" | "BE" | "LU" | "MY" | "PH" | "VN" | "TH" | "HK" | "AE" | "SA" | "EG" | "QA" | "KW" | "BH" | "OM"))
-}
-
 pub fn parse(ctx: &Ctx, text: &str) -> Components {
     let text = drop_paren_articles(text);
     let text = join_dotted_compass(text.as_ref()).into_owned();
@@ -783,7 +778,7 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
                 let first = nums[0];
                 let type_before = (0..first).any(|q| toks[q].seg == s && !used[q] && spans[q].as_ref().map_or(false, |sp| sp.has(Class::StreetType)));
                 let word_after = first + 1 < n && toks[first + 1].seg == s && !toks[first + 1].num && !used[first + 1] && toks[first + 1].s.chars().count() > 1;
-                let number_first_cc = number_first(ctx.cc);
+                let number_first_cc = matches!(ctx.cc, Some("US" | "CA" | "GB" | "IE" | "AU" | "NZ" | "ZA" | "SG" | "IN" | "FR" | "BE" | "LU" | "MY" | "PH" | "VN" | "TH" | "HK" | "AE" | "SA" | "EG" | "QA" | "KW" | "BH" | "OM"));
                 let type_then_num = first > 0 && toks[first - 1].seg == s && !used[first - 1] && spans[first - 1].as_ref().map_or(false, |sp| sp.has(Class::StreetType));
                 let last = *nums.last().unwrap();
                 let last_is_tail = (last + 1..n).all(|q| toks[q].seg != s || used[q] || (toks[q].s.chars().count() == 1 && toks[q].s.is_ascii()));
@@ -812,7 +807,7 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
                             break 'scan;
                         }
                         // "Paseo Guzman, 6 R7049CPJ Rosario": the number leads the next segment
-                        let number_first_cc = number_first(ctx.cc);
+                        let number_first_cc = matches!(ctx.cc, Some("US" | "CA" | "GB" | "IE" | "AU" | "NZ" | "ZA" | "SG" | "IN" | "FR" | "BE" | "LU" | "MY" | "PH" | "VN" | "TH" | "HK" | "AE" | "SA" | "EG" | "QA" | "KW" | "BH" | "OM"));
                         if adj == s + 1 && ks.len() > 1 && toks[ks[0]].num && !number_first_cc {
                             let h = ks[0];
                             let skip = if ks.len() > 1 && is_suffix(ks[1]) { 2 } else { 1 };
@@ -912,7 +907,7 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
         let free: Vec<usize> = (0..n).filter(|&q| toks[q].seg == sg && !used[q] && toks[q].s != "#").collect();
         let before: Vec<usize> = free.iter().copied().filter(|&q| q < h).collect();
         let after: Vec<usize> = free.iter().copied().filter(|&q| q > h).collect();
-        let number_first = number_first(ctx.cc);
+        let number_first = matches!(ctx.cc, Some("US" | "CA" | "GB" | "IE" | "AU" | "NZ" | "ZA" | "SG" | "IN" | "FR" | "BE" | "LU" | "MY" | "PH" | "VN" | "TH" | "HK" | "AE" | "SA" | "EG" | "QA" | "KW" | "BH" | "OM"));
         let postcode_after = postcode_span.map(|(k, _)| k).filter(|&k| toks[k].seg == sg && k > h);
         // (from, to) token ranges that become their own segments
         let mut tail_from: Option<usize> = None;
@@ -1011,7 +1006,7 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
     if let Some(ss) = street_seg {
         let mut idx: Vec<usize> = (0..n).filter(|&q| toks[q].seg == ss && !used[q] && !toks[q].num && toks[q].s != "#").collect();
         if !ctx.cjk_like(script) && !idx.is_empty() {
-            let number_first_cc = number_first(ctx.cc);
+            let number_first_cc = matches!(ctx.cc, Some("US" | "CA" | "GB" | "IE" | "AU" | "NZ" | "ZA" | "SG" | "IN" | "FR" | "BE" | "LU" | "MY" | "PH" | "VN" | "TH" | "HK" | "AE" | "SA" | "EG" | "QA" | "KW" | "BH" | "OM"));
             let h_same = house_idx.filter(|&h| toks[h].seg == ss);
             let (lo, hi) = (idx[0], *idx.last().unwrap());
             let extra: Vec<usize> = (0..n)

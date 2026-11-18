@@ -1601,26 +1601,12 @@ impl Matcher {
         let mut shape = parse::parse(ctx, &format!("1 Example St, {}", area_text));
         // only a region, a country or this code may follow the town's part: a town after it makes
         // that part a street ("62701, Example Trail, Sampleton, IL"; "62701 Example, Sampleton, IL")
-        let places: Vec<&Text> = shape.localities.iter().filter(|t| !shape.countries.contains(&t.key)).collect();
+        // (a county is no town: "62701, Exampleton, Example County, IL")
+        let county = |t: &Text| t.toks.len() >= 2 && t.toks.last().map_or(false, |w| matches!(w.0.as_str(), "county" | "parish" | "borough"));
+        let places: Vec<&Text> = shape.localities.iter().filter(|t| !shape.countries.contains(&t.key) && !county(t)).collect();
         let towns = places.iter().filter(|t| !shape.regions.contains(&t.key)).count();
         if places.len() > 2 || towns > 1 {
             return None;
-        }
-        // where house numbers come first and the postal code follows the town, a code of up to five
-        // digits written before words with no comma between them may be a house number: two words
-        // may be a street with no type and its town ("62701 Example Sampleton, IL" is a house on
-        // Example), unless the part is a region's own name, which doubles as its town. Words of two
-        // letters or less and capitalized codes of three ("Sampleton NSW") are no street.
-        let numeric = written.len() <= 5 && written.chars().all(|ch| ch.is_ascii_digit());
-        let house_first = ctx.cc.is_none() || (parse::number_first(ctx.cc) && !matches!(ctx.cc, Some("FR" | "BE" | "LU" | "MY")));
-        if !own_part && numeric && house_first {
-            let word = |w: &&str| {
-                let letters = w.chars().filter(|ch| ch.is_alphabetic()).count();
-                letters >= 3 && !(letters <= 3 && w.chars().all(|ch| !ch.is_lowercase()))
-            };
-            if town_part.split_whitespace().filter(word).count() > 1 && parse::parse(ctx, town_part).regions.is_empty() {
-                return None;
-            }
         }
         // the code as a part of its own ("62701, Example Grove, IL, USA"): every part after it is
         // its area, a town named like a street included; a first part that holds a number is no town
