@@ -510,3 +510,73 @@ fn a_row_that_adds_a_place_is_asked_about_beside_a_hyphenated_form_of_the_town()
     let e = m.pick_explained("Beispielplatz 8, Munich, Germany", &rows, &opts);
     assert_eq!((e.outcome, e.index), (Outcome::Match, Some(1)));
 }
+
+#[test]
+fn a_named_place_is_read_across_a_dash_and_without_its_short_code() {
+    let m = Matcher::new();
+    let rows = [
+        "Example International Airport (EXA) — 400 Sample Rd",
+        "Terminal 1 — Example International Airport",
+        "Terminal 2 — Example International Airport",
+        "International Terminal — Example International Airport",
+    ];
+    for country in [Some("US"), None] {
+        let explained: Vec<Row> = rows.iter().map(|&t| Row::from(t)).collect();
+        let e = m.pick_explained("Example International Airport", &explained, &PickOptions { country });
+        assert_eq!((e.outcome, e.index, e.same.clone()), (Outcome::Match, Some(0), vec![0]), "{:?}", country);
+        assert!(e.rows[1..].iter().all(|r| r.verdict == Verdict::Different));
+    }
+}
+
+#[test]
+fn rows_of_a_named_place_with_no_town_are_all_offered() {
+    let m = Matcher::new();
+    let rows = [
+        Row::from("Exampleton Example Terminal — 1 Example Plaza"),
+        Row { text: "Example Building — 1 Example Plaza", categorized: true },
+        Row::from("XB Example Building (Gate B)"),
+        Row::from("Example Building — 88 Sample Ctr"),
+        Row::from("The Sample Promenade/Example Building"),
+    ];
+    let e = m.pick_explained("Example Building, Exampleton, CA", &rows, &PickOptions { country: Some("US") });
+    // the caller gave a town and no row states one: ask, offering every row of the name, and let
+    // no row be taken on a read
+    assert_eq!((e.outcome, e.same.clone(), e.reasons.clone(), e.prefer_on_read), (Outcome::Ambiguous, vec![1, 2, 3, 4], vec!["place_unconfirmed"], None));
+    assert_eq!(e.rows[0].verdict, Verdict::Different);
+}
+
+#[test]
+fn exact_name_rows_on_two_streets_after_a_dash_are_two_places() {
+    let m = Matcher::new();
+    let rows = [
+        Row::from("Exampleton Example Terminal — 1 Example Bldg, Exampleton, CA"),
+        Row { text: "Example Building — 1 Example Bldg, Exampleton, CA", categorized: true },
+        Row::from("Exampleton Example Building (Gate B) — Example Station, Exampleton, CA"),
+        Row::from("Example Building — 88 Sample Ctr, Exampleton, CA"),
+        Row::from("The Sample Promenade/Example Building — Exampleton, CA"),
+    ];
+    let e = m.pick_explained("Example Building, Exampleton, CA", &rows, &PickOptions { country: Some("US") });
+    // both exact-name rows state the caller's town and are confirmed; on two streets they are two
+    // places, so the answer asks, with the longer names as choices, and a read takes none
+    assert_eq!((e.outcome, e.same.clone(), e.reasons.clone(), e.prefer_on_read), (Outcome::Ambiguous, vec![1, 2, 3, 4], vec!["several_places", "place_name_variant"], None));
+    assert_eq!((e.rows[1].verdict, e.rows[3].verdict), (Verdict::Same, Verdict::Same));
+}
+
+#[test]
+fn terminals_that_name_the_airport_after_a_dash_do_not_take_its_match() {
+    let m = Matcher::new();
+    let texts = [
+        "Example International Airport (EXA) — 400 Sample Rd, Exampleton, CA",
+        "Terminal 3 (Door 7) — Example International Airport (EXA)",
+        "Sample Air Terminal 4 — Example International Airport (EXA)",
+        "Terminal 2 — Example International Airport (EXA)",
+        "Jane Example Terminal 1 — Example International Airport (EXA)",
+    ];
+    for country in [Some("US"), None] {
+        for categorized in [false, true] {
+            let rows: Vec<Row> = texts.iter().map(|&text| Row { text, categorized }).collect();
+            let e = m.pick_explained("Example International Airport", &rows, &PickOptions { country });
+            assert_eq!((e.outcome, e.index, e.same.clone()), (Outcome::Match, Some(0), vec![0]), "{:?} {}", country, categorized);
+        }
+    }
+}

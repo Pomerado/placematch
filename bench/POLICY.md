@@ -100,7 +100,13 @@ on two streets or in two towns (two branches) are two places: `ambiguous`. A row
 words in order and others added before or between them is `ambiguous`; a row that starts with the
 name and goes on (`Example Park Ferry Terminal`) is another place. A site control is never a place:
 a row that holds the caller's whole text and otherwise only control words (`See more results for
-...`, `Search "..."`); a row that adds a name (`Old Town Example Park`) is not a control.
+...`, `Search "..."`); a row that adds a name (`Old Town Example Park`) is not a control. A dash
+with a space on each side separates a row's name as a comma does only before an address (a house
+number and street, a postcode, or a town the caller gave); otherwise it is part of the name
+(`Example Stadium - Gate A` is another place). A part of a place named before the caller's name
+(`Terminal 2 — Example Airport`) is that part. A transport place's three-letter code in parentheses
+(`Example Airport (EXA)`) is not part of the name; codes that differ name two places. A row whose first part names a venue by a place-type word the caller did
+not write is that venue, not a place in a town the caller typed alone.
 
 A candidate that adds a unit the caller did not give is not a match. In a `pick` case where the
 only candidates that fit add a unit, the answer is `ambiguous`: ask the caller which unit.
