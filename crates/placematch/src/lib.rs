@@ -1385,10 +1385,12 @@ impl Matcher {
         Some((rest, name))
     }
 
-    /// A first part that is the listing's next part, its address, with a place's name after it
-    /// ("12 Example Rd Parking" before "12 Example Rd, …"): the words after the address hold no
-    /// number and no word an address uses (street type, direction, unit, level, entrance or PO box),
-    /// so the part names a place at that address, not another address or a unit of it.
+    /// A first part that is the listing's next part, its address on a named street, with a place's
+    /// name after it ("12 Example Rd Parking" before "12 Example Rd, …"): the words after the address
+    /// hold no number and no word an address uses (street type, direction, unit, level, entrance,
+    /// staircase, house-number word or PO box), so the part names a place at that address, not
+    /// another address or a unit of it. A next part that is only a number ("12 AB, 12, Example St")
+    /// names no street, so its first part may be a unit.
     fn address_then_name(&self, first: &str, address: &str) -> bool {
         use data::Class::*;
         let (first, address) = (data::phrase_key(first), data::phrase_key(address));
@@ -1399,7 +1401,7 @@ impl Matcher {
             w.chars().any(|ch| ch.is_numeric())
                 || self.data.lookup(w).iter().any(|e| matches!(e.class, StreetType | Directional | UnitNum | UnitAlone | LevelNum | LevelAlone | Entrance | Staircase | PoBox | HouseKw))
         };
-        !address.is_empty() && after.split(' ').any(|w| w.chars().count() >= 2) && !after.split(' ').any(address_word)
+        address.chars().any(|ch| ch.is_alphabetic()) && after.split(' ').any(|w| w.chars().count() >= 2) && !after.split(' ').any(address_word)
     }
 
     /// A part that names a unit, floor or building within an address rather than a place: "#7",
