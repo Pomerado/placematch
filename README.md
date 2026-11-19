@@ -223,12 +223,16 @@ that street, with or without commas: a street with a type word after the number 
 Street, Exampleton"; "62701, Example Trail, Sampleton, IL"), or any part followed by another town
 ("62701 Example, Sampleton, IL"). A street with no type word written before its town with no comma
 ("62701 Example Sampleton, IL") reads the same as a town of two words, and is taken as the area.
-A town written right after the postcode with no comma may end in place-like words that are also
-street types ("62701 Example Grove, IL, USA", "62701 Example Garden Grove, IL", "62701 Example Bay
-Point, IL"): it is the area unless it reads as a street, then maybe its town. That is a part with a
-thoroughfare type in it, such as Street, Road, Avenue, Lane, Drive, Court or Way ("62701 Example
-Road, IL"; "62701 Example Road Bay Point, IL, USA"), or with another type word that has a word that
-is no type word after it ("62701 Example Plaza Sampleton, IL, USA").
+A town written right after the postcode with no comma may end in a few place-like words that are
+also street types: Grove, Garden(s), Park, Valley, Bay, Spring(s), Beach, Hill(s), Heights, Village,
+Falls, Island(s) and Harbor ("62701 Example Grove, IL, USA", "62701 Example Garden Grove, IL"). It
+is the area unless it reads as a street, then maybe its town: a part holding any other street type
+("62701 Example Road, IL"; "62701 Example Loop Spring Valley, IL, USA"), or a type word followed by
+a word that is no type word ("62701 Example Grove Sampleton, IL, USA"). A town whose name holds
+another street type ("Pike Road", "Lane Cove", "Bay Point"), or written with its state code and no
+comma ("Exampleton CT"), is then read as a street and answers none; a street named with one of
+those place-like words before a town named only with them ("62701 Example Grove Spring Valley, IL")
+reads as that town.
 
 A place's name with a postcode alone ("Example Center, 94000") is the name with the postcode as
 its area. Rows of the very same name in one town are one place, except that a row the site
