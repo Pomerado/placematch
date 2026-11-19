@@ -2188,6 +2188,13 @@ impl Matcher {
                     district_town = true;
                 }
             }
+            // in the US a ZIP code places a house: the caller's number and street under the caller's
+            // own ZIP code, with nothing left unsettled, is the caller's house whatever locality name
+            // each side writes ("New York" and "Manhattan", "Los Angeles" and "North Hollywood")
+            if !any_yes && !any_unknown && !misspelled && !peer && !unknown && same_code && q.cc.as_deref() == Some("US") && q.postcode.as_deref().map_or(false, |p| p.len() == 5) && q.house.is_some() && q.house == c.house && !q.street.is_empty() && !c.street.is_empty() {
+                any_yes = true;
+                district_town = true;
+            }
             if !any_yes {
                 // the caller's town spelled another way may be the row's or another town: ask
                 if misspelled && !any_unknown {

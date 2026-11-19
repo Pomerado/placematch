@@ -33,7 +33,9 @@ Hard components. A contradiction on any of them means a different place:
 - street type when both sides give one (`Avenue X` and `Quai X` differ; `St` and `Street` agree);
 - unit, flat or suite when both sides give one;
 - town when both sides give one, and every place name must fit: a shared district does not
-  make `Centro, Cidade Alta` the same as `Centro, Vila Baixa`;
+  make `Centro, Cidade Alta` the same as `Centro, Vila Baixa`; in the US, the same house number,
+  street and five-digit ZIP code on both sides settle the place whatever town or neighborhood
+  each side writes (`New York` and `Manhattan`);
 - postcode when both sides give one;
 - state, province or region when both sides give one (`IL` and `Missouri` differ; `Texas` and
   `TX` agree; a city that is a region of its own, such as `台中市`, counts as one);
