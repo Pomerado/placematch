@@ -68,7 +68,8 @@ building name. A row must still confirm where the caller's place is:
   Valley, Bay, Spring, Beach, Hill, Heights, Village, Falls, Island, Harbor) unless it holds any
   other street type (`62701 Example Loop Spring Valley, IL` is a house), a type word with a word
   that is no type word after it (`62701 Example Grove Sampleton, IL` is a house), or a name then
-  three or more of them (`62701 Example Grove Spring Valley, IL` is a house);
+  three or more of them, or four or more alone (`62701 Example Grove Spring Valley, IL` and `62701
+  Spring Grove Spring Valley, IL` are houses);
 - a state comes only from the state part or code, or from a state written after the town with
   no comma (`Exampleton IL`, `Exampleton New York`, in the US, Canada and Australia), never from a
   town named like a state (`Washington, PA` is not `Washington, DC`; `Nevada, MO` is not

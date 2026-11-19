@@ -228,13 +228,17 @@ also street types: Grove, Garden(s), Park, Valley, Bay, Spring(s), Beach, Hill(s
 Falls, Island(s) and Harbor ("62701 Example Grove, IL, USA", "62701 Example Garden Grove, IL"). It
 is the area unless it reads as a street, then maybe its town: a part holding any other street type
 ("62701 Example Road, IL"; "62701 Example Loop Spring Valley, IL, USA"), a type word followed by a
-word that is no type word ("62701 Example Grove Sampleton, IL, USA"), or a name followed by three
-or more of those place-like words ("62701 Example Grove Spring Valley, IL"), since a town's name ends
-in at most two ("Palm Beach Gardens"). A town whose name holds another street type ("Pike Road",
-"Lane Cove", "Bay Point"), or written with a state code that is also a street-type abbreviation and
-no comma ("Exampleton CT"), is then read as a street and answers none. A street named with one of
-those place-like words before a one-word town named with one ("62701 Example Grove Spring, IL")
-reads as that town.
+word that is no type word ("62701 Example Grove Sampleton, IL, USA"), a name followed by three or
+more of those place-like words ("62701 Example Grove Spring Valley, IL"), since a town's name ends in
+at most two after a name ("Palm Beach Gardens"), or four or more of them alone ("62701 Spring Grove
+Spring Valley, IL"), since a town named only with them has at most three ("Bay Harbor Islands"). A
+town whose name holds another street type ("Pike Road", "Lane Cove", "Bay Point"), or written with a
+state code that is also a street-type abbreviation and no comma ("Exampleton CT"), is then read as a
+street and answers none. A street named with one of those place-like words before a one-word town
+named with one ("62701 Example Grove Spring, IL") reads as that town. So does a street whose type is
+not in the type dictionaries (Lake, Forest, River, Mountain, Station, Orchard; Mtn, Vlg), or that has
+no type, before a town ending in one or two of those words ("90802 Example Lake Long Beach, CA"), as
+such a street before any other town already reads as the town ("62701 Example Lake Springfield, IL").
 
 A place's name with a postcode alone ("Example Center, 94000") is the name with the postcode as
 its area. Rows of the very same name in one town are one place, except that a row the site
