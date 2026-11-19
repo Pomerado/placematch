@@ -227,11 +227,13 @@ A town written right after the postcode with no comma may end in a few place-lik
 also street types: Grove, Garden(s), Park, Valley, Bay, Spring(s), Beach, Hill(s), Heights, Village,
 Falls, Island(s) and Harbor ("62701 Example Grove, IL, USA", "62701 Example Garden Grove, IL"). It
 is the area unless it reads as a street, then maybe its town: a part holding any other street type
-("62701 Example Road, IL"; "62701 Example Loop Spring Valley, IL, USA"), or a type word followed by
-a word that is no type word ("62701 Example Grove Sampleton, IL, USA"). A town whose name holds
-another street type ("Pike Road", "Lane Cove", "Bay Point"), or written with its state code and no
-comma ("Exampleton CT"), is then read as a street and answers none; a street named with one of
-those place-like words before a town named only with them ("62701 Example Grove Spring Valley, IL")
+("62701 Example Road, IL"; "62701 Example Loop Spring Valley, IL, USA"), a type word followed by a
+word that is no type word ("62701 Example Grove Sampleton, IL, USA"), or a name followed by three
+or more of those place-like words ("62701 Example Grove Spring Valley, IL"), since a town's name ends
+in at most two ("Palm Beach Gardens"). A town whose name holds another street type ("Pike Road",
+"Lane Cove", "Bay Point"), or written with a state code that is also a street-type abbreviation and
+no comma ("Exampleton CT"), is then read as a street and answers none. A street named with one of
+those place-like words before a one-word town named with one ("62701 Example Grove Spring, IL")
 reads as that town.
 
 A place's name with a postcode alone ("Example Center, 94000") is the name with the postcode as

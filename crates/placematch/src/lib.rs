@@ -296,9 +296,9 @@ const US_ZIP_PREFIXES: &[(u16, u16, &str)] = &[
 /// Street types that end the names of towns more often than of streets ("Example Grove", "Spring
 /// Valley", "Palm Beach Gardens"), each by the first word of its dictionary line. In a postcode's
 /// first part with no comma after the code, every other street type makes that part a street ("92999
-/// Example Loop Spring Valley"), so a type missing here reads as a street, never as a town; the list
-/// is kept short because a street named with one of these before a town named only with them
-/// ("92999 Example Grove Spring Valley") still reads as that town.
+/// Example Loop Spring Valley"), so a type missing here reads as a street, never as a town. A name
+/// then three or more of these is a street then its town ("92999 Example Grove Spring Valley"); a
+/// name then one or two of them reads as a town ("92999 Example Grove Spring").
 const TOWN_TYPES: &[&str] = &[
     "grove", "garden", "gardens", "park", "valley", "bay", "spring", "springs", "beach", "hill", "hills", "heights", "village", "falls", "island", "islands", "harbor",
 ];
@@ -1635,17 +1635,21 @@ impl Matcher {
         let typed_inside = || {
             let towns = town_type_keys();
             // per word: whether it is a street type, and whether it is one that makes the part a
-            // street (a lone letter never does: postal districts end in one, "8000 Aarhus C")
+            // street (a lone ASCII letter never does: postal districts end in one, "8000 Aarhus C")
             let words: Vec<(bool, bool)> = data::phrase_key(town_part)
                 .split(' ')
                 .filter(|w| !w.is_empty())
                 .map(|w| {
                     let mut types = self.data.lookup(w).iter().filter(|e| e.class == data::Class::StreetType).map(|e| &self.data.canon_keys[e.canon as usize]).peekable();
                     let typed = types.peek().is_some();
-                    (typed, typed && w.chars().count() > 1 && types.any(|k| !towns.contains(k)))
+                    (typed, typed && (w.chars().count() > 1 || !w.is_ascii()) && types.any(|k| !towns.contains(k)))
                 })
                 .collect();
-            words.iter().any(|w| w.1) || words.iter().position(|w| w.0).map_or(false, |i| words[i + 1..].iter().any(|w| !w.0))
+            let first_typed = words.iter().position(|w| w.0);
+            // a type word with a plain word after it ("Example Grove Sampleton"), or a name, then
+            // three or more place-like types: a street, then a town named only with them ("Example
+            // Grove Spring Valley"), as a town's name ends in at most two ("Palm Beach Gardens")
+            words.iter().any(|w| w.1) || first_typed.map_or(false, |i| words[i + 1..].iter().any(|w| !w.0) || (i > 0 && words.len() - i >= 3))
         };
         let as_town = !first_numbered && (own_part || !typed_inside());
         let mut area = if as_town {
