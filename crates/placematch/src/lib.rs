@@ -305,7 +305,7 @@ const TOWN_TYPES: &[&str] = &[
 ];
 
 /// `TOWN_TYPES` by the dictionary's canonical keys.
-fn town_type_keys() -> &'static [String] {
+pub(crate) fn town_type_keys() -> &'static [String] {
     static KEYS: std::sync::OnceLock<Vec<String>> = std::sync::OnceLock::new();
     KEYS.get_or_init(|| TOWN_TYPES.iter().map(|t| data::concat_key(t)).collect())
 }
@@ -512,8 +512,10 @@ fn han_eq(a: &str, b: &str) -> bool {
 /// The compass words of a street: before its name ("NE Example St"), or right after its type
 /// ("Example St NE"), with the rest of the street's words. A compass word after the town in an
 /// address written without commas is the town's state or part of the town ("Example St Exampleton
-/// NE", "Example St North Exampleton").
-fn street_directions(t: &Text) -> (Vec<&'static str>, String) {
+/// NE", "Example St North Exampleton"). `type_before_last`: "St" was read as the street's type
+/// between its name and its last word (`Components::street_type_before_direction`), so a compass
+/// word on one side only stays another street, as when "St" stays in the name.
+fn street_directions(t: &Text, type_before_last: bool) -> (Vec<&'static str>, String) {
     let one = |i: usize| -> Vec<&'static str> {
         let w = Text { toks: vec![t.toks[i].clone()], ..Default::default() };
         directions(&w)
@@ -532,7 +534,11 @@ fn street_directions(t: &Text) -> (Vec<&'static str>, String) {
     if last > 0 && last >= from {
         let d = one(last);
         let after_type = !t.toks[last - 1].1.is_empty() && one(last - 1).is_empty();
-        if !d.is_empty() && after_type {
+        if !d.is_empty() && type_before_last {
+            // the type was read apart, so the words before the compass word are the name's
+            v.extend(d);
+            to = last;
+        } else if !d.is_empty() && after_type {
             v.extend(d);
             // the street type the compass word follows, which the other side may keep apart
             to = last - 1;
@@ -1961,7 +1967,10 @@ impl Matcher {
         }
         // a compass word on one street and not the other, or another one, is another street, even
         // where it reads as a state code too ("1 Example St NE" is not "1 Example St" in Nebraska)
-        if !q.street.is_empty() && !c.street.is_empty() && is_latinish(q.street.script) && is_latinish(c.street.script) && street_directions(&q.street).0 != street_directions(&c.street).0 && street_directions(&q.street).1 == street_directions(&c.street).1 {
+        if !q.street.is_empty() && !c.street.is_empty() && is_latinish(q.street.script) && is_latinish(c.street.script) && {
+            let (qd, cd) = (street_directions(&q.street, q.street_type_before_direction), street_directions(&c.street, c.street_type_before_direction));
+            qd.0 != cd.0 && qd.1 == cd.1
+        } {
             return (Verdict::Different, vec!["street_name"]);
         }
         // street name
@@ -3045,6 +3054,12 @@ impl Matcher {
             }
             let fragile = r.iter().any(|x| matches!(*x, "street_name" | "po_box_missing" | "street_missing" | "street_name_not_comparable" | "city_not_comparable" | "candidate_has_no_house_number" | "house_number"));
             if !fragile {
+                continue;
+            }
+            // a row that reads the caller's number as its house number, under another postcode than
+            // the one the caller gave, is another place however its street reads ("225 Example
+            // Street Northeast, ... 30308" beside the caller's "... Northwest, ... 30313")
+            if c.house.as_deref() == Some(hn.as_str()) && matches!((&q.postcode, &c.postcode), (Some(a), Some(b)) if a != b) {
                 continue;
             }
             // a row that opens with what may be a unit ("Bay 12, 12 Example St") is read as that unit

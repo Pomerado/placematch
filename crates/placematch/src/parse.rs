@@ -41,6 +41,9 @@ pub struct Components {
     pub street_type_first: bool,
     /// characters of a compound type split off the name's last word
     pub street_type_word_chars: usize,
+    /// a type that is also a title ("St" for Saint) is written between the name and the compass words
+    /// that end the street ("Example St NE"), which stay the last words of `street`
+    pub street_type_before_direction: bool,
     pub units: Vec<String>,
     /// the folded words of each unit with its keyword, as the text gives them ("apt 3", "# 4b"), so
     /// the unit can be found as written
@@ -683,7 +686,24 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
             // guard: the first number of the first segment holding numbers and words is the house number
             let seg = toks[k].seg;
             let first_num = (0..n).find(|&q| toks[q].seg == seg && toks[q].num && !used[q]);
-            let typed_before = (0..seg).any(|s2| seg_has_type[s2] && !(0..n).any(|q| toks[q].seg == s2 && toks[q].num && !used[q]));
+            // "Example Plaza, 1610 Example Blvd": a part that opens with the number and ends in a street
+            // type of its own (a direction may follow it) is that street, so the number is its house
+            // number and a typed part before it is a place's name; a lone letter ("8000 Aarhus C") and
+            // the types that end town names (`TOWN_TYPES`: "1234 Example Grove") leave it a postcode
+            let own_street = {
+                let rest: Vec<usize> = (0..n).filter(|&q| toks[q].seg == seg && !used[q]).collect();
+                let end = rest.iter().copied().rev().find(|&q| !span_at(q).map_or(false, |s| s.has(Class::Directional)));
+                rest.first() == Some(&k)
+                    && len == 1
+                    && end.map_or(false, |e| {
+                        rest.iter().filter(|&&q| q < e).count() >= 2
+                            && toks[e].s.chars().count() > 1
+                            && span_at(e).map_or(false, |sp| {
+                                sp.start + sp.len - 1 == e && sp.start > k + 1 && sp.canons(Class::StreetType).iter().any(|&t| !crate::town_type_keys().contains(&ctx.data.canon_keys[t as usize]))
+                            })
+                    })
+            };
+            let typed_before = !own_street && (0..seg).any(|s2| seg_has_type[s2] && !(0..n).any(|q| toks[q].seg == s2 && toks[q].num && !used[q]));
             let bare_before = (0..seg).any(|s2| {
                 let ks: Vec<usize> = (0..n).filter(|&q| toks[q].seg == s2 && !used[q]).collect();
                 !ks.is_empty() && ks.iter().all(|&q| toks[q].num)
@@ -1062,11 +1082,18 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
             }
         }
         if type_span.is_none() {
-            // a type in the middle (e.g. "Rua Augusta, loja" or "Main St North")
+            // a type in the middle (e.g. "Rua Augusta, loja" or "Main St North"); a type that is also a
+            // title ("St" for Saint, as in "Port St Lucie") only when directions alone follow it
+            // ("Main St NW", "Main St E")
+            let directions_after = |sp: &Span| {
+                let after: Vec<usize> = idx.iter().copied().filter(|&q| q >= sp.start + sp.len).collect();
+                !after.is_empty() && after.iter().all(|&q| span_at(q).map_or(false, |s| s.has(Class::Directional)))
+            };
             for &q in &idx {
                 if let Some(sp) = span_at(q) {
-                    if sp.has(Class::StreetType) && sp.start == q && idx.len() > sp.len && !sp.has(Class::Title) && !sp.has(Class::Directional) {
+                    if sp.has(Class::StreetType) && sp.start == q && idx.len() > sp.len && (!sp.has(Class::Title) || (q > idx[0] && directions_after(sp))) && !sp.has(Class::Directional) {
                         type_span = Some(sp.clone());
+                        c.street_type_before_direction = sp.has(Class::Title);
                         break;
                     }
                 }
