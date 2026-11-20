@@ -132,7 +132,7 @@ Exampleton`): up to four digits, not opening with 0, with at most one letter aft
 before the number (`Calle Mayor, 4`), or the street opens with no number of its own (`5th Avenue,
 725`), the number is the house number. A street whose name opens with a number (`16 Mile Road,
 4500`, `17 Avenue SW, 1440`) is written the same way, so the row is read both ways and a place that
-fits either reading is a match.
+fits either reading is a match. The caller's own text keeps its one reading.
 
 A short part before the address that may name a unit, whatever its word, is read as the row's
 unit: a number with a letter or "F" (`7F`, `12B`, `7/F`), a symbol and a number (`№7`, `#7`),

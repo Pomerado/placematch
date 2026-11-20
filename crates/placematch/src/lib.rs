@@ -1808,10 +1808,14 @@ impl Matcher {
         if r.0 == Verdict::Same || (q.alt.is_none() && c.alt.is_none()) {
             return r;
         }
-        // a short number alone after a numbered street read as the unit ("410 Example Street, 7"):
-        // a place that reading fits is the caller's too; otherwise the answer stands
-        let qs: Vec<&Components> = std::iter::once(q).chain(q.alt.as_deref()).collect();
+        // a row with a short number alone after a numbered street, read as its unit ("410 Example
+        // Street, 7"): the caller's place when that reading fits, and a unit the caller did not give
+        // where the house number was misread; two rows are one place when either reading of each
+        // fits; otherwise the answer stands. The caller's own text keeps its one reading.
+        let peer = matches!(mode, Mode::Peer);
+        let qs: Vec<&Components> = std::iter::once(q).chain(q.alt.as_deref().filter(|_| peer)).collect();
         let cs: Vec<&Components> = std::iter::once(c).chain(c.alt.as_deref()).collect();
+        let mut misread = None;
         for (i, qq) in qs.iter().enumerate() {
             for (j, cc) in cs.iter().enumerate() {
                 if i + j > 0 {
@@ -1819,10 +1823,13 @@ impl Matcher {
                     if other.0 == Verdict::Same {
                         return other;
                     }
+                    if !peer && i == 0 && r.0 == Verdict::Different && r.1 == ["house_number"] && other.0 == Verdict::Different && other.1 == ["candidate_adds_unit"] {
+                        misread = Some(other);
+                    }
                 }
             }
         }
-        r
+        misread.unwrap_or(r)
     }
 
     fn compare_parsed_one(&self, q: &Components, c: &Components, mode: Mode) -> (Verdict, Vec<&'static str>) {
@@ -3742,9 +3749,7 @@ impl Matcher {
         // a business name, then the most complete one
         // (the most complete: the most of the caller's own place names, then the fewest the caller
         // did not name, so a row that adds a town or district is not taken over one that adds none)
-        // (the caller's unit as either reading of a short number after the street gives it)
-        let q_units = if q.units.is_empty() { q.alt.as_ref().map_or(&q.units, |a| &a.units) } else { &q.units };
-        let best = clusters[0].iter().copied().min_by_key(|&i| (cs[i].units != *q_units && cs[i].alt.as_ref().map_or(true, |a| a.units != *q_units), ranged[i], rewritten[i], cs[i].business.len(), usize::MAX - kept(i), added(i))).unwrap();
+        let best = clusters[0].iter().copied().min_by_key(|&i| (cs[i].units != q.units && cs[i].alt.as_ref().map_or(true, |a| a.units != q.units), ranged[i], rewritten[i], cs[i].business.len(), usize::MAX - kept(i), added(i))).unwrap();
         // a row read across scripts: its street or town is written in another script than the caller's
         let across = |i: usize| {
             let (c, qq) = (&cs[i], &q);
