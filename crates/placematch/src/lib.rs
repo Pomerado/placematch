@@ -1804,6 +1804,35 @@ impl Matcher {
     }
 
     fn compare_parsed(&self, q: &Components, c: &Components, mode: Mode) -> (Verdict, Vec<&'static str>) {
+        let r = self.compare_parsed_one(q, c, mode);
+        if r.0 == Verdict::Same || (q.alt.is_none() && c.alt.is_none()) {
+            return r;
+        }
+        // a row with a short number alone after a numbered street, read as its unit ("410 Example
+        // Street, 7"): the caller's place when that reading fits, and a unit the caller did not give
+        // where the house number was misread; two rows are one place when either reading of each
+        // fits; otherwise the answer stands. The caller's own text keeps its one reading.
+        let peer = matches!(mode, Mode::Peer);
+        let qs: Vec<&Components> = std::iter::once(q).chain(q.alt.as_deref().filter(|_| peer)).collect();
+        let cs: Vec<&Components> = std::iter::once(c).chain(c.alt.as_deref()).collect();
+        let mut misread = None;
+        for (i, qq) in qs.iter().enumerate() {
+            for (j, cc) in cs.iter().enumerate() {
+                if i + j > 0 {
+                    let other = self.compare_parsed_one(qq, cc, mode);
+                    if other.0 == Verdict::Same {
+                        return other;
+                    }
+                    if !peer && i == 0 && r.0 == Verdict::Different && r.1 == ["house_number"] && other.0 == Verdict::Different && other.1 == ["candidate_adds_unit"] {
+                        misread = Some(other);
+                    }
+                }
+            }
+        }
+        misread.unwrap_or(r)
+    }
+
+    fn compare_parsed_one(&self, q: &Components, c: &Components, mode: Mode) -> (Verdict, Vec<&'static str>) {
         let r = self.compare_parts(q, c, mode);
         if r.0 == Verdict::Same && self.city_reading_unconfirmed(q, c) {
             return (Verdict::Unknown, vec!["city_reading"]);
@@ -3720,7 +3749,7 @@ impl Matcher {
         // a business name, then the most complete one
         // (the most complete: the most of the caller's own place names, then the fewest the caller
         // did not name, so a row that adds a town or district is not taken over one that adds none)
-        let best = clusters[0].iter().copied().min_by_key(|&i| (cs[i].units != q.units, ranged[i], rewritten[i], cs[i].business.len(), usize::MAX - kept(i), added(i))).unwrap();
+        let best = clusters[0].iter().copied().min_by_key(|&i| (cs[i].units != q.units && cs[i].alt.as_ref().map_or(true, |a| a.units != q.units), ranged[i], rewritten[i], cs[i].business.len(), usize::MAX - kept(i), added(i))).unwrap();
         // a row read across scripts: its street or town is written in another script than the caller's
         let across = |i: usize| {
             let (c, qq) = (&cs[i], &q);
@@ -3728,7 +3757,7 @@ impl Matcher {
                 || matches!((&qq.city, &c.city), (Some(a), Some(b)) if script_group(a.script) != script_group(b.script))
         };
         // a row that leaves out a unit the caller gave
-        let unit_left_out = |i: usize| q.units.iter().any(|u| !cs[i].units.iter().any(|v| v[1..] == u[1..]));
+        let unit_left_out = |i: usize| q.units.iter().any(|u| !cs[i].units.iter().chain(cs[i].alt.iter().flat_map(|a| a.units.iter())).any(|v| v[1..] == u[1..]));
         for &i in &place {
             if unit_left_out(i) {
                 reports[i].notes.push("unit_not_listed");

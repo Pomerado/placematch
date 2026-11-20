@@ -104,6 +104,12 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
   Postcode, region, country, district and business names may be missing on either side.
 - A candidate that adds a unit the caller did not give is not picked. When only such
   candidates fit, the answer is `ambiguous`, so the caller can be asked which unit.
+- Where the number comes first, or no country is given, a short number alone in its own part
+  right after a typed street that opens with its house number ("123 Example Street, 4,
+  Exampleton") is the unit: "Apt 4", "#4", "Suite 4" and "4" are one unit, and "5" is another.
+  Where the street comes before the number ("Calle Mayor, 4"), the number is still the house
+  number. A street whose name opens with a number ("16 Mile Road, 4500") may be written that way
+  too, so a place that fits the number read as the house number still matches.
 - A short part before the address that may be a unit, whatever its word ("№7", "Studio 12",
   "U7", "7F", "7-B", "7"), is read as the row's unit: another unit is not the caller's, and
   otherwise the row is at most asked about, never taken, even beside a row that fits. Any other
