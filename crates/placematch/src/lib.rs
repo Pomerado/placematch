@@ -1804,6 +1804,28 @@ impl Matcher {
     }
 
     fn compare_parsed(&self, q: &Components, c: &Components, mode: Mode) -> (Verdict, Vec<&'static str>) {
+        let r = self.compare_parsed_one(q, c, mode);
+        if r.0 == Verdict::Same || (q.alt.is_none() && c.alt.is_none()) {
+            return r;
+        }
+        // a short number after a numbered street read the other way, as the house number ("16 Mile
+        // Road, 4500"): the place either reading fits is the caller's
+        let qs: Vec<&Components> = std::iter::once(q).chain(q.alt.as_deref()).collect();
+        let cs: Vec<&Components> = std::iter::once(c).chain(c.alt.as_deref()).collect();
+        for (i, qq) in qs.iter().enumerate() {
+            for (j, cc) in cs.iter().enumerate() {
+                if i + j > 0 {
+                    let other = self.compare_parsed_one(qq, cc, mode);
+                    if other.0 == Verdict::Same {
+                        return other;
+                    }
+                }
+            }
+        }
+        r
+    }
+
+    fn compare_parsed_one(&self, q: &Components, c: &Components, mode: Mode) -> (Verdict, Vec<&'static str>) {
         let r = self.compare_parts(q, c, mode);
         if r.0 == Verdict::Same && self.city_reading_unconfirmed(q, c) {
             return (Verdict::Unknown, vec!["city_reading"]);
