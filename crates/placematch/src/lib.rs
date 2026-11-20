@@ -3059,8 +3059,8 @@ impl Matcher {
                 continue;
             }
             // a row that reads the caller's number as its house number, under another postcode than
-            // the one the caller gave, is another place however its street reads ("225 Example
-            // Street Northeast, ... 30308" beside the caller's "... Northwest, ... 30313")
+            // the one the caller gave, is another place however its street reads ("410 Example
+            // Street Northeast, ... 30998" beside the caller's "... Northwest, ... 30999")
             if c.house.as_deref() == Some(hn.as_str()) && matches!((&q.postcode, &c.postcode), (Some(a), Some(b)) if a != b) {
                 continue;
             }
