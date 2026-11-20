@@ -75,6 +75,10 @@ pub struct Rules {
 thread_local! {
     /// `Rules::district_may_differ` for the pick under way on this thread.
     static DISTRICT_MAY_DIFFER: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+    /// Whether "St" before the compass words that end a street reads as its type
+    /// (`Matcher::st_before_directions`) in the comparison under way on this thread, and whether it
+    /// would have made two streets one while it was off (`Matcher::st_second_read`).
+    static ST_TYPE: std::cell::Cell<(bool, bool)> = const { std::cell::Cell::new((false, false)) };
 }
 
 /// Options for `Matcher::pick_explained`.
@@ -1355,6 +1359,10 @@ impl Matcher {
 
     /// Is the candidate the same place as the query? Returns the verdict and the reasons.
     pub fn compare(&self, query: &str, candidate: &str, country: Option<&str>) -> (Verdict, Vec<&'static str>) {
+        self.st_second_read(|| self.compare_plain(query, candidate, country), |v| v.0 == Verdict::Same, |v| v.0 == Verdict::Different)
+    }
+
+    fn compare_plain(&self, query: &str, candidate: &str, country: Option<&str>) -> (Verdict, Vec<&'static str>) {
         let ((query, ql), (candidate, cl)) = (self.bound(query), self.bound(candidate));
         match self.compare_whole(&query, &candidate, country) {
             // a text that lost a number or unit word may be another unit or building
@@ -2002,6 +2010,10 @@ impl Matcher {
                 Tri::Yes => {}
                 Tri::No if typo && self.compound_typo(q, c) => {
                     // "Keelopolku" vs "Kielopolku": one typo in the whole word, the type inside it
+                }
+                Tri::No if self.st_type_here(q, c) => {
+                    // "Main St NW" vs "Main Street Northwest": "St" was kept in the name, as it may be
+                    // Saint, but before the compass words that end the street it is the type
                 }
                 Tri::No => {
                     // an address written without commas keeps the town inside the street part:
@@ -3142,6 +3154,74 @@ impl Matcher {
         x.cc.as_deref().and_then(|cc| self.data.countries.get(cc)).map_or(false, |co| co.regions.contains_key(key))
     }
 
+    /// Run `read` as before, with "St" kept in a street's name; when that takes no place (`taken`) and
+    /// reading "St" as the type before the compass words that end a street would have made two
+    /// streets one, run it again so, and keep that answer unless it finds none (`none`). So an answer
+    /// that took a place before stays as it was, row and all.
+    fn st_second_read<T>(&self, read: impl Fn() -> T, taken: impl Fn(&T) -> bool, none: impl Fn(&T) -> bool) -> T {
+        /// Turns the reading off when the read ends, a panic caught by its caller included.
+        struct Reset((bool, bool));
+        impl Drop for Reset {
+            fn drop(&mut self) {
+                ST_TYPE.with(|cell| cell.set(self.0));
+            }
+        }
+        let _reset = Reset(ST_TYPE.with(|cell| cell.replace((false, false))));
+        let first = read();
+        if taken(&first) || !ST_TYPE.with(|cell| cell.get().1) {
+            return first;
+        }
+        ST_TYPE.with(|cell| cell.set((true, false)));
+        let second = read();
+        if none(&second) { first } else { second }
+    }
+
+    /// "St" before the compass words that end one street is the other's type (`st_before_directions`),
+    /// when the read under way takes it so (`st_second_read`); else note that it would.
+    fn st_type_here(&self, q: &Components, c: &Components) -> bool {
+        let (on, _) = ST_TYPE.with(|cell| cell.get());
+        if !(self.st_before_directions(q, c) || self.st_before_directions(c, q)) {
+            return false;
+        }
+        if !on {
+            ST_TYPE.with(|cell| cell.set((false, true)));
+        }
+        on
+    }
+
+    /// `x`'s street keeps "St" in its name, as it may be Saint, right before the compass words alone
+    /// that end it ("Main St NW", "E St NE"), and `y` reads the same street with its type apart and
+    /// written before its compass words ("Main Street Northwest"): the same street when "St" may
+    /// stand for `y`'s type and `x`'s other words are `y`'s. A Saint name keeps "St" before a word
+    /// that is no compass word ("St Paul Ave", "Port St Lucie"), and a "St" `y` leads with stays the
+    /// Saint of its name ("St Paul NW"), so neither reads this way.
+    fn st_before_directions(&self, x: &Components, y: &Components) -> bool {
+        let t = &x.street.toks;
+        // a "St" `y` leads with is no type written before compass words ("12 St Paul NW" is Saint)
+        if !x.street_type.is_empty() || y.street_type.is_empty() || !y.street_type_first || y.street_type_compound || y.street_type_word == "st" || t.len() < 3 {
+            return false;
+        }
+        let compass = |i: usize| !directions(&Text { toks: vec![t[i].clone()], ..Default::default() }).is_empty();
+        // the same compass words at the end of both, each written in full or short alike
+        let tail = |toks: &[(String, Vec<u32>)], k: usize| directions(&Text { toks: toks[toks.len().saturating_sub(k)..].to_vec(), ..Default::default() });
+        (1..t.len() - 1).any(|i| {
+            t[i].0 == "st"
+                && intersects(&t[i].1, &y.street_type)
+                && (i + 1..t.len()).all(compass)
+                && tail(t, t.len() - i - 1) == tail(&y.street.toks, t.len() - i - 1)
+                && {
+                    let mut rest = x.street.clone();
+                    rest.toks.remove(i);
+                    if i < rest.abbr.len() {
+                        rest.abbr.remove(i);
+                    }
+                    rest.key = rest.toks.iter().map(|w| w.0.as_str()).collect();
+                    rest.skel = fold::skeleton(&rest.key);
+                    text_eq(self, &rest, &y.street, false) == Tri::Yes
+                }
+        })
+    }
+
     /// One caller typo in a compound street word: "keelo" + "polku" vs "kielo" + "polku".
     fn compound_typo(&self, q: &Components, c: &Components) -> bool {
         let full = |x: &Components| -> String { if x.street_type_compound && !x.street_type_first { format!("{}{}", x.street.key, x.street_type_word) } else { x.street.key.clone() } };
@@ -3488,7 +3568,7 @@ impl Matcher {
         let given = self.country_code(options.country);
         let inferred = if given.is_none() { self.infer_country(query, &texts) } else { None };
         let country = given.or(inferred.as_deref());
-        let (p, e) = self.decide_home(query, rows, country, inferred.is_some(), true);
+        let (p, e) = self.st_second_read(|| self.decide_home(query, rows, country, inferred.is_some(), true), |r| r.1.outcome == Outcome::Match, |r| r.1.outcome == Outcome::None);
         let mut e = Self::unless_cut(p, e, &lost, query_lost).1;
         e.unit = self.unit_as_written(query, country);
         e.inferred_country = inferred;
@@ -3506,7 +3586,7 @@ impl Matcher {
         let texts: Vec<&str> = rows.iter().map(|r| r.text).collect();
         let country = self.country_code(country);
         let inferred = if country.is_none() { self.infer_country(query, &texts) } else { None };
-        let (p, e) = self.decide_home(query, &rows, country.or(inferred.as_deref()), inferred.is_some(), false);
+        let (p, e) = self.st_second_read(|| self.decide_home(query, &rows, country.or(inferred.as_deref()), inferred.is_some(), false), |r| matches!(r.0, Pick::Match(_)), |r| matches!(r.0, Pick::None));
         Self::unless_cut(p, e, &lost, query_lost).0
     }
 

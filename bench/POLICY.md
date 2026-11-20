@@ -97,7 +97,10 @@ building name. A row must still confirm where the caller's place is:
 A different compass word is a different street (`1 N Main St` and `1 S Main St`), never a typo, and
 so is a compass word on one side only of the same street words (`1 Example St NE` and `1 Example
 St`), even where the word is also a state code (`NE`). A letter the other side spells out is no
-compass word (`Av S. Ejemplo` and `Avenida San Ejemplo`).
+compass word (`Av S. Ejemplo` and `Avenida San Ejemplo`). `St` right before the compass words that
+end a street, the same words on both sides, is the other side's `Street` (`1 Example St NW` and `1
+Example Street Northwest`). It is read so only when the pick or comparison as read before takes no
+place, so an answer that took a place stays as it was, row and all.
 
 Two cities whose names share a reading in another script (`福州` and `抚州`, both `Fuzhou`) are
 not told apart by the reading: a row in Latin script for a Han city whose reading several cities
