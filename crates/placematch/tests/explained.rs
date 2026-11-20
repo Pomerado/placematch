@@ -714,3 +714,48 @@ fn st_before_compass_words_read_as_street_asks_where_the_postcode_differs() {
     let e = explain(&m, "12 Example St NW, Exampleton, GA 30999", &["12 Example Street Northwest, Exampleton, GA 30999"]);
     assert_eq!((e.outcome, e.index), (Outcome::Match, Some(0)));
 }
+
+#[test]
+fn a_business_named_with_a_number_beside_the_callers_full_address_is_the_place() {
+    let m = Matcher::new();
+    let q = "1450 Example St, Exampleton, CA 95999";
+    let plain = "1450 Example St, Exampleton, CA 95999";
+    let us = PickOptions { country: Some("US") };
+    // a business whose name opens with a number is the caller's place beside the caller's full
+    // address, not a unit to ask about: the site categorized it, or its name has a word
+    let rows = [Row::from(plain), Row { text: "7-Eleven, 1450 Example St, Exampleton, CA 95999", categorized: true }];
+    let e = m.pick_explained(q, &rows, &us);
+    assert_eq!((e.outcome, e.index, e.same.clone()), (Outcome::Match, Some(0), vec![0, 1]));
+    assert!(e.reasons.is_empty() && e.notes.is_empty());
+    assert_eq!(e.rows[1].verdict, Verdict::Same);
+    let e = explain(&m, q, &[plain, "3rd Street Deli, 1450 Example St, Exampleton, CA 95999"]);
+    assert_eq!((e.outcome, e.index, e.same.clone()), (Outcome::Match, Some(0), vec![0, 1]));
+    let e = explain(&m, q, &[plain, "Example Cafe, 1450 Example St, Exampleton, CA 95999", "99 Ranch Market, 1450 Example St, Exampleton, CA 95999"]);
+    assert_eq!((e.outcome, e.index, e.same.clone()), (Outcome::Match, Some(0), vec![0, 1, 2]));
+    // a name with no word counts only when the site categorized it
+    let numbered = "711, 1450 Example St, Exampleton, CA 95999";
+    let e = m.pick_explained(q, &[Row::from(plain), Row { text: numbered, categorized: true }], &us);
+    assert_eq!((e.outcome, e.index, e.same.clone()), (Outcome::Match, Some(0), vec![0, 1]));
+    let e = explain(&m, q, &[plain, numbered]);
+    assert_eq!((e.outcome, e.same.clone(), e.reasons.clone()), (Outcome::Ambiguous, vec![0, 1], vec!["several_places", "unit_not_given"]));
+}
+
+#[test]
+fn a_part_that_may_be_a_unit_beside_the_callers_full_address_still_asks() {
+    let m = Matcher::new();
+    let q = "1450 Example St, Exampleton, CA 95999";
+    let plain = "1450 Example St, Exampleton, CA 95999";
+    let asks = |e: Explained| (e.outcome, e.same, e.reasons);
+    let ask = (Outcome::Ambiguous, vec![0, 1], vec!["several_places", "unit_not_given"]);
+    for lead in ["7", "Bay 12", "7 East Wing"] {
+        let e = explain(&m, q, &[plain, &format!("{}, 1450 Example St, Exampleton, CA 95999", lead)]);
+        assert_eq!(asks(e), ask, "{}", lead);
+    }
+    // with no town or postcode from the caller, or a unit the caller gave, a business still asks
+    let business = "7-Eleven, 1450 Example St, Exampleton, CA 95999";
+    assert_eq!(asks(explain(&m, "1450 Example St", &[plain, business])), ask);
+    assert_eq!(explain(&m, "1450 Example St, Apt 7, Exampleton, CA 95999", &[plain, business]).outcome, Outcome::Ambiguous);
+    // a unit written with its word is the row's unit, as before
+    let e = explain(&m, q, &[plain, "Unit 7, 1450 Example St, Exampleton, CA 95999"]);
+    assert_eq!((e.outcome, e.index, e.same.clone()), (Outcome::Match, Some(0), vec![0]));
+}

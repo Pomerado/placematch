@@ -119,7 +119,13 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
   Hour Sample", and no street address of its own) that cannot be another unit: for a caller
   with a unit, its numbers are that unit's; for a caller with none, it opens with its number and
   names no side ("7 East Wing" is asked about); a row
-  with the caller's own unit is still taken beside it. A distance the row opens with ("0.2 mi")
+  with the caller's own unit is still taken beside it. For a caller who gave a town or postcode
+  and no unit, a business whose name opens with a number ("7-Eleven", "3rd Street Deli", "99 Ranch
+  Market") is no unit beside a row with the caller's house number, street and town or postcode:
+  the site categorized it, or its leading part has a word of three letters or more that is no
+  unit, level, entrance, staircase, PO box, building or compass word and is no part that may be a
+  unit whatever its word ("Bay 12" and "7 East Wing" are still asked about). The match the other
+  rows give is then the answer, with the businesses among the rows of the place. A distance the row opens with ("0.2 mi")
   is left out before the row is read; a whole number right before the address ("5M, 350 Example
   Ave") is an apartment, not a distance.
 - A business listing at the address is the same place as the plain address, and so is a listing

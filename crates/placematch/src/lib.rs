@@ -1576,6 +1576,20 @@ impl Matcher {
         }
     }
 
+    /// A leading part that names a business rather than a unit: it has a word of three letters or
+    /// more that is no unit, level, entrance, staircase, PO box or building word ("7-Eleven", "3rd
+    /// Street Deli", "99 Ranch Market"). A part that may be a unit whatever its word ("Bay 12",
+    /// "Studio 12") or that names a side ("7 East Wing") is none.
+    fn business_name(&self, part: &str) -> bool {
+        use data::Class::*;
+        let key = fold::fold(part);
+        let words: Vec<&str> = key.split(|ch: char| !ch.is_alphanumeric()).filter(|w| !w.is_empty()).collect();
+        let classed = |w: &str, f: fn(data::Class) -> bool| self.data.lookup(w).iter().any(|e| f(e.class));
+        Self::maybe_unit(part).is_none()
+            && !words.iter().any(|w| classed(w, |c| c == Directional))
+            && words.iter().any(|w| w.chars().count() >= 3 && w.chars().all(|ch| ch.is_alphabetic()) && !classed(w, |c| matches!(c, UnitNum | UnitAlone | LevelNum | LevelAlone | Entrance | Staircase | PoBox | Building)))
+    }
+
     /// A dropped leading part that is a place's name holding the caller's house number ("12 Hour
     /// Sample", "Sample79 Mall"), not a street address of its own ("12 Example Rd").
     fn numbered_name(&self, name: &str, house: &str) -> bool {
@@ -3609,15 +3623,16 @@ impl Matcher {
             let name = self.name_words(&self.without_short_codes(named.split(',').next().unwrap_or("")));
             (area.postcode.is_some() && q.po_box.is_none() && q.units.is_empty() && !name.is_empty()).then(|| self.named_decide(&ctx, &named, &name, rows))
         });
-        let street = self.decide_street(query, &ctx, &q, rows, ranges);
+        let street = self.decide_street(query, &ctx, &q, rows, ranges, true);
         match named_postcode {
             Some(named) if !matches!(street.0, Pick::Match(_)) && !matches!(named.0, Pick::None) => named,
             _ => street,
         }
     }
 
-    /// `decide_read` for a street address.
-    fn decide_street(&self, query: &str, ctx: &Ctx, q: &Components, rows: &[Row], ranges: bool) -> (Pick, Explained) {
+    /// `decide_read` for a street address. `ask_leading`: ask about rows that open with what may be
+    /// a unit (false: decide as if they were not there to ask about, see below).
+    fn decide_street(&self, query: &str, ctx: &Ctx, q: &Components, rows: &[Row], ranges: bool, ask_leading: bool) -> (Pick, Explained) {
         let (ctx, q) = (ctx, q.clone());
         let candidates: Vec<&str> = rows.iter().map(|r| r.text).collect();
         // each listing as compared, without a distance it opens with
@@ -3719,7 +3734,32 @@ impl Matcher {
         // (a row with the caller's own unit is still taken: "Unit 5, 12 Example St" for Unit 5)
         let lead: Vec<usize> = (0..cs.len()).filter(|&i| verdicts[i].1 == ["leading_unit"]).collect();
         let unit_rows = !q.units.is_empty() && same.iter().all(|&i| !cs[i].units.is_empty());
-        if !lead.is_empty() && !unit_rows {
+        if !lead.is_empty() && !unit_rows && ask_leading {
+            // businesses whose names open with a number ("7-Eleven", "99 Ranch Market"), for a caller
+            // who gave no unit and gave a town or postcode, are the caller's place too: the rows are
+            // decided as if the businesses were not there to ask about, and that answer stands when
+            // it takes a row with the caller's house number, street and town or postcode (any other
+            // reason to ask still asks as before)
+            let business = |i: usize| rows[i].categorized || calts[i].as_ref().and_then(|c| c.1.as_deref()).map_or(false, |n| self.business_name(n));
+            if q.units.is_empty() && (q.city.is_some() || q.postcode.is_some()) && lead.iter().all(|&i| business(i)) {
+                let (p, mut e) = self.decide_street(query, ctx, &q, rows, ranges, false);
+                let full = |i: usize| {
+                    let c = &cs[i];
+                    let town = matches!((&q.city, &c.city), (Some(a), Some(b)) if text_eq(self, a, b, false) == Tri::Yes);
+                    let postcode = q.postcode.is_some() && q.postcode == c.postcode;
+                    q.house.is_some() && listed_house[i] == q.house && !c.street.is_empty() && (town || postcode)
+                };
+                if let Pick::Match(best) = p {
+                    if full(best) {
+                        for &i in &lead {
+                            e.rows[i] = RowReport { verdict: Verdict::Same, reasons: vec![], notes: vec![] };
+                        }
+                        e.same.extend(&lead);
+                        e.same.sort();
+                        return (Pick::Match(best), e);
+                    }
+                }
+            }
             let mut ids: Vec<usize> = same.iter().chain(&lead).copied().collect();
             ids.sort();
             for &i in &lead {
