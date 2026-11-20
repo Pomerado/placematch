@@ -1359,7 +1359,7 @@ impl Matcher {
 
     /// Is the candidate the same place as the query? Returns the verdict and the reasons.
     pub fn compare(&self, query: &str, candidate: &str, country: Option<&str>) -> (Verdict, Vec<&'static str>) {
-        self.st_second_read(|| self.compare_plain(query, candidate, country), |v| v.0 == Verdict::Same, |_| false)
+        self.st_second_read(|| self.compare_plain(query, candidate, country), |v| v.0 == Verdict::Same, |v| v.0 == Verdict::Different)
     }
 
     fn compare_plain(&self, query: &str, candidate: &str, country: Option<&str>) -> (Verdict, Vec<&'static str>) {
