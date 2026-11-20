@@ -755,6 +755,9 @@ fn a_part_that_may_be_a_unit_beside_the_callers_full_address_still_asks() {
     let business = "7-Eleven, 1450 Example St, Exampleton, CA 95999";
     assert_eq!(asks(explain(&m, "1450 Example St", &[plain, business])), ask);
     assert_eq!(explain(&m, "1450 Example St, Apt 7, Exampleton, CA 95999", &[plain, business]).outcome, Outcome::Ambiguous);
+    // a business under another postcode than the plain row may be another place: still asked about
+    let e = explain(&m, "1450 Example St, Exampleton, CA", &["1450 Example St, Exampleton, CA 95998", "7-Eleven, 1450 Example St, Exampleton, CA 95999"]);
+    assert_eq!(asks(e), ask);
     // a unit written with its word is the row's unit, as before
     let e = explain(&m, q, &[plain, "Unit 7, 1450 Example St, Exampleton, CA 95999"]);
     assert_eq!((e.outcome, e.index, e.same.clone()), (Outcome::Match, Some(0), vec![0]));

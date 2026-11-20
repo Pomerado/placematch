@@ -173,10 +173,11 @@ street, and the caller's town or postcode), for a caller who gave a town or post
 when every such row is a business: the site categorized it, or its leading part has a word of
 three letters or more that is no unit, level, entrance, staircase, PO box or building word, names
 no side, and is no part that may be a unit whatever its word (`Bay 12`, `7 East Wing` and a bare
-`7` are still asked about). The rows are then decided as if those businesses were not there to ask
-about, and a match on a row with the caller's full street address is taken, with the businesses
-among the rows of the place. Any other reason to ask (two places, a row that may be the same
-address elsewhere, a state left out) still asks.
+`7` are still asked about). Each business is then read as a row of the caller's place without its
+name, and the rows are decided as usual: a match on a row with the caller's full street address is
+taken when every business is a row of that place. Any other reason to ask (a business under another
+postcode than that row, two places, a row that may be the same address elsewhere, a state left out)
+still asks as before.
 
 Business listings count: `Cafe Luna, 10 Main St, Springfield` is the same place as
 `10 Main St, Springfield`. So is a listing named after its own street address (`10 Main St Parking,

@@ -3631,7 +3631,7 @@ impl Matcher {
     }
 
     /// `decide_read` for a street address. `ask_leading`: ask about rows that open with what may be
-    /// a unit (false: decide as if they were not there to ask about, see below).
+    /// a unit (false: read them as rows of the caller's place without that part, see below).
     fn decide_street(&self, query: &str, ctx: &Ctx, q: &Components, rows: &[Row], ranges: bool, ask_leading: bool) -> (Pick, Explained) {
         let (ctx, q) = (ctx, q.clone());
         let candidates: Vec<&str> = rows.iter().map(|r| r.text).collect();
@@ -3704,6 +3704,22 @@ impl Matcher {
                 }
             }
         }
+        // (deciding without the leading-unit ask: a row that opens with what may be a unit is a row
+        // of the caller's place read without that part, compared with the other rows as any business
+        // at the address is)
+        if !ask_leading {
+            for i in 0..cs.len() {
+                if let (["leading_unit"], Some((c2, _))) = (verdicts[i].1.as_slice(), &calts[i]) {
+                    let r = self.compare_parsed(&q, c2, Mode::Query);
+                    if r.0 == Verdict::Same {
+                        reports[i] = RowReport { verdict: Verdict::Same, reasons: r.1.clone(), notes: vec![] };
+                        verdicts[i] = r;
+                        cs[i] = c2.clone();
+                        rewritten[i] = true;
+                    }
+                }
+            }
+        }
         let same: Vec<usize> = (0..cs.len()).filter(|&i| verdicts[i].0 == Verdict::Same).collect();
         if same.is_empty() {
             // the caller gave no unit and the site lists the place only with units: ask which one
@@ -3737,12 +3753,13 @@ impl Matcher {
         if !lead.is_empty() && !unit_rows && ask_leading {
             // businesses whose names open with a number ("7-Eleven", "99 Ranch Market"), for a caller
             // who gave no unit and gave a town or postcode, are the caller's place too: the rows are
-            // decided as if the businesses were not there to ask about, and that answer stands when
-            // it takes a row with the caller's house number, street and town or postcode (any other
-            // reason to ask still asks as before)
+            // decided again with each business read as a row of the place without its name, and that
+            // answer stands when it takes a row with the caller's house number, street and town or
+            // postcode and every business is a row of that place (any other reason to ask, such as a
+            // business under another postcode than the row taken, still asks as before)
             let business = |i: usize| rows[i].categorized || calts[i].as_ref().and_then(|c| c.1.as_deref()).map_or(false, |n| self.business_name(n));
             if q.units.is_empty() && (q.city.is_some() || q.postcode.is_some()) && lead.iter().all(|&i| business(i)) {
-                let (p, mut e) = self.decide_street(query, ctx, &q, rows, ranges, false);
+                let (p, e) = self.decide_street(query, ctx, &q, rows, ranges, false);
                 let full = |i: usize| {
                     let c = &cs[i];
                     let town = matches!((&q.city, &c.city), (Some(a), Some(b)) if text_eq(self, a, b, false) == Tri::Yes);
@@ -3750,12 +3767,7 @@ impl Matcher {
                     q.house.is_some() && listed_house[i] == q.house && !c.street.is_empty() && (town || postcode)
                 };
                 if let Pick::Match(best) = p {
-                    if full(best) {
-                        for &i in &lead {
-                            e.rows[i] = RowReport { verdict: Verdict::Same, reasons: vec![], notes: vec![] };
-                        }
-                        e.same.extend(&lead);
-                        e.same.sort();
+                    if full(best) && lead.iter().all(|i| e.same.contains(i)) {
                         return (Pick::Match(best), e);
                     }
                 }

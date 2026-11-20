@@ -124,8 +124,9 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
   Market") is no unit beside a row with the caller's house number, street and town or postcode:
   the site categorized it, or its leading part has a word of three letters or more that is no
   unit, level, entrance, staircase, PO box, building or compass word and is no part that may be a
-  unit whatever its word ("Bay 12" and "7 East Wing" are still asked about). The match the other
-  rows give is then the answer, with the businesses among the rows of the place. A distance the row opens with ("0.2 mi")
+  unit whatever its word ("Bay 12" and "7 East Wing" are still asked about). Each business is
+  then a row of the place without its name, and the answer is the match the rows give when every
+  business is a row of that place (one under another postcode still asks). A distance the row opens with ("0.2 mi")
   is left out before the row is read; a whole number right before the address ("5M, 350 Example
   Ave") is an apartment, not a distance.
 - A business listing at the address is the same place as the plain address, and so is a listing
