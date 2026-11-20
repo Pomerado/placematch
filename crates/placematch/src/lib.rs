@@ -3164,10 +3164,12 @@ impl Matcher {
     /// that end it ("Main St NW", "E St NE"), and `y` reads the same street with its type apart and
     /// written before its compass words ("Main Street Northwest"): the same street when "St" may
     /// stand for `y`'s type and `x`'s other words are `y`'s. A Saint name keeps "St" before a word
-    /// that is no compass word ("St Paul Ave", "Port St Lucie"), so it never reads this way.
+    /// that is no compass word ("St Paul Ave", "Port St Lucie"), and a "St" `y` leads with stays the
+    /// Saint of its name ("St Paul NW"), so neither reads this way.
     fn st_before_directions(&self, x: &Components, y: &Components) -> bool {
         let t = &x.street.toks;
-        if !x.street_type.is_empty() || y.street_type.is_empty() || !y.street_type_first || y.street_type_compound || t.len() < 3 {
+        // a "St" `y` leads with is no type written before compass words ("12 St Paul NW" is Saint)
+        if !x.street_type.is_empty() || y.street_type.is_empty() || !y.street_type_first || y.street_type_compound || y.street_type_word == "st" || t.len() < 3 {
             return false;
         }
         let compass = |i: usize| !directions(&Text { toks: vec![t[i].clone()], ..Default::default() }).is_empty();
@@ -3537,7 +3539,7 @@ impl Matcher {
         let given = self.country_code(options.country);
         let inferred = if given.is_none() { self.infer_country(query, &texts) } else { None };
         let country = given.or(inferred.as_deref());
-        let (p, e) = self.st_second_read(|| self.decide_home(query, rows, country, inferred.is_some(), true), |r| matches!(r.0, Pick::Match(_)), |r| matches!(r.0, Pick::None));
+        let (p, e) = self.st_second_read(|| self.decide_home(query, rows, country, inferred.is_some(), true), |r| r.1.outcome == Outcome::Match, |r| r.1.outcome == Outcome::None);
         let mut e = Self::unless_cut(p, e, &lost, query_lost).1;
         e.unit = self.unit_as_written(query, country);
         e.inferred_country = inferred;

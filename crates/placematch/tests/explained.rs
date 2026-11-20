@@ -703,3 +703,14 @@ fn a_postal_code_given_alone_is_no_row_whose_first_part_comes_before_another_tow
     assert_eq!(m.compare("2999", "2999 Sampleton NSW, Australia", Some("AU")).0, Verdict::Same);
     assert_eq!(m.compare("60999", "60999 Beispielstadt am Main, Deutschland", Some("DE")).0, Verdict::Same);
 }
+
+#[test]
+fn st_before_compass_words_read_as_street_asks_where_the_postcode_differs() {
+    let m = Matcher::new();
+    // read as Street only after reading "St" as a name took no row; the answer asks as the
+    // spelled-out street would
+    let e = explain(&m, "12 Example St NW, Exampleton, GA 30999", &["12 Example Street Northwest, Exampleton, GA 30998"]);
+    assert_eq!((e.outcome, e.reasons.clone()), (Outcome::Ambiguous, vec!["postcode_differs"]));
+    let e = explain(&m, "12 Example St NW, Exampleton, GA 30999", &["12 Example Street Northwest, Exampleton, GA 30999"]);
+    assert_eq!((e.outcome, e.index), (Outcome::Match, Some(0)));
+}
