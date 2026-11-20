@@ -1808,8 +1808,8 @@ impl Matcher {
         if r.0 == Verdict::Same || (q.alt.is_none() && c.alt.is_none()) {
             return r;
         }
-        // a short number after a numbered street read the other way, as the house number ("16 Mile
-        // Road, 4500"): the place either reading fits is the caller's
+        // a short number alone after a numbered street read as the unit ("410 Example Street, 7"):
+        // a place that reading fits is the caller's too; otherwise the answer stands
         let qs: Vec<&Components> = std::iter::once(q).chain(q.alt.as_deref()).collect();
         let cs: Vec<&Components> = std::iter::once(c).chain(c.alt.as_deref()).collect();
         for (i, qq) in qs.iter().enumerate() {
@@ -3742,7 +3742,9 @@ impl Matcher {
         // a business name, then the most complete one
         // (the most complete: the most of the caller's own place names, then the fewest the caller
         // did not name, so a row that adds a town or district is not taken over one that adds none)
-        let best = clusters[0].iter().copied().min_by_key(|&i| (cs[i].units != q.units, ranged[i], rewritten[i], cs[i].business.len(), usize::MAX - kept(i), added(i))).unwrap();
+        // (the caller's unit as either reading of a short number after the street gives it)
+        let q_units = if q.units.is_empty() { q.alt.as_ref().map_or(&q.units, |a| &a.units) } else { &q.units };
+        let best = clusters[0].iter().copied().min_by_key(|&i| (cs[i].units != *q_units && cs[i].alt.as_ref().map_or(true, |a| a.units != *q_units), ranged[i], rewritten[i], cs[i].business.len(), usize::MAX - kept(i), added(i))).unwrap();
         // a row read across scripts: its street or town is written in another script than the caller's
         let across = |i: usize| {
             let (c, qq) = (&cs[i], &q);
@@ -3750,7 +3752,7 @@ impl Matcher {
                 || matches!((&qq.city, &c.city), (Some(a), Some(b)) if script_group(a.script) != script_group(b.script))
         };
         // a row that leaves out a unit the caller gave
-        let unit_left_out = |i: usize| q.units.iter().any(|u| !cs[i].units.iter().any(|v| v[1..] == u[1..]));
+        let unit_left_out = |i: usize| q.units.iter().any(|u| !cs[i].units.iter().chain(cs[i].alt.iter().flat_map(|a| a.units.iter())).any(|v| v[1..] == u[1..]));
         for &i in &place {
             if unit_left_out(i) {
                 reports[i].notes.push("unit_not_listed");

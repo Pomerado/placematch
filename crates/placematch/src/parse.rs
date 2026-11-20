@@ -73,10 +73,9 @@ pub struct Components {
     /// the town is written in a comma part of its own, not read off the end of the street's part
     /// ("1 Example St NW Exampleton" may hold the street's compass word in its town)
     pub town_own_part: bool,
-    /// a short number alone after a street that opens with a number was read as the unit
-    /// ("410 Example Street, 7"); `alt` holds the text read the other way, the number as the house
-    /// number and the street's own number as part of its name ("16 Mile Road, 4500"), so a place
-    /// either reading fits is not lost
+    /// the text read with a short number alone after a street that opens with its own number as
+    /// the unit ("410 Example Street, 7" is unit 7 at 410), when that reads otherwise than this
+    /// reading, which keeps the number as the house number ("16 Mile Road, 4500")
     pub alt: Option<Box<Components>>,
 }
 
@@ -375,9 +374,10 @@ fn merge_korean_roads(toks: Vec<crate::token::Tok>) -> Vec<crate::token::Tok> {
 }
 
 pub fn parse(ctx: &Ctx, text: &str) -> Components {
-    let mut c = parse_with(ctx, text, true);
-    if c.unit_words.iter().any(|w| w.chars().all(|ch| ch.is_ascii_alphanumeric())) && c.alt.is_none() {
-        let other = parse_with(ctx, text, false);
+    let mut c = parse_with(ctx, text, false);
+    // a part after the first that is a short number alone ("410 Example Street, 7, Exampleton")
+    if text.split(',').skip(1).any(|part| short_unit(part.trim())) {
+        let other = parse_with(ctx, text, true);
         if other.house != c.house || other.units != c.units {
             c.alt = Some(Box::new(other));
         }
