@@ -3759,16 +3759,23 @@ impl Matcher {
             // business under another postcode than the row taken, still asks as before)
             let business = |i: usize| rows[i].categorized || calts[i].as_ref().and_then(|c| c.1.as_deref()).map_or(false, |n| self.business_name(n));
             if q.units.is_empty() && (q.city.is_some() || q.postcode.is_some()) && lead.iter().all(|&i| business(i)) {
-                let (p, e) = self.decide_street(query, ctx, &q, rows, ranges, false);
-                let full = |i: usize| {
+                let (p, mut e) = self.decide_street(query, ctx, &q, rows, ranges, false);
+                // a row that is no business read without its name and states the caller's house
+                // number, street and town or postcode: PlaceMatch's own choice when it is one, else
+                // the first in site order
+                let plain = |i: usize| {
                     let c = &cs[i];
                     let town = matches!((&q.city, &c.city), (Some(a), Some(b)) if text_eq(self, a, b, false) == Tri::Yes);
                     let postcode = q.postcode.is_some() && q.postcode == c.postcode;
-                    q.house.is_some() && listed_house[i] == q.house && !c.street.is_empty() && (town || postcode)
+                    !lead.contains(&i) && q.house.is_some() && listed_house[i] == q.house && !c.street.is_empty() && (town || postcode)
                 };
                 if let Pick::Match(best) = p {
-                    if full(best) && lead.iter().all(|i| e.same.contains(i)) {
-                        return (Pick::Match(best), e);
+                    let taken = if plain(best) { Some(best) } else { e.same.iter().copied().find(|&i| plain(i)) };
+                    if let (Some(i), true) = (taken, lead.iter().all(|i| e.same.contains(i))) {
+                        e.index = Some(i);
+                        e.notes = e.rows[i].notes.clone();
+                        e.cross_script = e.rows[i].reasons.contains(&"cross_script");
+                        return (Pick::Match(i), e);
                     }
                 }
             }

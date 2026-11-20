@@ -738,6 +738,11 @@ fn a_business_named_with_a_number_beside_the_callers_full_address_is_the_place()
     assert_eq!((e.outcome, e.index, e.same.clone()), (Outcome::Match, Some(0), vec![0, 1]));
     let e = explain(&m, q, &[plain, numbered]);
     assert_eq!((e.outcome, e.same.clone(), e.reasons.clone()), (Outcome::Ambiguous, vec![0, 1], vec!["several_places", "unit_not_given"]));
+    // the row taken is never a business read without its name: here the place listed by a name
+    // that is taken by its address
+    let rows = [Row { text: "7F, 1450 Example St, Exampleton, CA 95999", categorized: true }, Row::from("24 Hour Sample, 1450 Example St, Exampleton, CA 95999")];
+    let e = m.pick_explained(q, &rows, &us);
+    assert_eq!((e.outcome, e.index, e.same.clone()), (Outcome::Match, Some(1), vec![0, 1]));
 }
 
 #[test]

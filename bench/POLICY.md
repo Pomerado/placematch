@@ -174,8 +174,9 @@ when every such row is a business: the site categorized it, or its leading part 
 three letters or more that is no unit, level, entrance, staircase, PO box or building word, names
 no side, and is no part that may be a unit whatever its word (`Bay 12`, `7 East Wing` and a bare
 `7` are still asked about). Each business is then read as a row of the caller's place without its
-name, and the rows are decided as usual: a match on a row with the caller's full street address is
-taken when every business is a row of that place. Any other reason to ask (a business under another
+name, and the rows are decided as usual: a match is taken when every business is a row of that
+place, on a row that is no such business and states the caller's full street address (PlaceMatch's
+own choice when it is one, else the first such row). Any other reason to ask (a business under another
 postcode than that row, two places, a row that may be the same address elsewhere, a state left out)
 still asks as before.
 
