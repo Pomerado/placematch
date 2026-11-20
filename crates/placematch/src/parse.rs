@@ -203,6 +203,14 @@ fn english_ordinal(ctx: &Ctx, s: &str) -> String {
     }
 }
 
+/// A unit written as a short number alone: up to 4 digits, with at most one letter after them ("4",
+/// "12", "4B")
+fn short_unit(s: &str) -> bool {
+    let digits = s.chars().take_while(|ch| ch.is_ascii_digit()).count();
+    let rest: Vec<char> = s.chars().skip(digits).collect();
+    (1..=4).contains(&digits) && rest.len() <= 1 && rest.iter().all(|ch| ch.is_ascii_alphabetic())
+}
+
 fn norm_number(s: &str) -> String {
     let mut out = String::new();
     for c in s.chars() {
@@ -772,7 +780,13 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
                 // "str. 31 August 1989, 121a": a lone number segment after a typed street holds the
                 // house number; the street's own numbers are part of its name
                 let ks: Vec<usize> = (0..n).filter(|&q| toks[q].seg == s + 1 && !used[q]).collect();
-                if !ks.is_empty() && toks[ks[0]].num && (ks.len() == 1 || (ks.len() == 2 && is_suffix(ks[1]))) {
+                // "123 Example Street, 4, Exampleton": where the number comes first, a street part that
+                // opens with its own number keeps it as the house number, and the short number in the
+                // part after it is the unit (read in 4a)
+                let opens_with_number = (0..n).find(|&q| toks[q].seg == s && !used[q]) == Some(nums[0]) && toks[nums[0]].s.chars().all(|ch| ch.is_ascii_digit());
+                let number_first_cc = ctx.cc.map_or(true, |cc| matches!(cc, "US" | "CA" | "GB" | "IE" | "AU" | "NZ" | "ZA" | "SG" | "IN" | "PH" | "MY"));
+                let unit_next = opens_with_number && number_first_cc && ks.len() == 1 && short_unit(&toks[ks[0]].s) && (0..n).any(|q| toks[q].seg > s + 1);
+                if !unit_next && !ks.is_empty() && toks[ks[0]].num && (ks.len() == 1 || (ks.len() == 2 && is_suffix(ks[1]))) {
                     house_idx = Some(ks[0]);
                     break 'scan;
                 }
@@ -1171,6 +1185,9 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
 
     // 4a. a short "word number" segment right after the street segment is a unit ("Διαμ. 4", "D:30")
     if let (Some(ss), Some(_)) = (street_seg, &c.house) {
+        // the street part opens with the house number ("123 Example Street"), where the number comes first
+        let house_first_here = ctx.cc.map_or(true, |cc| matches!(cc, "US" | "CA" | "GB" | "IE" | "AU" | "NZ" | "ZA" | "SG" | "IN" | "PH" | "MY"))
+            && (0..n).find(|&q| toks[q].seg == ss).map_or(false, |q| toks[q].num && c.house.as_deref() == Some(norm_number(&toks[q].s).to_ascii_lowercase().as_str()));
         let s2 = ss + 1;
         let ks: Vec<usize> = (0..n).filter(|&q| toks[q].seg == s2 && !used[q]).collect();
         let nums: Vec<usize> = ks.iter().copied().filter(|&q| toks[q].num).collect();
@@ -1190,6 +1207,12 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
             for q in ks {
                 used[q] = true;
             }
+        } else if ks.len() == 1 && short_unit(&toks[ks[0]].s) && more_after && house_first_here && !postal_district {
+            // "123 Example Street, 4, Exampleton": a short number alone in the part after a street
+            // that opens with its house number is the unit ("Apt 4", "#4" and "4" are one unit)
+            c.units.push(format!("u{}", norm_number(&toks[ks[0]].s)));
+            c.unit_words.push(toks[ks[0]].s.clone());
+            used[ks[0]] = true;
         }
     }
 

@@ -125,6 +125,12 @@ not write is that venue, not a place in a town the caller typed alone.
 A candidate that adds a unit the caller did not give is not a match. In a `pick` case where the
 only candidates that fit add a unit, the answer is `ambiguous`: ask the caller which unit.
 
+Where the number comes first, a short number alone in its own part right after a street that
+opens with its house number is the unit (`123 Example Street, 4, Exampleton`): up to four digits,
+with at most one letter after them (`4`, `4B`, `200`). `Apt 4`, `#4`, `Suite 4` and `4` are one
+unit; `5` is another. Where the street comes before the number (`Calle Mayor, 4`), or the street
+opens with no number of its own (`5th Avenue, 725`), the number is the house number.
+
 A short part before the address that may name a unit, whatever its word, is read as the row's
 unit: a number with a letter or "F" (`7F`, `12B`, `7/F`), a symbol and a number (`№7`, `#7`),
 one or two letters glued to a number (`U7`), or one word and a number (`Studio 12`, `No. 7`).
