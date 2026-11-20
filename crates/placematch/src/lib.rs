@@ -2181,8 +2181,10 @@ impl Matcher {
             }
             // in the US a ZIP code places a house: the caller's number and street under the caller's
             // own ZIP code, with nothing left unsettled, is the caller's house whatever locality name
-            // each side writes ("New York" and "Manhattan", "Los Angeles" and "North Hollywood")
-            if !any_yes && !any_unknown && !misspelled && !peer && !unknown && same_code && q.cc.as_deref() == Some("US") && q.postcode.as_deref().map_or(false, |p| p.len() == 5) && q.house.is_some() && q.house == c.house && !q.street.is_empty() && !c.street.is_empty() {
+            // each side writes ("New York" and "Manhattan", "Los Angeles" and "North Hollywood"), when
+            // each side writes its town in a part of its own, so no compass word of the street is
+            // read as part of a town ("1 Example St NW Exampleton")
+            if !any_yes && !any_unknown && !misspelled && !peer && !unknown && same_code && q.cc.as_deref() == Some("US") && q.postcode.as_deref().map_or(false, |p| p.len() == 5) && q.house.is_some() && q.house == c.house && !q.street.is_empty() && !c.street.is_empty() && q.town_own_part && c.town_own_part {
                 any_yes = true;
                 district_town = true;
             }
