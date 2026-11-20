@@ -154,7 +154,10 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
   component order (number before or after the street), joined or split compound names, native
   digits, Japanese block addresses, transliteration, and a one-letter typo in a long name; an
   English ordinal word and its number ("Fifth Ave" and "5th Ave"); a house number's letter with a
-  space or without ("12 A Example St" and "12A Example St").
+  space or without ("12 A Example St" and "12A Example St"); "St" right before the compass words
+  that end a street as Street ("12 Example St NW" and "12 Example Street Northwest"), when the
+  rows taken as before take no place. "St" before any other word stays a name that may be Saint
+  ("St Paul Ave").
 
 Wrong picks are the costly error, so PlaceMatch prefers `ambiguous` or `none` whenever a
 candidate could be a different place.
