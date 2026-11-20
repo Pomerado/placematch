@@ -3623,16 +3623,15 @@ impl Matcher {
             let name = self.name_words(&self.without_short_codes(named.split(',').next().unwrap_or("")));
             (area.postcode.is_some() && q.po_box.is_none() && q.units.is_empty() && !name.is_empty()).then(|| self.named_decide(&ctx, &named, &name, rows))
         });
-        let street = self.decide_street(query, &ctx, &q, rows, ranges, true);
+        let street = self.decide_street(query, &ctx, &q, rows, ranges);
         match named_postcode {
             Some(named) if !matches!(street.0, Pick::Match(_)) && !matches!(named.0, Pick::None) => named,
             _ => street,
         }
     }
 
-    /// `decide_read` for a street address. `ask_leading`: ask about rows that open with what may be
-    /// a unit (false: read them as rows of the caller's place without that part, see below).
-    fn decide_street(&self, query: &str, ctx: &Ctx, q: &Components, rows: &[Row], ranges: bool, ask_leading: bool) -> (Pick, Explained) {
+    /// `decide_read` for a street address.
+    fn decide_street(&self, query: &str, ctx: &Ctx, q: &Components, rows: &[Row], ranges: bool) -> (Pick, Explained) {
         let (ctx, q) = (ctx, q.clone());
         let candidates: Vec<&str> = rows.iter().map(|r| r.text).collect();
         // each listing as compared, without a distance it opens with
@@ -3704,22 +3703,6 @@ impl Matcher {
                 }
             }
         }
-        // (deciding without the leading-unit ask: a row that opens with what may be a unit is a row
-        // of the caller's place read without that part, compared with the other rows as any business
-        // at the address is)
-        if !ask_leading {
-            for i in 0..cs.len() {
-                if let (["leading_unit"], Some((c2, _))) = (verdicts[i].1.as_slice(), &calts[i]) {
-                    let r = self.compare_parsed(&q, c2, Mode::Query);
-                    if r.0 == Verdict::Same {
-                        reports[i] = RowReport { verdict: Verdict::Same, reasons: r.1.clone(), notes: vec![] };
-                        verdicts[i] = r;
-                        cs[i] = c2.clone();
-                        rewritten[i] = true;
-                    }
-                }
-            }
-        }
         let same: Vec<usize> = (0..cs.len()).filter(|&i| verdicts[i].0 == Verdict::Same).collect();
         if same.is_empty() {
             // the caller gave no unit and the site lists the place only with units: ask which one
@@ -3750,32 +3733,38 @@ impl Matcher {
         // (a row with the caller's own unit is still taken: "Unit 5, 12 Example St" for Unit 5)
         let lead: Vec<usize> = (0..cs.len()).filter(|&i| verdicts[i].1 == ["leading_unit"]).collect();
         let unit_rows = !q.units.is_empty() && same.iter().all(|&i| !cs[i].units.is_empty());
-        if !lead.is_empty() && !unit_rows && ask_leading {
+        if !lead.is_empty() && !unit_rows {
             // businesses whose names open with a number ("7-Eleven", "99 Ranch Market"), for a caller
-            // who gave no unit and gave a town or postcode, are the caller's place too: the rows are
-            // decided again with each business read as a row of the place without its name, and that
-            // answer stands when it takes a row with the caller's house number, street and town or
-            // postcode and every business is a row of that place (any other reason to ask, such as a
-            // business under another postcode than the row taken, still asks as before)
+            // who gave no unit and gave a town or postcode, are the caller's place too: the other
+            // rows are decided without them, and a match there stands when its row states the
+            // caller's house number, street and town or postcode and every business, read without
+            // its name, is the same place as each row of it (a business under another postcode, or
+            // any other reason to ask, still asks as before)
             let business = |i: usize| rows[i].categorized || calts[i].as_ref().and_then(|c| c.1.as_deref()).map_or(false, |n| self.business_name(n));
             if q.units.is_empty() && (q.city.is_some() || q.postcode.is_some()) && lead.iter().all(|&i| business(i)) {
-                let (p, mut e) = self.decide_street(query, ctx, &q, rows, ranges, false);
-                // a row that is no business read without its name and states the caller's house
-                // number, street and town or postcode: PlaceMatch's own choice when it is one, else
-                // the first in site order
-                let plain = |i: usize| {
-                    let c = &cs[i];
+                let keep: Vec<usize> = (0..rows.len()).filter(|i| !lead.contains(i)).collect();
+                let others: Vec<Row> = keep.iter().map(|&i| Row { text: rows[i].text, categorized: rows[i].categorized }).collect();
+                let (p, e) = self.decide_street(query, ctx, &q, &others, ranges);
+                if let Pick::Match(k) = p {
+                    let best = keep[k];
+                    let place: Vec<usize> = e.same.iter().map(|&k| keep[k]).collect();
+                    let c = &cs[best];
                     let town = matches!((&q.city, &c.city), (Some(a), Some(b)) if text_eq(self, a, b, false) == Tri::Yes);
                     let postcode = q.postcode.is_some() && q.postcode == c.postcode;
-                    !lead.contains(&i) && q.house.is_some() && listed_house[i] == q.house && !c.street.is_empty() && (town || postcode)
-                };
-                if let Pick::Match(best) = p {
-                    let taken = if plain(best) { Some(best) } else { e.same.iter().copied().find(|&i| plain(i)) };
-                    if let (Some(i), true) = (taken, lead.iter().all(|i| e.same.contains(i))) {
-                        e.index = Some(i);
-                        e.notes = e.rows[i].notes.clone();
-                        e.cross_script = e.rows[i].reasons.contains(&"cross_script");
-                        return (Pick::Match(i), e);
+                    let full = q.house.is_some() && listed_house[best] == q.house && !c.street.is_empty() && (town || postcode);
+                    let one = |a: &Components, b: &Components| self.compare_parsed(a, b, Mode::Peer).0 != Verdict::Different && self.compare_parsed(b, a, Mode::Peer).0 != Verdict::Different;
+                    let at_place = |i: usize| calts[i].as_ref().map_or(false, |(c2, _)| place.iter().all(|&j| one(c2, &cs[j])));
+                    if full && lead.iter().all(|&i| at_place(i)) {
+                        let mut reports = reports.clone();
+                        for (k, &i) in keep.iter().enumerate() {
+                            reports[i] = e.rows[k].clone();
+                        }
+                        for &i in &lead {
+                            reports[i] = RowReport { verdict: Verdict::Same, reasons: vec![], notes: vec![] };
+                        }
+                        let mut same: Vec<usize> = place.iter().chain(&lead).copied().collect();
+                        same.sort();
+                        return (Pick::Match(best), Explained { index: Some(best), same, rows: reports, ..e });
                     }
                 }
             }
