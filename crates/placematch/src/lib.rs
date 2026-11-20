@@ -1577,17 +1577,22 @@ impl Matcher {
     }
 
     /// A leading part that names a business rather than a unit: it has a word of three letters or
-    /// more that is no unit, level, entrance, staircase, PO box or building word ("7-Eleven", "3rd
-    /// Street Deli", "99 Ranch Market"). A part that may be a unit whatever its word ("Bay 12",
-    /// "Studio 12") or that names a side ("7 East Wing") is none.
+    /// more that the address dictionaries know only as a place's or a company's word, or not at all,
+    /// in the singular too, and that is no building-part word they lack ("7-Eleven", "3rd Street
+    /// Deli", "99 Ranch Market"; not "12 Bay", "7 Upstairs", "7 Units" or "Condo 7 Rear"). A part
+    /// that may be a unit whatever its word ("Bay 12", "Studio 12") or that names a side ("7 East
+    /// Wing") is none.
     fn business_name(&self, part: &str) -> bool {
         use data::Class::*;
+        // building parts and units the dictionaries do not list
+        const PARTS: &[&str] = &["wing", "booth", "dock", "stand", "upstairs", "downstairs", "condo", "carport", "parking", "attic", "slot", "plot", "deck", "porch", "triplex", "storage", "locker", "mailbox", "cell", "hut", "cart", "campsite", "mooring", "dorm"];
         let key = fold::fold(part);
         let words: Vec<&str> = key.split(|ch: char| !ch.is_alphanumeric()).filter(|w| !w.is_empty()).collect();
-        let classed = |w: &str, f: fn(data::Class) -> bool| self.data.lookup(w).iter().any(|e| f(e.class));
+        let named = |w: &str| !PARTS.contains(&w) && self.data.lookup(w).iter().all(|e| matches!(e.class, Place | Company));
+        let singular = |w: &str| [w.strip_suffix("es"), w.strip_suffix('s')].into_iter().flatten().all(|s| s.chars().count() < 3 || named(s));
         Self::maybe_unit(part).is_none()
-            && !words.iter().any(|w| classed(w, |c| c == Directional))
-            && words.iter().any(|w| w.chars().count() >= 3 && w.chars().all(|ch| ch.is_alphabetic()) && !classed(w, |c| matches!(c, UnitNum | UnitAlone | LevelNum | LevelAlone | Entrance | Staircase | PoBox | Building)))
+            && !words.iter().any(|w| self.data.lookup(w).iter().any(|e| e.class == Directional))
+            && words.iter().any(|w| w.chars().count() >= 3 && w.chars().all(|ch| ch.is_alphabetic()) && named(w) && singular(w))
     }
 
     /// A dropped leading part that is a place's name holding the caller's house number ("12 Hour
@@ -3738,8 +3743,8 @@ impl Matcher {
             // who gave no unit and gave a town or postcode, are the caller's place too: the other
             // rows are decided without them, and a match there stands when its row states the
             // caller's house number, street and town or postcode and every business, read without
-            // its name, is the same place as each row of it (a business under another postcode, or
-            // any other reason to ask, still asks as before)
+            // its name, is the same place as each row of it and as each other business (a business
+            // under another postcode, or any other reason to ask, still asks as before)
             let business = |i: usize| rows[i].categorized || calts[i].as_ref().and_then(|c| c.1.as_deref()).map_or(false, |n| self.business_name(n));
             if q.units.is_empty() && (q.city.is_some() || q.postcode.is_some()) && lead.iter().all(|&i| business(i)) {
                 let keep: Vec<usize> = (0..rows.len()).filter(|i| !lead.contains(i)).collect();
@@ -3753,7 +3758,10 @@ impl Matcher {
                     let postcode = q.postcode.is_some() && q.postcode == c.postcode;
                     let full = q.house.is_some() && listed_house[best] == q.house && !c.street.is_empty() && (town || postcode);
                     let one = |a: &Components, b: &Components| self.compare_parsed(a, b, Mode::Peer).0 != Verdict::Different && self.compare_parsed(b, a, Mode::Peer).0 != Verdict::Different;
-                    let at_place = |i: usize| calts[i].as_ref().map_or(false, |(c2, _)| place.iter().all(|&j| one(c2, &cs[j])));
+                    let address = |i: usize| calts[i].as_ref().map(|(c2, _)| c2);
+                    let at_place = |i: usize| {
+                        address(i).map_or(false, |c2| place.iter().all(|&j| one(c2, &cs[j])) && lead.iter().all(|&j| j == i || address(j).map_or(false, |c3| one(c2, c3))))
+                    };
                     if full && lead.iter().all(|&i| at_place(i)) {
                         let mut reports = reports.clone();
                         for (k, &i) in keep.iter().enumerate() {
