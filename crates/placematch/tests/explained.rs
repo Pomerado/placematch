@@ -626,10 +626,17 @@ fn a_town_written_with_its_district_is_the_callers_town_only_under_the_district_
     let row2 = [Row::from("Beispielweg 3, 12345 Exampleburgdorf, Germany")];
     let e = m.pick_explained_with("Beispielweg 3, 12345 Exampleburg, Germany", &row2, &de, &on);
     assert_ne!(e.outcome, Outcome::Match);
-    // on, never in the US
+    // never in the US, where the ZIP code decides instead, with the rule on or off: the same
+    // house under the caller's own ZIP code is the caller's place, and under another one it is not
     let us = PickOptions { country: Some("US") };
     let row3 = [Row::from("1 Example St, Exampleton-North, IL 60601")];
     let e = m.pick_explained_with("1 Example St, Exampleton, IL 60601", &row3, &us, &on);
+    assert_eq!((e.outcome, e.index), (Outcome::Match, Some(0)));
+    let e = m.pick_explained("1 Example St, Exampleton, IL 60601", &row3, &us);
+    assert_eq!((e.outcome, e.index), (Outcome::Match, Some(0)));
+    let e = m.pick_explained_with("1 Example St, Exampleton, IL 60602", &row3, &us, &on);
+    assert_ne!(e.outcome, Outcome::Match);
+    let e = m.pick_explained_with("1 Example St, Exampleton, IL", &row3, &us, &on);
     assert_ne!(e.outcome, Outcome::Match);
     // on, never in a US territory either
     let pr = PickOptions { country: Some("PR") };

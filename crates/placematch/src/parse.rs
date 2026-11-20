@@ -70,6 +70,9 @@ pub struct Components {
     /// an Irish postal district's number written after its town ("2" in "Dublin 2", "6w" in
     /// "Dublin 6W"): when both sides give one, another is another place
     pub postal_district: Option<String>,
+    /// the town is written in a comma part of its own, not read off the end of the street's part
+    /// ("1 Example St NW Exampleton" may hold the street's compass word in its town)
+    pub town_own_part: bool,
 }
 
 pub struct Ctx<'a> {
@@ -397,6 +400,8 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
     let script = Some(dominant_script(&folded));
     let n = toks.len();
     let mut nseg = toks.last().map_or(0, |t| t.seg + 1);
+    // the comma parts as written; parts split off later share a comma part with the house number
+    let written_parts = nseg;
     // dictionary spans (longest match within a segment)
     let mut spans: Vec<Option<Span>> = vec![None; n];
     let mut i = 0;
@@ -1391,6 +1396,9 @@ pub fn parse(ctx: &Ctx, text: &str) -> Components {
     // regions double as localities (city-states, cantons named like their capital) after real ones
     c.localities.extend(region_texts);
     c.city = c.localities.first().cloned();
+    c.town_own_part = c.city.as_ref().map_or(false, |city| {
+        seg_texts.iter().find(|x| x.1.key == city.key).map_or(false, |x| toks[x.0].seg < written_parts && Some(toks[x.0].seg) != street_seg)
+    });
     // a ZIP+4 code alone ("60000-1234") is a postcode, not a house number
     if matches!(ctx.cc, None | Some("US")) && c.street.is_empty() && c.localities.is_empty() && c.postcode.is_none() {
         if let Some(h) = c.house.clone() {

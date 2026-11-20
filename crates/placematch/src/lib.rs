@@ -2179,6 +2179,17 @@ impl Matcher {
                     district_town = true;
                 }
             }
+            // in the US a ZIP code places a house: the caller's number and street, written alike with
+            // the same type, under the caller's own ZIP code, with nothing left unsettled, is the
+            // caller's house whatever locality name
+            // each side writes ("New York" and "Manhattan", "Los Angeles" and "North Hollywood"), when
+            // each side writes its town in a part of its own, so no compass word of the street is
+            // read as part of a town ("1 Example St NW Exampleton")
+            if !any_yes && !any_unknown && !misspelled && !peer && !unknown && same_code && q.cc.as_deref() == Some("US") && q.postcode.as_deref().map_or(false, |p| p.len() == 5) && q.house.is_some() && q.house == c.house && !q.street.is_empty() && q.street.key == c.street.key && !q.street_type.is_empty() && intersects(&q.street_type, &c.street_type) && q.town_own_part && c.town_own_part {
+                any_yes = true;
+                district_town = true;
+                reasons.push("town_by_postcode");
+            }
             if !any_yes {
                 // the caller's town spelled another way may be the row's or another town: ask
                 if misspelled && !any_unknown {
@@ -3047,6 +3058,12 @@ impl Matcher {
             if !fragile {
                 continue;
             }
+            // a row that reads the caller's number as its house number, under another postcode than
+            // the one the caller gave, is another place however its street reads ("410 Example
+            // Street Northeast, ... 30998" beside the caller's "... Northwest, ... 30999")
+            if c.house.as_deref() == Some(hn.as_str()) && matches!((&q.postcode, &c.postcode), (Some(a), Some(b)) if a != b) {
+                continue;
+            }
             // a row that opens with what may be a unit ("Bay 12, 12 Example St") is read as that unit
             let unit_first = self.without_leading_name(raw[i].as_ref()).map_or(false, |(rest, name)| {
                 let next = fold::fold(rest.split(',').next().unwrap_or(""));
@@ -3550,6 +3567,17 @@ impl Matcher {
                 verdicts[i] = read;
                 cs[i] = c2;
                 ranged[i] = true;
+            }
+        }
+        // a row that is the caller's place only by the ZIP code (`town_by_postcode`) gives way to a
+        // row in the caller's own town
+        let by_code = |v: &(Verdict, Vec<&'static str>)| v.0 == Verdict::Same && v.1.contains(&"town_by_postcode");
+        if verdicts.iter().any(|v| v.0 == Verdict::Same && !by_code(v)) {
+            for i in 0..cs.len() {
+                if by_code(&verdicts[i]) {
+                    verdicts[i] = (Verdict::Different, vec!["city"]);
+                    reports[i] = RowReport { verdict: Verdict::Different, reasons: vec!["city"], notes: vec![] };
+                }
             }
         }
         let same: Vec<usize> = (0..cs.len()).filter(|&i| verdicts[i].0 == Verdict::Same).collect();

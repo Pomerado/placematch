@@ -125,11 +125,16 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
   "Exampleton Beach" for "Exampleton") is not the caller's town: it may be a district or another
   town ("Baden-Baden" for "Baden"). A row with the caller's address in such a town, differing by
   the town alone, is asked about beside the rows of the caller's place when every one of those
-  adds a place the caller did not write (`place_unconfirmed`).
+  adds a place the caller did not write (`place_unconfirmed`). In the US the ZIP code decides
+  instead (below).
 - Among rows of the caller's place, PlaceMatch takes the one that keeps the most of the caller's
   own place names, then the one that adds the fewest the caller did not write: a row that adds a
   town or district is not taken over the same address without it.
-- The town must be right: a shared district or region name does not make two towns one. A row
+- The town must be right: a shared district or region name does not make two towns one. In the
+  US, a ZIP code places a house: a row with the caller's house number, street, street type and
+  compass words under the caller's own five-digit ZIP code is the caller's place whatever town or
+  neighborhood each side writes ("New York" and "Manhattan", "Los Angeles" and "North Hollywood");
+  under another ZIP code, or when either side gives none, the towns must agree. A row
   that names no town does not confirm the caller's place. In the US, Canada and Australia, a row
   that leaves out only the state, with the caller's town spelled the same, in a part of its own or
   right after the caller's street, and no postcode or other country shown, is taken; the risk left
