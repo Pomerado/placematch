@@ -112,14 +112,25 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
   too, so a place that fits the number read as the house number still matches.
 - A short part before the address that may be a unit, whatever its word ("№7", "Studio 12",
   "U7", "7F", "7-B", "7"), is read as the row's unit: another unit is not the caller's, and
-  otherwise the row is at most asked about, never taken, even beside a row that fits. Any other
+  otherwise the row is at most asked about, never taken, even beside a row that fits, unless the
+  site categorized it as a business at the caller's address (below). Any other
   leading part with a number is at most asked about when that number is not the address's and
   the caller gave a unit, or when the part is three words or fewer and the caller gave none,
   unless it reads as a place's name (two words or more with the number not last, such as "24
   Hour Sample", and no street address of its own) that cannot be another unit: for a caller
   with a unit, its numbers are that unit's; for a caller with none, it opens with its number and
   names no side ("7 East Wing" is asked about); a row
-  with the caller's own unit is still taken beside it. A distance the row opens with ("0.2 mi")
+  with the caller's own unit is still taken beside it. For a caller who gave a town or postcode
+  and no unit, a business whose name opens with a number ("7-Eleven", "3rd Street Deli", "99 Ranch
+  Market") is no unit beside a row with the caller's house number, street and town or postcode:
+  the site categorized it, or its leading part has a word of three letters or more that the
+  address dictionaries know only as a place's or company's word, or not at all (in the singular
+  too), is no building-part word they lack ("Wing", "Booth", "Upstairs", "Condo"), names no side
+  and is no part that may be a unit whatever its word ("Bay 12", "12 Bay", "7 Units" and "7 East
+  Wing" are still asked about). The answer is then the match the other rows give without the
+  businesses, when every business, read without its name, is that place too, and so is every
+  other business (one under another postcode or in another state still asks). A distance the row
+  opens with ("0.2 mi")
   is left out before the row is read; a whole number right before the address ("5M, 350 Example
   Ave") is an apartment, not a distance.
 - A business listing at the address is the same place as the plain address, and so is a listing

@@ -167,6 +167,21 @@ possible unit, not a distance: a distance has a decimal or a place's name after 
 that is only the caller's own house number or postcode (`7, 7 Example St`) is not taken as text
 the caller wrote, so it is read as a possible unit too.
 
+A business whose name opens with a number (`7-Eleven`, `3rd Street Deli`, `99 Ranch Market`) is
+not asked about as a unit beside a row with the caller's full street address (house number,
+street, and the caller's town or postcode), for a caller who gave a town or postcode and no unit,
+when every such row is a business: the site categorized it, or its leading part has a word of
+three letters or more that the address dictionaries know only as a place's or a company's word, or
+not at all, in the singular too (`Deli`, `Market`, `Eleven`; not `Bay`, `Back`, `Units` or
+`Suites`), that is no building-part word they lack (`Wing`, `Booth`, `Dock`, `Upstairs`, `Condo`,
+`Carport`, `Parking` and a few more), and the part names no side and is no part that may be a unit
+whatever its word (`Bay 12`, `12 Bay`, `Condo 7 Rear`, `7 East Wing` and a bare `7` are still asked
+about). The other rows are then decided without the businesses, and their match is taken when its
+row states the caller's full street address and every business, read without its name, is the same
+place as each row of that place and as each other business; the businesses are then among the rows
+of the place. Any other answer (a business under another postcode or in another state than those
+rows or than another business, or any reason the other rows ask) keeps the question as before.
+
 Business listings count: `Cafe Luna, 10 Main St, Springfield` is the same place as
 `10 Main St, Springfield`. So is a listing named after its own street address (`10 Main St Parking,
 10 Main St, Springfield`) when the words after the address hold no number and no street, direction,
