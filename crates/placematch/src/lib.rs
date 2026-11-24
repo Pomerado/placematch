@@ -156,9 +156,9 @@ pub struct Explained {
     /// such row holds it in full (or the exact name is only outside it); with no area from the
     /// caller there is none. Also, when no row is the caller's place: the site's one row under
     /// another town's name (`place_unconfirmed`) when the caller gave no postcode or both give the
-    /// same one, or, when every row asked about adds only a unit the caller did not give, the
-    /// site's first of them that is the caller's place but for its unit. A read may take it; a
-    /// write still asks.
+    /// same one, or, for a caller who gave no unit, when every row asked about adds one, the site's
+    /// first of them that is the caller's place but for its unit. A read may take it; a write
+    /// still asks.
     pub prefer_on_read: Option<usize>,
     /// Each row's verdict and reasons, by row index.
     pub rows: Vec<RowReport>,
@@ -2704,15 +2704,24 @@ impl Matcher {
         })
     }
 
-    /// Both texts name a state or province, in a part of its own or right after the town, and the
-    /// same one.
-    fn same_region(&self, a: &Components, b: &Components) -> bool {
-        let ids = |x: &Components| -> Vec<u16> {
-            let shown = x.town_region.as_deref().zip(x.cc.as_deref().and_then(|cc| self.data.countries.get(cc))).map(|(k, co)| co.region_ids(k)).unwrap_or_default();
-            self.region_ids(x, false).iter().map(|r| r.0).chain(shown).collect()
-        };
-        let (ra, rb) = (ids(a), ids(b));
-        ra.iter().any(|r| rb.contains(r))
+    /// `c` is `q`'s place but for its town: the same house number, street and street type, each
+    /// town in a part of its own (so no compass word of a street is read as part of a town), the
+    /// same state or province named on both sides, and nothing else apart once the row names the
+    /// caller's town.
+    fn town_only_differs(&self, q: &Components, c: &Components) -> bool {
+        let regions = self.region_ids(q, false);
+        let mut placed = c.clone();
+        placed.city = q.city.clone();
+        placed.localities = q.localities.clone();
+        q.house.is_some()
+            && q.house == c.house
+            && !q.street.is_empty()
+            && q.street.key == c.street.key
+            && intersects(&q.street_type, &c.street_type)
+            && q.town_own_part
+            && c.town_own_part
+            && self.region_ids(c, false).iter().any(|r| regions.iter().any(|s| s.0 == r.0))
+            && self.compare_parsed(q, &placed, Mode::Query).0 == Verdict::Same
     }
 
     /// The states a United States ZIP code may be in, by its first three digits.
@@ -3741,7 +3750,7 @@ impl Matcher {
                     (Verdict::Different, ["postcode"]) if self.postcode_only_differs(&q, &cs[i]) => "postcode_differs",
                     // the site's one row, at the caller's number and street in the caller's state
                     // under another town's name, may be the caller's place named another way
-                    (Verdict::Different, ["city"]) if cs.len() == 1 && self.same_region(&q, &cs[i]) => "place_unconfirmed",
+                    (Verdict::Different, ["city"]) if cs.len() == 1 && self.town_only_differs(&q, &cs[i]) => "place_unconfirmed",
                     _ => continue,
                 };
                 near.push(i);
@@ -3754,20 +3763,20 @@ impl Matcher {
                 return (strict, Explained::none(reports));
             }
             // what a read may take: that one row under another town's name, when the caller gave no
-            // postcode or both give the same one; or, when every row asked about adds only a unit the
-            // caller did not give, the site's first of them that is the caller's place but for its
-            // unit (a leading unit's row was checked so when it was read)
+            // postcode or both give the same one; or, for a caller who gave no unit, when every row
+            // asked about adds a unit, the site's first of them that is the caller's place but for
+            // its unit
             let but_unit = |i: usize| {
                 let mut c = cs[i].clone();
                 c.units.clear();
                 if let Some(a) = c.alt.as_mut() {
                     a.units.clear();
                 }
-                verdicts[i].1 == ["leading_unit"] || self.compare_parsed(&q, &c, Mode::Query).0 == Verdict::Same
+                self.compare_parsed(&q, &c, Mode::Query).0 == Verdict::Same
             };
             let prefer = match (near.as_slice(), reasons.as_slice()) {
                 ([i], [_]) if verdicts[*i].1 == ["city"] => (q.postcode.is_none() || q.postcode == cs[*i].postcode).then_some(*i),
-                _ if reasons.iter().all(|r| *r == "unit_not_given") => near.iter().copied().find(|&i| but_unit(i)),
+                _ if q.units.is_empty() && reasons.iter().all(|r| *r == "unit_not_given") => near.iter().copied().find(|&i| but_unit(i)),
                 _ => None,
             };
             return (strict, Explained { prefer_on_read: prefer, ..Explained::ambiguous(near, reasons, reports) });

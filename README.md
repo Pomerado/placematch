@@ -145,11 +145,12 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
   the town alone, is asked about beside the rows of the caller's place when every one of those
   adds a place the caller did not write (`place_unconfirmed`). In the US the ZIP code decides
   instead (below).
-- When the site lists one row, with the caller's house number and street in the caller's state
-  under another town's name and nothing else that differs, it may be the caller's place named
-  another way: it is asked about (`place_unconfirmed`), and a read may take it (`prefer_on_read`)
-  when the caller gave no postcode or both give the same one. Two such rows, another state or
-  postcode, or a caller who names no state still answer `none`.
+- When the site lists one row (rows in another country left aside), with the caller's house
+  number, street and street type in the caller's state under another town's name, each town in a
+  part of its own, and nothing else that differs, it may be the caller's place named another way:
+  it is asked about (`place_unconfirmed`), and a read may take it (`prefer_on_read`) when the
+  caller gave no postcode or both give the same one. Two such rows, another state or postcode, or
+  a caller who names no state still answer `none`.
 - Among rows of the caller's place, PlaceMatch takes the one that keeps the most of the caller's
   own place names, then the one that adds the fewest the caller did not write: a row that adds a
   town or district is not taken over the same address without it.
