@@ -108,8 +108,9 @@ pub enum Outcome {
 ///   caller's town or street, or (with no country given) adds a place the caller did not name
 ///   ("CA" may be California or Canada); a row giving the caller's town in another script whose
 ///   reading several towns share; or, only when no row is the caller's place, a row at the caller's
-///   number and street that leaves out the caller's town, or the state the caller gave; or a row
-///   (or a caller's text) too long to read whole that lost a number or unit word (see `MAX_PARTS`);
+///   number and street that leaves out the caller's town, or the state the caller gave, or the
+///   site's one row there in the caller's state under another town's name; or a row (or a
+///   caller's text) too long to read whole that lost a number or unit word (see `MAX_PARTS`);
 /// - and, only when no row is the caller's place, the near rows: they add a unit the caller did not
 ///   give (`unit_not_given`), show another postcode at the caller's number, street and town
 ///   (`postcode_differs`), list the caller's street without a house number (`number_not_listed`), or
@@ -152,8 +153,12 @@ pub struct Explained {
     pub cross_script: bool,
     /// `ambiguous` between a same-name row and a row with the name in a longer form: the one row of
     /// them the site categorized, when exactly one is, the caller gave a town or postcode and every
-    /// such row holds it in full (or the exact name is only outside it). A read may take it; a write
-    /// still asks; with no area from the caller there is none.
+    /// such row holds it in full (or the exact name is only outside it); with no area from the
+    /// caller there is none. Also, when no row is the caller's place: the site's one row under
+    /// another town's name (`place_unconfirmed`) when the caller gave no postcode or both give the
+    /// same one, or, when every row asked about adds only a unit the caller did not give, the
+    /// site's first of them that is the caller's place but for its unit. A read may take it; a
+    /// write still asks.
     pub prefer_on_read: Option<usize>,
     /// Each row's verdict and reasons, by row index.
     pub rows: Vec<RowReport>,
@@ -2699,6 +2704,17 @@ impl Matcher {
         })
     }
 
+    /// Both texts name a state or province, in a part of its own or right after the town, and the
+    /// same one.
+    fn same_region(&self, a: &Components, b: &Components) -> bool {
+        let ids = |x: &Components| -> Vec<u16> {
+            let shown = x.town_region.as_deref().zip(x.cc.as_deref().and_then(|cc| self.data.countries.get(cc))).map(|(k, co)| co.region_ids(k)).unwrap_or_default();
+            self.region_ids(x, false).iter().map(|r| r.0).chain(shown).collect()
+        };
+        let (ra, rb) = (ids(a), ids(b));
+        ra.iter().any(|r| rb.contains(r))
+    }
+
     /// The states a United States ZIP code may be in, by its first three digits.
     fn zip_states(&self, x: &Components) -> Vec<u16> {
         let (Some("US"), Some(p)) = (x.cc.as_deref(), x.postcode.as_deref()) else {
@@ -3723,6 +3739,9 @@ impl Matcher {
                     (Verdict::Unknown, ["number_range"]) => "number_range",
                     (Verdict::Unknown, ["town_not_listed"] | ["region_not_listed"] | ["town_spelled_differently"]) => "place_unconfirmed",
                     (Verdict::Different, ["postcode"]) if self.postcode_only_differs(&q, &cs[i]) => "postcode_differs",
+                    // the site's one row, at the caller's number and street in the caller's state
+                    // under another town's name, may be the caller's place named another way
+                    (Verdict::Different, ["city"]) if cs.len() == 1 && self.same_region(&q, &cs[i]) => "place_unconfirmed",
                     _ => continue,
                 };
                 near.push(i);
@@ -3731,7 +3750,27 @@ impl Matcher {
                     reports[i].reasons.push(why);
                 }
             }
-            return if near.is_empty() { (strict, Explained::none(reports)) } else { (strict, Explained::ambiguous(near, reasons, reports)) };
+            if near.is_empty() {
+                return (strict, Explained::none(reports));
+            }
+            // what a read may take: that one row under another town's name, when the caller gave no
+            // postcode or both give the same one; or, when every row asked about adds only a unit the
+            // caller did not give, the site's first of them that is the caller's place but for its
+            // unit (a leading unit's row was checked so when it was read)
+            let but_unit = |i: usize| {
+                let mut c = cs[i].clone();
+                c.units.clear();
+                if let Some(a) = c.alt.as_mut() {
+                    a.units.clear();
+                }
+                verdicts[i].1 == ["leading_unit"] || self.compare_parsed(&q, &c, Mode::Query).0 == Verdict::Same
+            };
+            let prefer = match (near.as_slice(), reasons.as_slice()) {
+                ([i], [_]) if verdicts[*i].1 == ["city"] => (q.postcode.is_none() || q.postcode == cs[*i].postcode).then_some(*i),
+                _ if reasons.iter().all(|r| *r == "unit_not_given") => near.iter().copied().find(|&i| but_unit(i)),
+                _ => None,
+            };
+            return (strict, Explained { prefer_on_read: prefer, ..Explained::ambiguous(near, reasons, reports) });
         }
         // a row that opens with what may be a unit before the caller's address may be the caller's
         // place too: the rows are asked about, so neither is taken over the other

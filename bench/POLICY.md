@@ -126,7 +126,9 @@ number and street, a postcode, or a town the caller gave); otherwise it is part 
 not write is that venue, not a place in a town the caller typed alone.
 
 A candidate that adds a unit the caller did not give is not a match. In a `pick` case where the
-only candidates that fit add a unit, the answer is `ambiguous`: ask the caller which unit.
+only candidates that fit add a unit, the answer is `ambiguous`: ask the caller which unit. A
+picker reading the site may take the first of them that is the caller's place but for its unit
+(`prefer_on_read`).
 
 Where the number comes first, or no country is given, a short number alone in its own part right
 after a typed street that opens with its house number is the unit (`123 Example Street, 4,

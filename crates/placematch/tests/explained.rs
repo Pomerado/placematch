@@ -358,7 +358,8 @@ fn pick_agrees_with_pick_explained() {
             let want = match e.outcome {
                 Outcome::Match => Pick::Match(e.index.unwrap()),
                 Outcome::None => Pick::None,
-                Outcome::Ambiguous if e.reasons.iter().all(|r| near.contains(r)) => {
+                // a lone row under another town's name is asked about as a near row is
+                Outcome::Ambiguous if e.reasons.iter().all(|r| near.contains(r) || (*r == "place_unconfirmed" && e.same.iter().all(|&i| e.rows[i].verdict == Verdict::Different))) => {
                     let units: Vec<usize> = e.same.iter().copied().filter(|&i| e.rows[i].reasons.contains(&"unit_not_given")).collect();
                     if units.is_empty() {
                         Pick::None
@@ -780,4 +781,41 @@ fn a_part_that_may_be_a_unit_beside_the_callers_full_address_still_asks() {
     // a unit written with its word is the row's unit, as before
     let e = explain(&m, q, &[plain, "Unit 7, 1450 Example St, Exampleton, CA 95999"]);
     assert_eq!((e.outcome, e.index, e.same.clone()), (Outcome::Match, Some(0), vec![0]));
+}
+
+/// The site's one row at the caller's number and street, in the caller's state, under another
+/// town's name is asked about, and a read may take it when the caller gave no postcode or both give
+/// the same one; rows that add only a unit the caller did not give may be taken by a read too.
+#[test]
+fn a_lone_row_under_another_town_or_rows_with_a_unit_are_asked_about_and_a_read_may_take_them() {
+    let m = Matcher::new();
+    let ask = |q: &str, rows: &[&str]| {
+        let e = explain(&m, q, rows);
+        (e.outcome, e.same, e.reasons, e.prefer_on_read)
+    };
+    let town = |prefer| (Outcome::Ambiguous, vec![0], vec!["place_unconfirmed"], prefer);
+    assert_eq!(ask("10 Example St, Springfield, IL", &["10 Example St, Shelbyville, IL 62701"]), town(Some(0)));
+    assert_eq!(ask("10 Example St, Springfield, IL", &["10 Example St, Shelbyville, IL"]), town(Some(0)));
+    assert_eq!(ask("10 Example St Springfield IL 62701", &["10 Example St, Shelbyville, IL 62701"]), town(Some(0)));
+    // a postcode from the caller that the row leaves out: asked, with nothing for a read to take
+    assert_eq!(ask("10 Example St, Springfield, IL 62701", &["10 Example St, Shelbyville, IL"]), town(None));
+    // `pick` still answers whether a row is the place
+    assert_eq!(m.pick("10 Example St, Springfield, IL", &["10 Example St, Shelbyville, IL"], Some("US")), Pick::None);
+    // another postcode, number or state, a second town, or a caller with no state: none, as before
+    for (q, rows) in [
+        ("10 Example St, Springfield, IL 62701", &["10 Example St, Shelbyville, IL 62702"][..]),
+        ("10 Example St, Springfield, IL", &["12 Example St, Shelbyville, IL"]),
+        ("10 Example St, Springfield, IL", &["10 Example St, Shelbyville, MO"]),
+        ("10 Example St, Springfield, IL", &["10 Example St, Shelbyville, IL", "10 Example St, Capital City, IL"]),
+        ("10 Example St, Springfield", &["10 Example St, Shelbyville, IL"]),
+    ] {
+        assert_eq!(explain(&m, q, rows).outcome, Outcome::None, "{} {:?}", q, rows);
+    }
+    // the site's first row that adds only a unit, at the caller's place
+    let unit = |same, prefer| (Outcome::Ambiguous, same, vec!["unit_not_given"], prefer);
+    assert_eq!(ask("10 Example St, Springfield", &["10 Example St, Apt 4, Springfield", "11 Example St, Springfield"]), unit(vec![0], Some(0)));
+    assert_eq!(ask("10 Example St, Springfield, IL", &["10 Example St, Apt 4, Springfield, IL", "10 Example St, Apt 5, Springfield, IL"]), unit(vec![0, 1], Some(0)));
+    // a unit row in another town or under another postcode is asked about with nothing to take
+    assert_eq!(ask("10 Example St, Springfield, IL", &["10 Example St, Apt 4, Shelbyville, IL 62999"]), unit(vec![0], None));
+    assert_eq!(ask("10 Example St, Springfield, IL 62701", &["10 Example St, Apt 4, Springfield, IL 62702"]), unit(vec![0], None));
 }
