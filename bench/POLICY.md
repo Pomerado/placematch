@@ -97,8 +97,8 @@ building name. A row must still confirm where the caller's place is:
 A row that is the caller's own text with some commas left out (`1450 Example St #4 Port Example, CA
 95999` for `1450 Example St #4, Port Example, CA 95999`) is the caller's place: the same words in the
 same order, case, accents, spaces, commas, periods and hyphens aside, `#` kept on its value, and no
-comma the caller did not write, when the caller's text itself would be the caller's place. Any other
-word, or a word moved or left out, is judged by the rules above.
+comma the caller did not write. It answers as the caller's text in its place would. Any other word,
+or a word moved or left out, is judged by the rules above.
 
 A different compass word is a different street (`1 N Main St` and `1 S Main St`), never a typo, and
 so is a compass word on one side only of the same street words (`1 Example St NE` and `1 Example

@@ -801,6 +801,11 @@ fn a_row_that_runs_its_street_or_unit_into_the_callers_town_with_no_comma_is_the
     let other = "1450 Example St #5 Port Example, CA 95999";
     assert_eq!(explain(&m, q, &[row, other]).index, Some(0));
     assert_eq!(explain(&m, q, &[other, row]).index, Some(1));
+    // a row that may be the caller's address elsewhere still asks, as beside the caller's text
+    for elsewhere in ["1450 Example St N #4, Exampleton, CA 95998", "1450 Example St NE, Exampleton, CA 95998", "PO Box 1450, Example St, Exampleton, CA 95998"] {
+        let e = explain(&m, "1450 Example St #4, Port Example, CA", &["1450 Example St #4 Port Example, CA", elsewhere]);
+        assert_eq!((e.outcome, e.reasons.clone()), (Outcome::Ambiguous, vec!["several_places"]), "{elsewhere}");
+    }
     // any word changed, moved, added or left out keeps its answer: none
     for (q, rows) in [
         ("1450 Example St Apt 4, Exampleton, CA 95999", vec!["7, 1450 Example St Exampleton, CA 95999"]),

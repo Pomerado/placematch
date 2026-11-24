@@ -168,8 +168,9 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
   the answer would otherwise be `none` or `Different`, in any country: the same words in the same
   order, with case and accents folded, spaces, commas, periods and hyphens read alike, and "#" kept
   on its value ("# 4" is "#4", never "4"). Every comma the row writes must be one the caller wrote,
-  no word may differ, move or be missing, and the caller's own text, offered as a row, must be the
-  caller's place (so a country the caller gives is still never crossed). Another unit, house
+  and no word may differ, move or be missing. The answer is then the one given with the caller's
+  own text in that row's place, so the checks for another country and for the same address
+  elsewhere answer as they would for the text written with its commas. Another unit, house
   number, postcode, state or town word still answers as before, and so does any other row written
   without a comma: this rule is not a reading of such rows.
 - A country the caller gives or writes is never crossed: a row that shows another country is another

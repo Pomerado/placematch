@@ -1866,28 +1866,22 @@ impl Matcher {
         (words, commas)
     }
 
-    /// `decide_home`'s answer, or, when it is `none`, a match for the rows that are the caller's own
-    /// text (`same_text`), when the caller's text offered as a row is the caller's place (`own`), so
-    /// a country given that the text crosses stays crossed; an `ambiguous` answer or a match stays as
-    /// it is.
-    fn or_same_text(query: &str, rows: &[Row], (p, e): (Pick, Explained), own: impl FnOnce() -> bool) -> (Pick, Explained) {
-        if e.outcome != Outcome::None {
+    /// `decide_home`'s answer, or, when it is `none` and some rows are the caller's own text
+    /// (`same_text`), the answer `decide` gives with the caller's text in place of each of those rows,
+    /// unless that is `none` too. Every check runs on it as on the caller's text written with its
+    /// commas: another country, and a row that may be the same address elsewhere, included. An
+    /// `ambiguous` answer or a match stays as it is.
+    fn or_same_text(query: &str, rows: &[Row], (p, e): (Pick, Explained), decide: impl Fn(&[Row]) -> (Pick, Explained)) -> (Pick, Explained) {
+        if e.outcome != Outcome::None || !rows.iter().any(|r| Self::same_text(query, r.text)) {
             return (p, e);
         }
-        let same: Vec<usize> = (0..rows.len()).filter(|&i| Self::same_text(query, rows[i].text)).collect();
-        let Some(&index) = same.first() else {
-            return (p, e);
-        };
-        if !own() {
-            return (p, e);
+        let read: Vec<Row> = rows.iter().map(|r| if Self::same_text(query, r.text) { Row { text: query, categorized: r.categorized } } else { *r }).collect();
+        let again = decide(&read);
+        if again.1.outcome == Outcome::None {
+            (p, e)
+        } else {
+            again
         }
-        let mut reports = e.rows.clone();
-        for &i in &same {
-            if let Some(r) = reports.get_mut(i) {
-                *r = RowReport { verdict: Verdict::Same, reasons: vec![], notes: vec![] };
-            }
-        }
-        (Pick::Match(index), Explained { outcome: Outcome::Match, index: Some(index), same, rows: reports, ..e })
     }
 
     /// An address written without commas may end its street part after any number in it
@@ -3667,7 +3661,7 @@ impl Matcher {
         let inferred = if given.is_none() { self.infer_country(query, &texts) } else { None };
         let country = given.or(inferred.as_deref());
         let decide = |rows: &[Row]| self.st_second_read(|| self.decide_home(query, rows, country, inferred.is_some(), true), |r| r.1.outcome == Outcome::Match, |r| r.1.outcome == Outcome::None);
-        let (p, e) = Self::or_same_text(query, rows, decide(rows), || decide(&[Row::from(query)]).1.outcome == Outcome::Match);
+        let (p, e) = Self::or_same_text(query, rows, decide(rows), decide);
         let mut e = Self::unless_cut(p, e, &lost, query_lost).1;
         e.unit = self.unit_as_written(query, country);
         e.inferred_country = inferred;
@@ -3686,7 +3680,7 @@ impl Matcher {
         let country = self.country_code(country);
         let inferred = if country.is_none() { self.infer_country(query, &texts) } else { None };
         let decide = |rows: &[Row]| self.st_second_read(|| self.decide_home(query, rows, country.or(inferred.as_deref()), inferred.is_some(), false), |r| matches!(r.0, Pick::Match(_)), |r| matches!(r.0, Pick::None));
-        let (p, e) = Self::or_same_text(query, &rows, decide(&rows), || matches!(decide(&[Row::from(query)]).0, Pick::Match(_)));
+        let (p, e) = Self::or_same_text(query, &rows, decide(&rows), decide);
         Self::unless_cut(p, e, &lost, query_lost).0
     }
 
