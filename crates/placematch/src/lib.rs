@@ -3765,14 +3765,14 @@ impl Matcher {
             // what a read may take: that one row under another town's name, when the caller gave no
             // postcode or both give the same one; or, for a caller who gave no unit, when every row
             // asked about adds a unit, the site's first of them that is the caller's place but for
-            // its unit
+            // its unit (a leading unit's row was checked so when it was read)
             let but_unit = |i: usize| {
                 let mut c = cs[i].clone();
                 c.units.clear();
                 if let Some(a) = c.alt.as_mut() {
                     a.units.clear();
                 }
-                self.compare_parsed(&q, &c, Mode::Query).0 == Verdict::Same
+                verdicts[i].1 == ["leading_unit"] || self.compare_parsed(&q, &c, Mode::Query).0 == Verdict::Same
             };
             let prefer = match (near.as_slice(), reasons.as_slice()) {
                 ([i], [_]) if verdicts[*i].1 == ["city"] => (q.postcode.is_none() || q.postcode == cs[*i].postcode).then_some(*i),

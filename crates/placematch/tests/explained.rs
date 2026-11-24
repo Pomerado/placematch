@@ -817,12 +817,15 @@ fn a_lone_row_under_another_town_or_rows_with_a_unit_are_asked_about_and_a_read_
     ] {
         assert_eq!(explain(&m, q, rows).outcome, Outcome::None, "{} {:?}", q, rows);
     }
+    // another postal district at the same house and street
+    assert_eq!(explain_in(&m, Some("IE"), "10 Example Street, Dublin 2, Co. Dublin", &["10 Example Street, Dublin 4, Co. Dublin"]).outcome, Outcome::None);
     // the site's first row that adds only a unit, at the caller's place
     let unit = |same, prefer| (Outcome::Ambiguous, same, vec!["unit_not_given"], prefer);
     assert_eq!(ask("10 Example St, Springfield", &["10 Example St, Apt 4, Springfield", "11 Example St, Springfield"]), unit(vec![0], Some(0)));
     assert_eq!(ask("10 Example St, Springfield, IL", &["10 Example St, Apt 4, Springfield, IL", "10 Example St, Apt 5, Springfield, IL"]), unit(vec![0, 1], Some(0)));
-    // a unit the site writes as a bare number after the street
+    // a unit the site writes as a bare number after the street, or before the address
     assert_eq!(explain_in(&m, None, "410 Example St, Exampleton", &["410 Example Street, 7, Exampleton"]).prefer_on_read, Some(0));
+    assert_eq!(ask("12 Example St, Exampleton, IL", &["U7, 12 Example St, Exampleton, IL"]), unit(vec![0], Some(0)));
     // a unit row in another town or under another postcode, or another unit for a caller who gave
     // one, is asked about with nothing to take
     assert_eq!(ask("10 Example St, Springfield, IL", &["10 Example St, Apt 4, Shelbyville, IL 62999"]), unit(vec![0], None));
