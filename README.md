@@ -163,6 +163,15 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
   by its first three digits. A state comes from its own part or code, or is written after the town
   with no comma ("Exampleton IL", "Exampleton New York"), never from a town named like a state
   ("Washington, PA" is not "Washington, DC").
+- A row that is the caller's own text with some of its commas left out ("1450 Example St #4 Port
+  Example, CA 95999" for "1450 Example St #4, Port Example, CA 95999") is the caller's place when
+  the answer would otherwise be `none` or `Different`, in any country: the same words in the same
+  order, with case and accents folded, spaces, commas, periods and hyphens read alike, and "#" kept
+  on its value ("# 4" is "#4", never "4"). Every comma the row writes must be one the caller wrote,
+  no word may differ, move or be missing, and the caller's own text, offered as a row, must be the
+  caller's place (so a country the caller gives is still never crossed). Another unit, house
+  number, postcode, state or town word still answers as before, and so does any other row written
+  without a comma: this rule is not a reading of such rows.
 - A country the caller gives or writes is never crossed: a row that shows another country is another
   place ("Paris, TX 75460" is not in France; "London, ON N6A 1A1" is not in the United Kingdom), and
   so is, for a caller in the US, Canada, the UK or Australia, a row whose postcode of digits is not of
