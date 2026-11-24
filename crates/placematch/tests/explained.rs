@@ -781,3 +781,48 @@ fn a_part_that_may_be_a_unit_beside_the_callers_full_address_still_asks() {
     let e = explain(&m, q, &[plain, "Unit 7, 1450 Example St, Exampleton, CA 95999"]);
     assert_eq!((e.outcome, e.index, e.same.clone()), (Outcome::Match, Some(0), vec![0]));
 }
+
+#[test]
+fn a_row_that_runs_its_street_or_unit_into_the_callers_town_with_no_comma_is_the_callers_place() {
+    let m = Matcher::new();
+    // the caller's own text with the comma before the town left out
+    let q = "1450 Example St #4, Port Example, CA 95999";
+    let row = "1450 Example St #4 Port Example, CA 95999";
+    let e = explain(&m, q, &[row]);
+    assert_eq!((e.outcome, e.index, e.same.clone()), (Outcome::Match, Some(0), vec![0]));
+    assert_eq!(m.compare(q, row, Some("US")).0, Verdict::Same);
+    let e = explain(&m, "1450 Example St, Port Example, CA 95999", &["1450 Example St Port Example, CA 95999"]);
+    assert_eq!((e.outcome, e.index), (Outcome::Match, Some(0)));
+    // a country given that the caller's text crosses stays crossed
+    let (q_us, row_us) = ("1450 Example St #4, Port Example, IL", "1450 Example St #4 Port Example, IL");
+    assert_eq!(explain_in(&m, Some("GB"), q_us, &[row_us]).outcome, Outcome::None);
+    assert_eq!(m.compare(q_us, row_us, Some("GB")).0, Verdict::Different);
+    // the same answer whatever the order of the rows
+    let other = "1450 Example St #5 Port Example, CA 95999";
+    assert_eq!(explain(&m, q, &[row, other]).index, Some(0));
+    assert_eq!(explain(&m, q, &[other, row]).index, Some(1));
+    // a row that may be the caller's address elsewhere still asks, as beside the caller's text
+    for elsewhere in ["1450 Example St N #4, Exampleton, CA 95998", "1450 Example St NE, Exampleton, CA 95998", "PO Box 1450, Example St, Exampleton, CA 95998"] {
+        let e = explain(&m, "1450 Example St #4, Port Example, CA", &["1450 Example St #4 Port Example, CA", elsewhere]);
+        assert_eq!((e.outcome, e.reasons.clone()), (Outcome::Ambiguous, vec!["several_places"]), "{elsewhere}");
+    }
+    // any word changed, moved, added or left out keeps its answer: none
+    for (q, rows) in [
+        ("1450 Example St Apt 4, Exampleton, CA 95999", vec!["7, 1450 Example St Exampleton, CA 95999"]),
+        (q, vec![other, "1450 Example St #6 Port Example, CA 95999"]),
+        ("1450 Example St, Exampleton, CA 95999", vec!["1450 Example St 5 Exampleton, CA 95999"]),
+        ("1450 Example St, Exampleton, CA 95999", vec!["1450 Example St 1452 Exampleton, CA 95999"]),
+        ("1450 Example Dr, Sampleton, CA 95999", vec!["1450 Example Dr La Sampleton, CA 95999"]),
+        ("1450 Example Ave S, Gate, CA 95999", vec!["1450 Example Ave South Gate, CA 95999"]),
+        ("12 Example, Park, KS", vec!["12 Example Park, Otherton, KS"]),
+        (q, vec!["1450 Example St 4 Port Example, CA 95999"]),
+        ("1450 Example St Apt 4, Port Example, CA 95999", vec![row]),
+        (q, vec!["1450 Example St Port Example, CA 95999"]),
+        ("1450 Example St, Port Example, CA 95999", vec![row]),
+        (q, vec!["#4 1450 Example St Port Example, CA 95999"]),
+        (q, vec!["1450 Example St #4 Port Example, CA"]),
+        ("12 Example St, North Exampleton, CA 95999", vec!["12 Example St North, Exampleton, CA 95999"]),
+    ] {
+        assert_eq!(explain(&m, q, &rows).outcome, Outcome::None, "{q} / {rows:?}");
+    }
+}
