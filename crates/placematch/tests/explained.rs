@@ -781,3 +781,18 @@ fn a_part_that_may_be_a_unit_beside_the_callers_full_address_still_asks() {
     let e = explain(&m, q, &[plain, "Unit 7, 1450 Example St, Exampleton, CA 95999"]);
     assert_eq!((e.outcome, e.index, e.same.clone()), (Outcome::Match, Some(0), vec![0]));
 }
+
+#[test]
+fn a_row_that_runs_its_street_or_unit_into_the_callers_town_with_no_comma_is_the_callers_place() {
+    let m = Matcher::new();
+    // the town opens with a street-type word, after "St", which may also be Saint
+    let q = "1450 Example St #4, Port Example, CA 95999";
+    let e = explain(&m, q, &["1450 Example St #4 Port Example, CA 95999"]);
+    assert_eq!((e.outcome, e.index, e.notes.len()), (Outcome::Match, Some(0), 0));
+    let e = explain(&m, "1450 Example St, Port Example, CA 95999", &["1450 Example St Port Example, CA 95999"]);
+    assert_eq!((e.outcome, e.index), (Outcome::Match, Some(0)));
+    // another house number, unit, ZIP code or street type is still no match
+    for row in ["1452 Example St #4 Port Example, CA 95999", "1450 Example St #5 Port Example, CA 95999", "1450 Example St #4 Port Example, CA 95998", "1450 Example Ave #4 Port Example, CA 95999"] {
+        assert_ne!(explain(&m, q, &[row]).outcome, Outcome::Match, "{row}");
+    }
+}

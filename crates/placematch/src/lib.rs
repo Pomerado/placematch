@@ -1401,7 +1401,14 @@ impl Matcher {
         let c = self.parse_row(&ctx, query, &q, &candidate);
         let alts: Vec<Components> = Self::comma_free_readings(query).iter().map(|a| parse::parse(&ctx, a)).collect();
         let calt = self.without_leading_name(&candidate).map(|(t, name)| (parse::parse(&ctx, &t), name));
-        self.compare_any(query, &q, &alts, &c, calt.as_ref())
+        let r = self.compare_any(query, &q, &alts, &c, calt.as_ref());
+        // a listing that runs its street or unit on into the caller's town with no comma
+        if !Self::taken(&r) {
+            if let Some((_, v)) = self.punctuated(&ctx, &q, &candidate).filter(|(_, v)| Self::taken(v)) {
+                return v;
+            }
+        }
+        r
     }
 
     /// A listing that starts with a business or building name holding digits ("Grand 2009 Ltd,
@@ -1828,6 +1835,50 @@ impl Matcher {
             .take(4)
             .map(|&i| format!("{}, {}", words[..=i].join(" "), words[i + 1..].join(" ")))
             .collect()
+    }
+
+    /// A row that runs its street, or its unit, on into the caller's town with no comma ("12 Example
+    /// St #4 Port Example, IL 62701" for "12 Example St #4, Port Example, IL 62701"): the row read
+    /// with a comma before the words that are the caller's town, and that reading compared with the
+    /// caller's text. The caller writes the town in a part of its own, and the words come at the end
+    /// of a part that holds a number before them (the house number or the unit), with another part
+    /// after it. The reading is compared as written, so another house number, unit, postcode or
+    /// street type is still another place; it is the caller's place only when it is so in the
+    /// caller's own town (`taken`), not in a town the ZIP code alone places.
+    fn punctuated(&self, ctx: &Ctx, q: &Components, row: &str) -> Option<(Components, (Verdict, Vec<&'static str>))> {
+        let town = q.city.as_ref().filter(|_| q.town_own_part)?;
+        let last = town.toks.last()?.0.as_str();
+        let parts: Vec<&str> = row.split(',').collect();
+        let mut first = None;
+        for part in &parts[..parts.len() - 1] {
+            // each word with its byte offset in the row
+            let words: Vec<(usize, &str)> = part.split_whitespace().map(|w| (w.as_ptr() as usize - row.as_ptr() as usize, w)).collect();
+            // a town of up to three words, after a number and a word
+            for n in 1..=3.min(words.len().saturating_sub(2)) {
+                let (head, tail) = words.split_at(words.len() - n);
+                if !head.iter().any(|(_, w)| w.chars().any(|ch| ch.is_numeric())) || !data::concat_key(tail[tail.len() - 1].1).ends_with(last) {
+                    continue;
+                }
+                let at = tail[0].0;
+                let c = parse::parse(ctx, &format!("{}, {}", row[..at].trim_end(), &row[at..]));
+                if !c.city.as_ref().map_or(false, |t| text_eq(self, town, t, false) == Tri::Yes) {
+                    continue;
+                }
+                let r = self.compare_parsed(q, &c, Mode::Query);
+                if Self::taken(&r) {
+                    return Some((c, r));
+                }
+                if first.is_none() {
+                    first = Some((c, r));
+                }
+            }
+        }
+        first
+    }
+
+    /// A verdict that takes the caller's place in the caller's own town.
+    fn taken(v: &(Verdict, Vec<&'static str>)) -> bool {
+        v.0 == Verdict::Same && !v.1.contains(&"town_by_postcode")
     }
 
     fn compare_parsed(&self, q: &Components, c: &Components, mode: Mode) -> (Verdict, Vec<&'static str>) {
@@ -3651,12 +3702,31 @@ impl Matcher {
             .zip(&candidates)
             .map(|((c, ca), text)| if self.is_control(query, text) { (Verdict::Different, vec!["control"]) } else { self.compare_any(query, &q, &alts, c, ca.as_ref()) })
             .collect();
+        // a row that runs its street or unit on into the caller's town with no comma is read with the
+        // comma put in: as the caller's place when only that reading takes it (its verdict is kept
+        // otherwise), and so beside a row taken that way when checking for the same address elsewhere
+        let mut readings: Vec<Option<Components>> = vec![None; cs.len()];
+        let mut punctuated = vec![false; cs.len()];
+        for i in 0..cs.len() {
+            if Self::taken(&verdicts[i]) || verdicts[i].1 == ["control"] {
+                continue;
+            }
+            if let Some((c2, v)) = self.punctuated(ctx, &q, &compared[i]) {
+                if Self::taken(&v) {
+                    cs[i] = c2.clone();
+                    verdicts[i] = v;
+                    punctuated[i] = true;
+                }
+                readings[i] = Some(c2);
+            }
+        }
         let mut reports: Vec<RowReport> = verdicts.iter().map(|(v, r)| RowReport { verdict: *v, reasons: r.clone(), notes: vec![] }).collect();
         // a listing taken by its address after a leading name ("24 Hour Sample, 12 Example St") is
         // read as that address from here on (a row that only looks like the caller's place is still
         // checked against the listing as written)
         let as_written = cs.clone();
-        let mut rewritten = vec![false; cs.len()];
+        // (a row read with a comma put in counts as rewritten too)
+        let mut rewritten = punctuated.clone();
         for i in 0..cs.len() {
             if let (Verdict::Same, Some((c2, _))) = (verdicts[i].0, &calts[i]) {
                 if self.compare_parsed(&q, &cs[i], Mode::Query).0 != Verdict::Same && self.compare_parsed(&q, c2, Mode::Query).0 == Verdict::Same {
@@ -3869,7 +3939,15 @@ impl Matcher {
         }
         let mut place = clusters[0].clone();
         place.sort();
-        if self.has_shadow(&q, &as_written, &clusters[0], &compared) {
+        // (rows read with a comma put in are checked so beside a place taken so)
+        let read: Vec<Components>;
+        let shadowed = if punctuated[clusters[0][0]] {
+            read = as_written.iter().zip(&readings).map(|(c, r)| r.as_ref().unwrap_or(c).clone()).collect();
+            &read
+        } else {
+            &as_written
+        };
+        if self.has_shadow(&q, shadowed, &clusters[0], &compared) {
             return (Pick::Ambiguous(place.clone()), Explained::ambiguous(place, vec!["several_places"], reports));
         }
         // rows that leave out the caller's state, beside the same address in another state: they
