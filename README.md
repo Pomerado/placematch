@@ -163,13 +163,6 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
   by its first three digits. A state comes from its own part or code, or is written after the town
   with no comma ("Exampleton IL", "Exampleton New York"), never from a town named like a state
   ("Washington, PA" is not "Washington, DC").
-- A row that runs its street, or its unit, on into the caller's town with no comma ("1450 Example
-  St #4 Port Example, CA 95999" for "1450 Example St #4, Port Example, CA 95999") is read with
-  that comma, whatever words the town holds, when the caller writes the town in a part of its own
-  and a number (the house number or the unit) comes before it. That reading is the caller's place
-  only in the caller's own town, never by the ZIP code alone, and another house number, unit,
-  postcode or street type is still another place; when it is not the caller's place, the row
-  answers as read without the comma.
 - A country the caller gives or writes is never crossed: a row that shows another country is another
   place ("Paris, TX 75460" is not in France; "London, ON N6A 1A1" is not in the United Kingdom), and
   so is, for a caller in the US, Canada, the UK or Australia, a row whose postcode of digits is not of
