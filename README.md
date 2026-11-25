@@ -104,7 +104,8 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
   Postcode, region, country, district and business names may be missing on either side.
 - A candidate that adds a unit the caller did not give is not picked. When only such
   candidates fit, the answer is `ambiguous`, so the caller can be asked which unit; a read may
-  take the site's first of them that is the caller's place but for its unit (`prefer_on_read`).
+  take the site's first of them that is the caller's place but for its unit (`prefer_on_read`)
+  when the caller wrote only an address and those rows are one place no row puts in another state.
 - Where the number comes first, or no country is given, a short number alone in its own part
   right after a typed street that opens with its house number ("123 Example Street, 4,
   Exampleton") is the unit: "Apt 4", "#4", "Suite 4" and "4" are one unit, and "5" is another.
@@ -113,7 +114,8 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
   too, so a place that fits the number read as the house number still matches.
 - A short part before the address that may be a unit, whatever its word ("№7", "Studio 12",
   "U7", "7F", "7-B", "7"), is read as the row's unit: another unit is not the caller's, and
-  otherwise the row is at most asked about, never taken, even beside a row that fits, unless the
+  otherwise the row is at most asked about, never picked (a read may take it only as above), even
+  beside a row that fits, unless the
   site categorized it as a business at the caller's address (below). Any other
   leading part with a number is at most asked about when that number is not the address's and
   the caller gave a unit, or when the part is three words or fewer and the caller gave none,
@@ -146,8 +148,9 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
   adds a place the caller did not write (`place_unconfirmed`). In the US the ZIP code decides
   instead (below).
 - When the site lists one row (rows in another country left aside), with the caller's house
-  number, street and street type in the caller's state under another town's name, each town in a
-  part of its own, and nothing else that differs, it may be the caller's place named another way:
+  number, street and street type in the caller's state under another town's name, each side
+  naming one town in a part of its own, nothing before the address and nothing else that differs,
+  it may be the caller's place named another way:
   it is asked about (`place_unconfirmed`), and a read may take it (`prefer_on_read`) when the
   caller gave no postcode or both give the same one. Two such rows, another state or postcode, or
   a caller who names no state still answer `none`.

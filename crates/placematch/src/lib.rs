@@ -3826,30 +3826,43 @@ impl Matcher {
                 let fit = fits(&c) || c.alt.as_deref().map_or(false, |a| fits(a)) || calts[i].as_ref().map_or(false, |(a, _)| fits(a));
                 fit && lead_is_unit(i) && (verdicts[i].1 == ["leading_unit"] || self.compare_parsed(&q, &c, Mode::Query).0 == Verdict::Same)
             };
-            let prefer = match (near.as_slice(), reasons.as_slice()) {
-                ([i], [_]) if verdicts[*i].1 == ["city"] => (q.postcode.is_none() || q.postcode == cs[*i].postcode).then_some(*i),
-                // more distinct rows than `MAX_COMPARED_ROWS` are not compared with each other: none is taken
-                _ if q.units.is_empty() && whole_query && reasons.iter().all(|r| *r == "unit_not_given") && distinct_texts(near.iter().map(|&i| candidates[i])) <= MAX_COMPARED_ROWS => {
-                    let mine: Vec<Components> = near.iter().map(|&i| but_unit(i)).collect();
-                    let one_place = mine.iter().enumerate().all(|(a, x)| mine.iter().enumerate().all(|(b, y)| a == b || self.compare_parsed(x, y, Mode::Peer).0 != Verdict::Different));
-                    // every row without its unit (one that opens with a unit, or that is asked about
-                    // for its state or postcode, read by the address after that part): a row that
-                    // leaves out the caller's state beside the same address in another state is
-                    // asked about, as such rows with no unit are
-                    let bare: Vec<Components> = (0..cs.len())
-                        .map(|j| match (&calts[j], verdicts[j].1.as_slice()) {
-                            (Some((a, _)), ["leading_unit"] | ["region"] | ["postcode"]) => {
-                                let mut a = a.clone();
-                                a.units.clear();
-                                a
-                            }
-                            _ => but_unit(j),
-                        })
-                        .collect();
-                    let bare_verdicts: Vec<(Verdict, Vec<&'static str>)> = bare.iter().map(|c| self.compare_parsed(&q, c, Mode::Query)).collect();
-                    if one_place { near.iter().copied().find(|&i| takes(i) && !self.state_left_out_beside_another(&q, &bare, &[i], &bare_verdicts)) } else { None }
+            // `pick` (the read without ranges) has no use for what a read may take
+            let prefer = if !ranges {
+                None
+            } else {
+                match (near.as_slice(), reasons.as_slice()) {
+                    ([i], [_]) if verdicts[*i].1 == ["city"] => (q.postcode.is_none() || q.postcode == cs[*i].postcode).then_some(*i),
+                    // more distinct rows than `MAX_COMPARED_ROWS` are not compared with each other: none is taken
+                    _ if q.units.is_empty() && whole_query && reasons.iter().all(|r| *r == "unit_not_given") && distinct_texts(near.iter().map(|&i| candidates[i])) <= MAX_COMPARED_ROWS => {
+                        // rows of one text are one place, so each text is read once, through its first row
+                        let keys: Vec<String> = candidates.iter().map(|t| text_key(t)).collect();
+                        let mut seen = std::collections::HashSet::new();
+                        let firsts: Vec<usize> = near.iter().copied().filter(|&i| seen.insert(&keys[i])).collect();
+                        let mut seen = std::collections::HashSet::new();
+                        let texts: Vec<usize> = (0..cs.len()).filter(|&j| seen.insert(&keys[j])).collect();
+                        let mine: Vec<Components> = firsts.iter().map(|&i| but_unit(i)).collect();
+                        let one_place = mine.iter().enumerate().all(|(a, x)| mine.iter().enumerate().all(|(b, y)| a == b || self.compare_parsed(x, y, Mode::Peer).0 != Verdict::Different));
+                        // every row without its unit (one that opens with a unit, or that is asked
+                        // about for its state or postcode, read by the address after that part): a
+                        // row that leaves out the caller's state beside the same address in another
+                        // state is asked about, as such rows with no unit are
+                        let bare: Vec<Components> = texts
+                            .iter()
+                            .map(|&j| match (&calts[j], verdicts[j].1.as_slice()) {
+                                (Some((a, _)), ["leading_unit"] | ["region"] | ["postcode"]) => {
+                                    let mut a = a.clone();
+                                    a.units.clear();
+                                    a
+                                }
+                                _ => but_unit(j),
+                            })
+                            .collect();
+                        let bare_verdicts: Vec<(Verdict, Vec<&'static str>)> = bare.iter().map(|c| self.compare_parsed(&q, c, Mode::Query)).collect();
+                        let other_state = |i: usize| texts.iter().position(|&j| keys[j] == keys[i]).map_or(false, |k| self.state_left_out_beside_another(&q, &bare, &[k], &bare_verdicts));
+                        if one_place { firsts.iter().copied().find(|&i| takes(i) && !other_state(i)) } else { None }
+                    }
+                    _ => None,
                 }
-                _ => None,
             };
             return (strict, Explained { prefer_on_read: prefer, ..Explained::ambiguous(near, reasons, reports) });
         }

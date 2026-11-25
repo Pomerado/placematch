@@ -35,7 +35,9 @@ Hard components. A contradiction on any of them means a different place:
 - town when both sides give one, and every place name must fit: a shared district does not
   make `Centro, Cidade Alta` the same as `Centro, Vila Baixa`; in the US, the same house number,
   street and five-digit ZIP code on both sides settle the place whatever town or neighborhood
-  each side writes (`New York` and `Manhattan`);
+  each side writes (`New York` and `Manhattan`); the site's one row that differs only by naming
+  another town in the caller's state is asked about, and a read may take it when no postcode
+  differs;
 - postcode when both sides give one;
 - state, province or region when both sides give one (`IL` and `Missouri` differ; `Texas` and
   `TX` agree; a city that is a region of its own, such as `台中市`, counts as one);
@@ -128,7 +130,8 @@ not write is that venue, not a place in a town the caller typed alone.
 A candidate that adds a unit the caller did not give is not a match. In a `pick` case where the
 only candidates that fit add a unit, the answer is `ambiguous`: ask the caller which unit. A
 picker reading the site may take the first of them that is the caller's place but for its unit
-(`prefer_on_read`).
+(`prefer_on_read`) when the caller wrote only an address and those rows are one place no row puts
+in another state.
 
 Where the number comes first, or no country is given, a short number alone in its own part right
 after a typed street that opens with its house number is the unit (`123 Example Street, 4,
