@@ -862,7 +862,15 @@ fn a_lone_row_under_another_town_or_rows_with_a_unit_are_asked_about_and_a_read_
         ("12 Example St, Exampleton, IL", &["14 Example St, 12 Example St, Exampleton, IL"]),
         ("12 Example St, Exampleton, Cook County, IL", &["12 Example St, Lake County, IL"]),
         ("12 Example St, Cook County, IL", &["12 Example St, Lake County, IL"]),
+        // a unit number after the ZIP code, or one that repeats the house number
+        ("10 Example St, Springfield, IL 62751, 5", &["10 Example St Apt 7, Springfield, IL 62751", "10 Example St Apt 5, Springfield, IL 62751"]),
+        ("10 Example St, Springfield, IL, 10", &["10 Example St Apt 7, Springfield, IL", "10 Example St Apt 10, Springfield, IL"]),
+        // a row that opens with an address of its own on a street with no type
+        ("12 Example St, Exampleton, IL", &["1400 Broadway, 12 Example St, Exampleton, IL"]),
     ] {
         assert_eq!(explain(&m, q, rows).prefer_on_read, None, "{} {:?}", q, rows);
     }
+    // another district of the caller's own town is not another town
+    assert_eq!(explain(&m, "10 Example St, Downtown, Springfield, IL", &["10 Example St, Uptown, Springfield, IL"]).outcome, Outcome::None);
+    assert_eq!(explain_in(&m, Some("BR"), "Rua Exemplo 10, Centro, São Paulo, SP", &["Rua Exemplo 10, Mooca, São Paulo, SP"]).outcome, Outcome::None);
 }
