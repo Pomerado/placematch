@@ -156,9 +156,10 @@ pub struct Explained {
     /// such row holds it in full (or the exact name is only outside it); with no area from the
     /// caller there is none. Also, when no row is the caller's place: the site's one row under
     /// another town's name (`place_unconfirmed`) when the caller gave no postcode or both give the
-    /// same one, or, for a caller who gave no unit, when every row asked about adds one, the site's
-    /// first of them that is the caller's place but for its unit. A read may take it; a write
-    /// still asks.
+    /// same one, or, for a caller who gave no unit and wrote only an address, when every row asked
+    /// about adds one and those rows, at most 16 different ones, are one place no row puts in
+    /// another state, the site's first of them that is the caller's place but for its unit. A read
+    /// may take it; a write still asks.
     pub prefer_on_read: Option<usize>,
     /// Each row's verdict and reasons, by row index.
     pub rows: Vec<RowReport>,

@@ -36,8 +36,8 @@ Hard components. A contradiction on any of them means a different place:
   make `Centro, Cidade Alta` the same as `Centro, Vila Baixa`; in the US, the same house number,
   street and five-digit ZIP code on both sides settle the place whatever town or neighborhood
   each side writes (`New York` and `Manhattan`); the site's one row that differs only by naming
-  another town in the caller's state is asked about, and a read may take it when no postcode
-  differs;
+  another town in the caller's state is asked about, and a read may take it when the caller gave
+  no postcode or both give the same one;
 - postcode when both sides give one;
 - state, province or region when both sides give one (`IL` and `Missouri` differ; `Texas` and
   `TX` agree; a city that is a region of its own, such as `台中市`, counts as one);

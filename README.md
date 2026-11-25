@@ -116,8 +116,8 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
 - A short part before the address that may be a unit, whatever its word ("№7", "Studio 12",
   "U7", "7F", "7-B", "7"), is read as the row's unit: another unit is not the caller's, and
   otherwise the row is at most asked about, never picked (a read may take it only as above), even
-  beside a row that fits, unless the
-  site categorized it as a business at the caller's address (below). Any other
+  beside a row that fits, unless the site categorized it as a business at the caller's address
+  (below). Any other
   leading part with a number is at most asked about when that number is not the address's and
   the caller gave a unit, or when the part is three words or fewer and the caller gave none,
   unless it reads as a place's name (two words or more with the number not last, such as "24
