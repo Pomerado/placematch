@@ -850,4 +850,19 @@ fn a_lone_row_under_another_town_or_rows_with_a_unit_are_asked_about_and_a_read_
         let e = explain(&m, &q, &[rows[0].as_str(), rows[1].as_str()]);
         assert_eq!((e.outcome, e.prefer_on_read), (Outcome::Ambiguous, None), "{} {:?}", q, rows);
     }
+    // nothing for a read either: a caller's unit as a number of its own, a lone row in another
+    // town that opens with what may be a unit, unit rows at two places, a row that opens with
+    // another address, or a county read as a town
+    for (q, rows) in [
+        ("5, 10 Example St, Springfield, IL", &["10 Example St Apt 7, Springfield, IL", "10 Example St Apt 5, Springfield, IL"][..]),
+        ("10 Example St, Springfield, IL, 5", &["10 Example St Apt 7, Springfield, IL", "10 Example St Apt 5, Springfield, IL"]),
+        ("10 Example St, Apt 5, Springfield, IL", &["7, 10 Example St, Shelbyville, IL"]),
+        ("10 Example St, Springfield, IL", &["7F, 10 Example St, Shelbyville, IL"]),
+        ("10 Example St, Springfield", &["10 Example St, Apt 4, Springfield, IL", "10 Example St, Apt 4, Springfield, MO"]),
+        ("12 Example St, Exampleton, IL", &["14 Example St, 12 Example St, Exampleton, IL"]),
+        ("12 Example St, Exampleton, Cook County, IL", &["12 Example St, Lake County, IL"]),
+        ("12 Example St, Cook County, IL", &["12 Example St, Lake County, IL"]),
+    ] {
+        assert_eq!(explain(&m, q, rows).prefer_on_read, None, "{} {:?}", q, rows);
+    }
 }

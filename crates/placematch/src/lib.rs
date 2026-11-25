@@ -555,6 +555,11 @@ fn street_directions(t: &Text) -> (Vec<&'static str>, String) {
 }
 
 /// Compare two names (street or locality). `typo`: allow one edit for names of 6+ letters.
+/// A county, parish or borough named with its kind ("Example County"), which is no town.
+fn county_name(t: &Text) -> bool {
+    t.toks.len() >= 2 && t.toks.last().map_or(false, |w| matches!(w.0.as_str(), "county" | "parish" | "borough"))
+}
+
 fn text_eq(m: &Matcher, q: &Text, c: &Text, typo: bool) -> Tri {
     // two Han names are one name only when their characters agree, up to traditional, Japanese and
     // simplified forms: a shared reading is not enough ("福州" and "抚州" both read "fuzhou")
@@ -1651,8 +1656,7 @@ impl Matcher {
         // only a region, a country or this code may follow the town's part: a town after it makes
         // that part a street ("62701, Example Trail, Sampleton, IL"; "62701 Example, Sampleton, IL")
         // (a county is no town: "62701, Exampleton, Example County, IL")
-        let county = |t: &Text| t.toks.len() >= 2 && t.toks.last().map_or(false, |w| matches!(w.0.as_str(), "county" | "parish" | "borough"));
-        let places: Vec<&Text> = shape.localities.iter().filter(|t| !shape.countries.contains(&t.key) && !county(t)).collect();
+        let places: Vec<&Text> = shape.localities.iter().filter(|t| !shape.countries.contains(&t.key) && !county_name(t)).collect();
         let towns = places.iter().filter(|t| !shape.regions.contains(&t.key)).count();
         if places.len() > 2 || towns > 1 {
             return None;
@@ -2705,9 +2709,9 @@ impl Matcher {
     }
 
     /// `c` is `q`'s place but for its town: the same house number, street and street type, each
-    /// town in a part of its own (so no compass word of a street is read as part of a town), the
-    /// same state or province named on both sides, and nothing else apart once the row names the
-    /// caller's town.
+    /// town in a part of its own (so no compass word of a street is read as part of a town) and
+    /// neither a county, the same state or province named on both sides, and nothing else apart
+    /// once the row names the caller's town.
     fn town_only_differs(&self, q: &Components, c: &Components) -> bool {
         let regions = self.region_ids(q, false);
         let mut placed = c.clone();
@@ -2725,6 +2729,8 @@ impl Matcher {
             && intersects(&q.street_type, &c.street_type)
             && q.town_own_part
             && c.town_own_part
+            && !q.city.as_ref().map_or(false, county_name)
+            && !c.city.as_ref().map_or(false, county_name)
             && self.region_ids(c, false).iter().any(|r| regions.iter().any(|s| s.0 == r.0))
             && self.compare_parsed(q, &placed, Mode::Query).0 == Verdict::Same
     }
@@ -3754,8 +3760,9 @@ impl Matcher {
                     (Verdict::Unknown, ["town_not_listed"] | ["region_not_listed"] | ["town_spelled_differently"]) => "place_unconfirmed",
                     (Verdict::Different, ["postcode"]) if self.postcode_only_differs(&q, &cs[i]) => "postcode_differs",
                     // the site's one row, at the caller's number and street in the caller's state
-                    // under another town's name, may be the caller's place named another way
-                    (Verdict::Different, ["city"]) if cs.len() == 1 && self.town_only_differs(&q, &cs[i]) => "place_unconfirmed",
+                    // under another town's name, with nothing before its address (which may be a
+                    // unit), may be the caller's place named another way
+                    (Verdict::Different, ["city"]) if cs.len() == 1 && calts[i].is_none() && cs[i].business.is_empty() && self.town_only_differs(&q, &cs[i]) => "place_unconfirmed",
                     _ => continue,
                 };
                 near.push(i);
@@ -3769,26 +3776,45 @@ impl Matcher {
             }
             // what a read may take: that one row under another town's name, when the caller gave no
             // postcode or both give the same one; or, for a caller who gave no unit, when every row
-            // asked about adds a unit, the site's first of them that is the caller's place but for
-            // its unit (a leading unit's row was checked so when it was read). A caller's text with
-            // more than such a row holds may give a unit the reading missed ("PH B", "Lower"), so
-            // it needs no part before its address, the row's street as its own, and each of its
-            // towns named by the row
+            // asked about adds a unit and they are one place, the site's first of them that is the
+            // caller's place but for its unit (a leading unit's row was checked so when it was
+            // read, and a leading part that is an address of its own is no unit). A caller's text
+            // holding more than such a row may give a unit the reading missed ("PH B", "Lower",
+            // "5, 10 Example St"), so it needs no part before its address, no number but its house
+            // number, street and postcode, the row's street as its own, and each of its towns named
+            // by the row
             let fits = |x: &Components| {
                 q.street.key == x.street.key && self.towns(&q).iter().all(|t| self.towns(x).iter().any(|u| text_eq(self, t, u, false) == Tri::Yes))
             };
+            let numbers_known = query
+                .split(|ch: char| !ch.is_alphanumeric())
+                .filter(|w| w.chars().any(|ch| ch.is_numeric()))
+                .all(|w| q.house.as_deref().map_or(false, |h| h.eq_ignore_ascii_case(w)) || q.postcode.as_deref().map_or(false, |p| p.contains(w)) || q.street.key.split(' ').any(|t| t == w.to_lowercase()));
+            let whole_query = q.business.is_empty() && self.without_leading_name(query).is_none() && numbers_known;
             let but_unit = |i: usize| {
                 let mut c = cs[i].clone();
                 c.units.clear();
                 if let Some(a) = c.alt.as_mut() {
                     a.units.clear();
                 }
-                let whole = q.business.is_empty() && (fits(&c) || c.alt.as_deref().map_or(false, |a| fits(a)) || calts[i].as_ref().map_or(false, |(a, _)| fits(a)));
-                whole && (verdicts[i].1 == ["leading_unit"] || self.compare_parsed(&q, &c, Mode::Query).0 == Verdict::Same)
+                c
+            };
+            let one_place = near.iter().all(|&i| near.iter().all(|&j| i == j || self.compare_parsed(&but_unit(i), &but_unit(j), Mode::Peer).0 != Verdict::Different));
+            let lead_is_unit = |i: usize| {
+                verdicts[i].1 != ["leading_unit"]
+                    || calts[i].as_ref().and_then(|(_, n)| n.as_deref()).map_or(true, |n| {
+                        let a = parse::parse(ctx, n);
+                        a.house.is_none() || a.street.is_empty() || a.street_type.is_empty()
+                    })
+            };
+            let takes = |i: usize| {
+                let c = but_unit(i);
+                let fit = fits(&c) || c.alt.as_deref().map_or(false, |a| fits(a)) || calts[i].as_ref().map_or(false, |(a, _)| fits(a));
+                fit && lead_is_unit(i) && (verdicts[i].1 == ["leading_unit"] || self.compare_parsed(&q, &c, Mode::Query).0 == Verdict::Same)
             };
             let prefer = match (near.as_slice(), reasons.as_slice()) {
                 ([i], [_]) if verdicts[*i].1 == ["city"] => (q.postcode.is_none() || q.postcode == cs[*i].postcode).then_some(*i),
-                _ if q.units.is_empty() && reasons.iter().all(|r| *r == "unit_not_given") => near.iter().copied().find(|&i| but_unit(i)),
+                _ if q.units.is_empty() && whole_query && one_place && reasons.iter().all(|r| *r == "unit_not_given") => near.iter().copied().find(|&i| takes(i)),
                 _ => None,
             };
             return (strict, Explained { prefer_on_read: prefer, ..Explained::ambiguous(near, reasons, reports) });
