@@ -3804,14 +3804,16 @@ impl Matcher {
                 }
                 c
             };
-            let one_place = near.iter().all(|&i| near.iter().all(|&j| i == j || self.compare_parsed(&but_unit(i), &but_unit(j), Mode::Peer).0 != Verdict::Different));
             let number = |w: &str| w.starts_with(|ch: char| ch.is_ascii_digit());
             // a part written name first and number last ("Beispielstraße 12")
             let number_last = |part: &str| {
                 let w: Vec<&str> = part.split_whitespace().collect();
                 w.len() >= 2 && !number(w[0]) && w.last().map_or(false, |x| number(x))
             };
-            let caller_number_last = number_last(query.split(',').next().unwrap_or(""));
+            // the caller writes its house number after its street's name, with or without a comma after it
+            let words: Vec<&str> = query.split(|ch: char| ch.is_whitespace() || ch == ',').filter(|w| !w.is_empty()).collect();
+            let house_after_name = words.first().map_or(false, |w| !number(w)) && q.house.as_deref().map_or(false, |h| words[1..].iter().any(|w| w.eq_ignore_ascii_case(h)));
+            let caller_number_last = number_last(query.split(',').next().unwrap_or("")) || house_after_name;
             let lead_is_unit = |i: usize| {
                 let lead = compared[i].split(',').next().unwrap_or("");
                 let mut words = lead.split_whitespace();
@@ -3826,7 +3828,27 @@ impl Matcher {
             };
             let prefer = match (near.as_slice(), reasons.as_slice()) {
                 ([i], [_]) if verdicts[*i].1 == ["city"] => (q.postcode.is_none() || q.postcode == cs[*i].postcode).then_some(*i),
-                _ if q.units.is_empty() && whole_query && one_place && reasons.iter().all(|r| *r == "unit_not_given") => near.iter().copied().find(|&i| takes(i)),
+                // more distinct rows than `MAX_COMPARED_ROWS` are not compared with each other: none is taken
+                _ if q.units.is_empty() && whole_query && reasons.iter().all(|r| *r == "unit_not_given") && distinct_texts(near.iter().map(|&i| candidates[i])) <= MAX_COMPARED_ROWS => {
+                    let mine: Vec<Components> = near.iter().map(|&i| but_unit(i)).collect();
+                    let one_place = mine.iter().enumerate().all(|(a, x)| mine.iter().enumerate().all(|(b, y)| a == b || self.compare_parsed(x, y, Mode::Peer).0 != Verdict::Different));
+                    // every row without its unit (one that opens with a unit, or that is asked about
+                    // for its state or postcode, read by the address after that part): a row that
+                    // leaves out the caller's state beside the same address in another state is
+                    // asked about, as such rows with no unit are
+                    let bare: Vec<Components> = (0..cs.len())
+                        .map(|j| match (&calts[j], verdicts[j].1.as_slice()) {
+                            (Some((a, _)), ["leading_unit"] | ["region"] | ["postcode"]) => {
+                                let mut a = a.clone();
+                                a.units.clear();
+                                a
+                            }
+                            _ => but_unit(j),
+                        })
+                        .collect();
+                    let bare_verdicts: Vec<(Verdict, Vec<&'static str>)> = bare.iter().map(|c| self.compare_parsed(&q, c, Mode::Query)).collect();
+                    if one_place { near.iter().copied().find(|&i| takes(i) && !self.state_left_out_beside_another(&q, &bare, &[i], &bare_verdicts)) } else { None }
+                }
                 _ => None,
             };
             return (strict, Explained { prefer_on_read: prefer, ..Explained::ambiguous(near, reasons, reports) });
