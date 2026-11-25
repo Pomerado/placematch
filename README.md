@@ -105,7 +105,8 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
 - A candidate that adds a unit the caller did not give is not picked. When only such
   candidates fit, the answer is `ambiguous`, so the caller can be asked which unit; a read may
   take the site's first of them that is the caller's place but for its unit (`prefer_on_read`)
-  when the caller wrote only an address and those rows are one place no row puts in another state.
+  when the caller wrote only an address and those rows, at most 16 different ones, are one place
+  no row puts in another state.
 - Where the number comes first, or no country is given, a short number alone in its own part
   right after a typed street that opens with its house number ("123 Example Street, 4,
   Exampleton") is the unit: "Apt 4", "#4", "Suite 4" and "4" are one unit, and "5" is another.
