@@ -3780,8 +3780,9 @@ impl Matcher {
             // postcode or both give the same one; or, for a caller who gave no unit, when every row
             // asked about adds a unit and they are one place, the site's first of them that is the
             // caller's place but for its unit (a leading unit's row was checked so when it was
-            // read, and a leading part that opens with a number and then a word is an address of
-            // its own, no unit). A caller's text holding more than such a row may give a unit the
+            // read, and a leading part that opens with a number and then a word, or that is
+            // written name first and number last as the caller writes its own street, is an
+            // address of its own, no unit). A caller's text holding more than such a row may give a unit the
             // reading missed ("PH B", "Lower", "5, 10 Example St"), so it needs no part before its
             // address, no number but its house number (once), street and postcode (a whole part
             // of it), the row's street as its own, and each of its towns named by the row
@@ -3804,10 +3805,19 @@ impl Matcher {
                 c
             };
             let one_place = near.iter().all(|&i| near.iter().all(|&j| i == j || self.compare_parsed(&but_unit(i), &but_unit(j), Mode::Peer).0 != Verdict::Different));
+            let number = |w: &str| w.starts_with(|ch: char| ch.is_ascii_digit());
+            // a part written name first and number last ("Beispielstraße 12")
+            let number_last = |part: &str| {
+                let w: Vec<&str> = part.split_whitespace().collect();
+                w.len() >= 2 && !number(w[0]) && w.last().map_or(false, |x| number(x))
+            };
+            let caller_number_last = number_last(query.split(',').next().unwrap_or(""));
             let lead_is_unit = |i: usize| {
-                let mut words = compared[i].split(',').next().unwrap_or("").split_whitespace();
-                let opens_with_number = words.next().map_or(false, |w| w.starts_with(|ch: char| ch.is_ascii_digit()));
-                verdicts[i].1 != ["leading_unit"] || !(opens_with_number && words.any(|w| w.chars().filter(|ch| ch.is_alphabetic()).count() >= 2))
+                let lead = compared[i].split(',').next().unwrap_or("");
+                let mut words = lead.split_whitespace();
+                let opens_with_number = words.next().map_or(false, number);
+                let address = (opens_with_number && words.any(|w| w.chars().filter(|ch| ch.is_alphabetic()).count() >= 2)) || (caller_number_last && number_last(lead));
+                verdicts[i].1 != ["leading_unit"] || !address
             };
             let takes = |i: usize| {
                 let c = but_unit(i);

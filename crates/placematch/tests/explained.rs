@@ -867,9 +867,14 @@ fn a_lone_row_under_another_town_or_rows_with_a_unit_are_asked_about_and_a_read_
         ("10 Example St, Springfield, IL, 10", &["10 Example St Apt 7, Springfield, IL", "10 Example St Apt 10, Springfield, IL"]),
         // a row that opens with an address of its own on a street with no type
         ("12 Example St, Exampleton, IL", &["1400 Broadway, 12 Example St, Exampleton, IL"]),
+        // a caller who gave a unit, and a lone row in another town that opens with a business
+        ("12 Example St Apt B, Exampleton, IL", &["Lower Level 7, 12 Example St, Exampleton, IL"]),
+        ("10 Example St, Springfield, IL", &["Example Cafe, 10 Example St, Shelbyville, IL"]),
     ] {
         assert_eq!(explain(&m, q, rows).prefer_on_read, None, "{} {:?}", q, rows);
     }
+    // a row that opens with another address written as the caller writes its own, name first
+    assert_eq!(explain_in(&m, Some("DE"), "Beispielstraße 12, 10115 Berlin", &["Hauptstraße 14, Beispielstraße 12, 10115 Berlin"]).prefer_on_read, None);
     // another district of the caller's own town is not another town
     assert_eq!(explain(&m, "10 Example St, Downtown, Springfield, IL", &["10 Example St, Uptown, Springfield, IL"]).outcome, Outcome::None);
     assert_eq!(explain_in(&m, Some("BR"), "Rua Exemplo 10, Centro, São Paulo, SP", &["Rua Exemplo 10, Mooca, São Paulo, SP"]).outcome, Outcome::None);
