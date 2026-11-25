@@ -2712,7 +2712,12 @@ impl Matcher {
         let regions = self.region_ids(q, false);
         let mut placed = c.clone();
         placed.city = q.city.clone();
-        placed.localities = q.localities.clone();
+        // only the row's town takes the caller's: a county or borough the row names stays its own
+        if let (Some(row), Some(town)) = (&c.city, &q.city) {
+            if let Some(t) = placed.localities.iter_mut().find(|t| t.key == row.key) {
+                *t = town.clone();
+            }
+        }
         q.house.is_some()
             && q.house == c.house
             && !q.street.is_empty()
@@ -3765,14 +3770,21 @@ impl Matcher {
             // what a read may take: that one row under another town's name, when the caller gave no
             // postcode or both give the same one; or, for a caller who gave no unit, when every row
             // asked about adds a unit, the site's first of them that is the caller's place but for
-            // its unit (a leading unit's row was checked so when it was read)
+            // its unit (a leading unit's row was checked so when it was read). A caller's text with
+            // more than such a row holds may give a unit the reading missed ("PH B", "Lower"), so
+            // it needs no part before its address, the row's street as its own, and each of its
+            // towns named by the row
+            let fits = |x: &Components| {
+                q.street.key == x.street.key && self.towns(&q).iter().all(|t| self.towns(x).iter().any(|u| text_eq(self, t, u, false) == Tri::Yes))
+            };
             let but_unit = |i: usize| {
                 let mut c = cs[i].clone();
                 c.units.clear();
                 if let Some(a) = c.alt.as_mut() {
                     a.units.clear();
                 }
-                verdicts[i].1 == ["leading_unit"] || self.compare_parsed(&q, &c, Mode::Query).0 == Verdict::Same
+                let whole = q.business.is_empty() && (fits(&c) || c.alt.as_deref().map_or(false, |a| fits(a)) || calts[i].as_ref().map_or(false, |(a, _)| fits(a)));
+                whole && (verdicts[i].1 == ["leading_unit"] || self.compare_parsed(&q, &c, Mode::Query).0 == Verdict::Same)
             };
             let prefer = match (near.as_slice(), reasons.as_slice()) {
                 ([i], [_]) if verdicts[*i].1 == ["city"] => (q.postcode.is_none() || q.postcode == cs[*i].postcode).then_some(*i),
