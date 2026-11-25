@@ -42,7 +42,10 @@ export interface Explained {
   /** match: the row was read across scripts. */
   cross_script: boolean;
   /** ambiguous between a same-name row and a longer form of the name: the one of them the site
-   * categorized, which a read may take. A write still asks. */
+   * categorized; or the site's one row under another town's name when the caller gave no postcode
+   * or both give the same; or the site's first row that adds only a unit, when the caller wrote
+   * only an address and those rows, at most 16 different ones, are one place no row puts in
+   * another state. A read may take it. A write still asks. */
   prefer_on_read: number | null;
   rows: RowReport[];
   /** The caller's unit as the caller wrote it ("Apt 3", "#4B"; several joined with ", "), whatever

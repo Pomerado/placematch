@@ -103,7 +103,10 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
 - House number, street, street type, unit, town, postcode and PO box must not contradict.
   Postcode, region, country, district and business names may be missing on either side.
 - A candidate that adds a unit the caller did not give is not picked. When only such
-  candidates fit, the answer is `ambiguous`, so the caller can be asked which unit.
+  candidates fit, the answer is `ambiguous`, so the caller can be asked which unit; a read may
+  take the site's first of them that is the caller's place but for its unit (`prefer_on_read`)
+  when the caller wrote only an address and those rows, at most 16 different ones, are one place
+  no row puts in another state.
 - Where the number comes first, or no country is given, a short number alone in its own part
   right after a typed street that opens with its house number ("123 Example Street, 4,
   Exampleton") is the unit: "Apt 4", "#4", "Suite 4" and "4" are one unit, and "5" is another.
@@ -112,8 +115,9 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
   too, so a place that fits the number read as the house number still matches.
 - A short part before the address that may be a unit, whatever its word ("№7", "Studio 12",
   "U7", "7F", "7-B", "7"), is read as the row's unit: another unit is not the caller's, and
-  otherwise the row is at most asked about, never taken, even beside a row that fits, unless the
-  site categorized it as a business at the caller's address (below). Any other
+  otherwise the row is at most asked about, never picked (a read may take it only as above), even
+  beside a row that fits, unless the site categorized it as a business at the caller's address
+  (below). Any other
   leading part with a number is at most asked about when that number is not the address's and
   the caller gave a unit, or when the part is three words or fewer and the caller gave none,
   unless it reads as a place's name (two words or more with the number not last, such as "24
@@ -144,6 +148,13 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
   the town alone, is asked about beside the rows of the caller's place when every one of those
   adds a place the caller did not write (`place_unconfirmed`). In the US the ZIP code decides
   instead (below).
+- When the site lists one row (rows in another country left aside), with the caller's house
+  number, street and street type in the caller's state under another town's name, each side
+  naming one town in a part of its own, nothing before the address and nothing else that differs,
+  it may be the caller's place named another way:
+  it is asked about (`place_unconfirmed`), and a read may take it (`prefer_on_read`) when the
+  caller gave no postcode or both give the same one. Two such rows, another state or postcode, or
+  a caller who names no state still answer `none`.
 - Among rows of the caller's place, PlaceMatch takes the one that keeps the most of the caller's
   own place names, then the one that adds the fewest the caller did not write: a row that adds a
   town or district is not taken over the same address without it.
@@ -151,7 +162,8 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
   US, a ZIP code places a house: a row with the caller's house number, street, street type and
   compass words under the caller's own five-digit ZIP code is the caller's place whatever town or
   neighborhood each side writes ("New York" and "Manhattan", "Los Angeles" and "North Hollywood");
-  under another ZIP code, or when either side gives none, the towns must agree. A row
+  under another ZIP code, or when either side gives none, the towns must agree, but for the one
+  row asked about above. A row
   that names no town does not confirm the caller's place. In the US, Canada and Australia, a row
   that leaves out only the state, with the caller's town spelled the same, in a part of its own or
   right after the caller's street, and no postcode or other country shown, is taken; the risk left

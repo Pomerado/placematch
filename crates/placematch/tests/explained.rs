@@ -358,7 +358,8 @@ fn pick_agrees_with_pick_explained() {
             let want = match e.outcome {
                 Outcome::Match => Pick::Match(e.index.unwrap()),
                 Outcome::None => Pick::None,
-                Outcome::Ambiguous if e.reasons.iter().all(|r| near.contains(r)) => {
+                // a lone row under another town's name is asked about as a near row is
+                Outcome::Ambiguous if e.reasons.iter().all(|r| near.contains(r) || (*r == "place_unconfirmed" && e.same.iter().all(|&i| e.rows[i].verdict == Verdict::Different))) => {
                     let units: Vec<usize> = e.same.iter().copied().filter(|&i| e.rows[i].reasons.contains(&"unit_not_given")).collect();
                     if units.is_empty() {
                         Pick::None
@@ -780,4 +781,111 @@ fn a_part_that_may_be_a_unit_beside_the_callers_full_address_still_asks() {
     // a unit written with its word is the row's unit, as before
     let e = explain(&m, q, &[plain, "Unit 7, 1450 Example St, Exampleton, CA 95999"]);
     assert_eq!((e.outcome, e.index, e.same.clone()), (Outcome::Match, Some(0), vec![0]));
+}
+
+/// The site's one row at the caller's number and street, in the caller's state, under another
+/// town's name is asked about, and a read may take it when the caller gave no postcode or both give
+/// the same one; rows that add only a unit the caller did not give may be taken by a read too.
+#[test]
+fn a_lone_row_under_another_town_or_rows_with_a_unit_are_asked_about_and_a_read_may_take_them() {
+    let m = Matcher::new();
+    let ask = |q: &str, rows: &[&str]| {
+        let e = explain(&m, q, rows);
+        (e.outcome, e.same, e.reasons, e.prefer_on_read)
+    };
+    let town = |prefer| (Outcome::Ambiguous, vec![0], vec!["place_unconfirmed"], prefer);
+    assert_eq!(ask("10 Example St, Springfield, IL", &["10 Example St, Shelbyville, IL 62701"]), town(Some(0)));
+    assert_eq!(ask("10 Example St, Springfield, IL", &["10 Example St, Shelbyville, IL"]), town(Some(0)));
+    // a postcode from the caller that the row leaves out: asked, with nothing for a read to take
+    assert_eq!(ask("10 Example St, Springfield, IL 62701", &["10 Example St, Shelbyville, IL"]), town(None));
+    // `pick` still answers whether a row is the place
+    assert_eq!(m.pick("10 Example St, Springfield, IL", &["10 Example St, Shelbyville, IL"], Some("US")), Pick::None);
+    // another postcode, number, street or state, a second town, a row with no number or no street,
+    // a unit, a caller with no state, or a town written with no comma after a compass word: none,
+    // as before
+    for (q, rows) in [
+        ("10 Example St, Springfield, IL 62701", &["10 Example St, Shelbyville, IL 62702"][..]),
+        ("10 Example St, Springfield, IL", &["12 Example St, Shelbyville, IL"]),
+        ("100 Oak St, Springfield, IL", &["100 Oak Hill St, Springfield, IL"]),
+        ("10 Example St, Springfield, IL", &["10 Example St, Shelbyville, MO"]),
+        ("10 Example St, Springfield, IL", &["10 Example St, Shelbyville, IL", "10 Example St, Capital City, IL"]),
+        ("10 Example St, Springfield, IL", &["Example St, Shelbyville, IL"]),
+        ("10 Example St, Springfield, IL", &["Shelbyville, IL"]),
+        ("10 Example St, Springfield, IL", &["10 Example St Apt 4 Shelbyville, IL"]),
+        ("10 Example St, Springfield", &["10 Example St, Shelbyville, IL"]),
+        ("410 Park St Northwest Washington DC 20001", &["410 Park Street Southwest Washington DC 20001"]),
+    ] {
+        assert_eq!(explain(&m, q, rows).outcome, Outcome::None, "{} {:?}", q, rows);
+    }
+    // another postal district at the same house and street, another county the row names, or a
+    // compass word read into the town on either side
+    assert_eq!(explain_in(&m, Some("IE"), "10 Example Street, Dublin 2, Co. Dublin", &["10 Example Street, Dublin 4, Co. Dublin"]).outcome, Outcome::None);
+    assert_eq!(explain(&m, "12 Example St, Exampleton, Cook County, IL", &["12 Example St, Sampleton, Lake County, IL"]).outcome, Outcome::None);
+    assert_eq!(ask("12 Example St, Exampleton, Cook County, IL", &["12 Example St, Sampleton, Cook County, IL"]), town(Some(0)));
+    assert_eq!(explain(&m, "100 Main St, Springfield, IL", &["100 Main St North Springfield, IL"]).outcome, Outcome::None);
+    assert_eq!(explain(&m, "100 Main St North Springfield, IL", &["100 Main St, Springfield, IL"]).outcome, Outcome::None);
+    // the site's first row that adds only a unit, at the caller's place
+    let unit = |same, prefer| (Outcome::Ambiguous, same, vec!["unit_not_given"], prefer);
+    assert_eq!(ask("10 Example St, Springfield", &["10 Example St, Apt 4, Springfield", "11 Example St, Springfield"]), unit(vec![0], Some(0)));
+    assert_eq!(ask("10 Example St, Springfield, IL", &["10 Example St, Apt 4, Springfield, IL", "10 Example St, Apt 5, Springfield, IL"]), unit(vec![0, 1], Some(0)));
+    // a unit the site writes as a bare number after the street, or before the address
+    assert_eq!(explain_in(&m, None, "410 Example St, Exampleton", &["410 Example Street, 7, Exampleton"]).prefer_on_read, Some(0));
+    assert_eq!(ask("12 Example St, Exampleton, IL", &["U7, 12 Example St, Exampleton, IL"]), unit(vec![0], Some(0)));
+    // a unit row in another town or under another postcode, or another unit for a caller who gave
+    // one, is asked about with nothing to take
+    assert_eq!(ask("10 Example St, Springfield, IL", &["10 Example St, Apt 4, Shelbyville, IL 62999"]), unit(vec![0], None));
+    assert_eq!(ask("10 Example St, Springfield, IL 62701", &["10 Example St, Apt 4, Springfield, IL 62702"]), unit(vec![0], None));
+    assert_eq!(explain(&m, "12 Example St, Unit 5, Exampleton, IL", &["Lower Level 7, 12 Example St, Exampleton, IL"]).prefer_on_read, None);
+    // a unit the caller wrote in a form not read as one, after the street, in a part of its own or
+    // before the address, and a row asked about for another reason beside the unit rows: nothing
+    // to take
+    let z = ", Exampleton, IL 62999";
+    for (q, rows) in [
+        (format!("12 Example St PH B{z}"), [format!("12 Example St #PHA{z}"), format!("12 Example St #PHB{z}")]),
+        (format!("12 Example St, Building A Unit 1{z}"), [format!("12 Example St Unit 2{z}"), format!("12 Example St Unit 1{z}")]),
+        (format!("12 Example St, Lower{z}"), [format!("12 Example St Unit 1{z}"), format!("12 Example St Unit 2{z}")]),
+        (format!("PH B, 12 Example St{z}"), [format!("12 Example St Apt 1{z}"), format!("12 Example St Apt 2{z}")]),
+        ("100 Main St, Springfield, IL 62701".to_string(), ["100 Main St Apt 4, Springfield, IL 62701".to_string(), "100 Main St, Springfield, IL 62702".to_string()]),
+        ("10 Example St, Springfield, IL".to_string(), ["10 Example St Apt 4, Springfield, IL".to_string(), "10-14 Example St, Springfield, IL".to_string()]),
+    ] {
+        let e = explain(&m, &q, &[rows[0].as_str(), rows[1].as_str()]);
+        assert_eq!((e.outcome, e.prefer_on_read), (Outcome::Ambiguous, None), "{} {:?}", q, rows);
+    }
+    // nothing for a read either: a caller's unit as a number of its own, a lone row in another
+    // town that opens with what may be a unit, unit rows at two places, a row that opens with
+    // another address, or a county read as a town
+    for (q, rows) in [
+        ("5, 10 Example St, Springfield, IL", &["10 Example St Apt 7, Springfield, IL", "10 Example St Apt 5, Springfield, IL"][..]),
+        ("10 Example St, Springfield, IL, 5", &["10 Example St Apt 7, Springfield, IL", "10 Example St Apt 5, Springfield, IL"]),
+        ("10 Example St, Apt 5, Springfield, IL", &["7, 10 Example St, Shelbyville, IL"]),
+        ("10 Example St, Springfield, IL", &["7F, 10 Example St, Shelbyville, IL"]),
+        ("10 Example St, Springfield", &["10 Example St, Apt 4, Springfield, IL", "10 Example St, Apt 4, Springfield, MO"]),
+        ("12 Example St, Exampleton, IL", &["14 Example St, 12 Example St, Exampleton, IL"]),
+        ("12 Example St, Exampleton, Cook County, IL", &["12 Example St, Lake County, IL"]),
+        ("12 Example St, Cook County, IL", &["12 Example St, Lake County, IL"]),
+        // a unit number after the ZIP code, or one that repeats the house number
+        ("10 Example St, Springfield, IL 62751, 5", &["10 Example St Apt 7, Springfield, IL 62751", "10 Example St Apt 5, Springfield, IL 62751"]),
+        ("10 Example St, Springfield, IL, 10", &["10 Example St Apt 7, Springfield, IL", "10 Example St Apt 10, Springfield, IL"]),
+        // a row that opens with an address of its own on a street with no type
+        ("12 Example St, Exampleton, IL", &["1400 Broadway, 12 Example St, Exampleton, IL"]),
+        // a caller who gave a unit, and a lone row in another town that opens with a business
+        ("12 Example St Apt B, Exampleton, IL", &["Lower Level 7, 12 Example St, Exampleton, IL"]),
+        ("10 Example St, Springfield, IL", &["Example Cafe, 10 Example St, Shelbyville, IL"]),
+        // a unit row that leaves out the caller's state, beside one at the address in another state
+        ("10 Example St, Springfield, IL", &["10 Example St Apt 5, Springfield", "10 Example St Apt 7, Springfield, WI"]),
+        ("10 Example St, Springfield, IL", &["Unit 5, 10 Example St, Springfield", "Unit 7, 10 Example St, Springfield, WI"]),
+        ("10 Example St, Springfield, IL", &["10 Example St Apt 5, Springfield", "10 Example St, Springfield, WI"]),
+    ] {
+        assert_eq!(explain(&m, q, rows).prefer_on_read, None, "{} {:?}", q, rows);
+    }
+    // a row that opens with another address written as the caller writes its own, name first
+    for q in ["Beispielstraße 12, 10115 Berlin", "Beispielstraße 12 10115 Berlin"] {
+        assert_eq!(explain_in(&m, Some("DE"), q, &["Hauptstraße 14, Beispielstraße 12, 10115 Berlin"]).prefer_on_read, None, "{}", q);
+    }
+    // the same unit rows in the caller's state, or with no state in either: a read may take the first
+    assert_eq!(ask("10 Example St, Springfield, IL", &["10 Example St Apt 5, Springfield", "10 Example St Apt 7, Springfield, IL"]), unit(vec![0, 1], Some(0)));
+    assert_eq!(ask("10 Example St, Springfield, IL", &["10 Example St Apt 5, Springfield", "10 Example St Apt 7, Springfield"]), unit(vec![0, 1], Some(0)));
+    // another district of the caller's own town is not another town
+    assert_eq!(explain(&m, "10 Example St, Downtown, Springfield, IL", &["10 Example St, Uptown, Springfield, IL"]).outcome, Outcome::None);
+    assert_eq!(explain_in(&m, Some("BR"), "Rua Exemplo 10, Centro, São Paulo, SP", &["Rua Exemplo 10, Mooca, São Paulo, SP"]).outcome, Outcome::None);
 }

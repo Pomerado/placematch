@@ -145,4 +145,11 @@ fn long_rows_answer_quickly() {
         m.pick_explained(&text, &explained, &PickOptions { country });
         assert!(start.elapsed() < bound, "{:?}: {:?}", unit, start.elapsed());
     }
+    // many rows of one text that adds a unit
+    let rows = vec!["10 Example St Apt 5, Springfield, IL"; 2000];
+    let explained: Vec<Row> = rows.iter().map(|&t| Row::from(t)).collect();
+    let start = std::time::Instant::now();
+    m.pick("10 Example St, Springfield, IL", &rows, Some("US"));
+    m.pick_explained("10 Example St, Springfield, IL", &explained, &PickOptions { country: Some("US") });
+    assert!(start.elapsed() < bound, "rows of one unit: {:?}", start.elapsed());
 }
