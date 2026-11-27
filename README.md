@@ -104,6 +104,7 @@ The full policy is in [bench/POLICY.md](bench/POLICY.md). In short:
   Postcode, region, country, district and business names may be missing on either side.
 - A candidate that adds a unit the caller did not give is not picked. When only such
   candidates fit, the answer is `ambiguous`, so the caller can be asked which unit.
+  A unit that is only the street's own quadrant ("1 Example Ave NW, # Nw") adds none.
 - Where the number comes first, or no country is given, a short number alone in its own part
   right after a typed street that opens with its house number ("123 Example Street, 4,
   Exampleton") is the unit: "Apt 4", "#4", "Suite 4" and "4" are one unit, and "5" is another.
