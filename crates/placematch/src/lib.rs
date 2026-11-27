@@ -2090,7 +2090,10 @@ impl Matcher {
         // units
         if !c.units.is_empty() {
             if q.units.is_empty() {
-                if !peer {
+                // a unit that is only the street's own quadrant adds none ("1 Example Ave NW, # Nw"); a
+                // lone compass letter may be a suite ("500 E Main St, Suite E")
+                let street_quadrant = |u: &String| directions(&Text { toks: vec![(u[1..].to_string(), vec![])], ..Default::default() }).iter().any(|d| d.len() == 2 && directions(&c.street).contains(d));
+                if !peer && !c.units.iter().all(street_quadrant) {
                     return (Verdict::Different, vec!["candidate_adds_unit"]);
                 }
             } else {
